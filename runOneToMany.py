@@ -32,12 +32,13 @@ for city in citiesList:
       
 showImages = False
 
-for city in citiesList:
-  model = FitNeuralNetwork('./Data/'+city+'.xlsx', city,showImages)
-  citiesListAux = citiesList.copy()
-  citiesListAux.remove(city)
-  for cityAux in citiesListAux: 
-    #Deve-se passar o caminho para o xlsx, o nome da Região e o modelo treinado;
-    ApplyTraining("./Data/"+cityAux+".xlsx", cityAux, model,showImages,city)
+city = 'SÃO JOÃO DA PONTE'
+model = FitNeuralNetwork('./Data/'+city+'.xlsx', city,showImages)
+citiesListAux = citiesList.copy()
+citiesListAux.remove(city)
+
+for cityAux in citiesListAux: 
+  #Deve-se passar o caminho para o xlsx, o nome da Região e o modelo treinado;
+  ApplyTraining("./Data/"+cityAux+".xlsx", cityAux, model,showImages,city)
   
 PrintMetricsList()
