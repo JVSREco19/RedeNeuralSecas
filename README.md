@@ -8,13 +8,7 @@
 
 Insira os arquivos de dados das cidades no formato `.xlsx` na pasta `Data`. Cada arquivo deve estar no seguinte formato:
 
-Series 1    Data
--0,765687012    1961-12-01 00:00:00
--0,996111869    1962-01-01 00:00:00
--1,193551841    1962-02-01 00:00:00
--1,473556598    1962-03-01 00:00:00
--1,53136015     1962-04-01 00:00:00
-
+![alt text](image.png)
 
 Onde a primeira coluna é o valor do SPEI e a segunda coluna é a data correspondente.
 
