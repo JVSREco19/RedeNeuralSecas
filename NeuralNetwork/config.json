@@ -1,0 +1,7 @@
+{
+    "totalPoints": 12,
+    "predictionPoints": 6,
+    "numberOfEpochs": 300,
+    "hiddenUnits" : 9,
+    "parcelDataTrain" : 0.8
+  }
