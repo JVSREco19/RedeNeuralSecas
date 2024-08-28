@@ -14,6 +14,7 @@ Onde a primeira coluna é o valor do SPEI e a segunda coluna é a data correspon
 
 Os dados podem ser adquiridos através deste repositório: [GenerateCitiesSPEI](https://github.com/JVSREco19/GenerateCitiesSPEI).
 
+![alt text](image-1.png)
 2. **Executar os Scripts:**
 
 Existem dois scripts principais que você pode usar para treinar e testar o modelo:
