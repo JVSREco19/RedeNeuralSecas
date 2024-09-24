@@ -3,14 +3,13 @@ from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork,PrintMet
 
 import os
 
+SHOW_IMAGES = False
+
 citiesList = [os.path.splitext(arquivo)[0] for arquivo in os.listdir('./Data') if os.path.isfile(os.path.join('./Data', arquivo))]
 
 for city in citiesList:
   caminho = './Images/' + city
   os.makedirs(caminho) if not os.path.exists(caminho) else print(f"Pasta '{caminho}' já existe!")
-
-      
-showImages = False
 
 for city in citiesList:
   model = FitNeuralNetwork('./Data/'+city+'.xlsx', city,showImages)
