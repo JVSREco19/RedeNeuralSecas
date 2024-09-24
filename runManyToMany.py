@@ -3,16 +3,7 @@ from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork,PrintMet
 
 import os
 
-def nomes_arquivos_sem_extensao(caminho_pasta):
-    # Lista todos os arquivos no diretório
-    arquivos = os.listdir(caminho_pasta)
-    
-    # Remove a extensão .xlsx de cada nome de arquivo
-    nomes_sem_extensao = [arquivo.removesuffix('.xlsx') for arquivo in arquivos]
-    
-    return nomes_sem_extensao
-
-citiesList = nomes_arquivos_sem_extensao('./Data')
+citiesList = [os.path.splitext(arquivo)[0] for arquivo in os.listdir('./Data')]
 for city in citiesList:
   caminho = './Images/'+city
   if not os.path.exists(caminho):
