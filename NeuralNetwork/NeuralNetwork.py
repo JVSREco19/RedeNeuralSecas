@@ -76,12 +76,12 @@ def FitNeuralNetwork(xlsx, regionName,showImages):
         #[1] = Dataset que contem a parcela de dados que será utilizada para validar se as predições da rede estão corretas(teste)
     testDataForPrediction, testDataTrueValues = cria_IN_OUT(testData, totalPoints)
 
-        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs foram utilizados para alimentar a predição da rede(treinamento)
-        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(treinamento)
+        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs serão utilizados para alimentar a predição da rede(treinamento)
+        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs serão preditos(treinamento)
     trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
 
-        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs foram utilizados para alimentar a predição da rede(teste)
-        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(teste)
+        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs serão utilizados para alimentar a predição da rede(teste)
+        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs serão preditos(teste)
     testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
 
     model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues,showImages,regionName)
