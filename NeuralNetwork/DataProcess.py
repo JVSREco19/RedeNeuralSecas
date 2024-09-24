@@ -21,12 +21,7 @@ def splitSpeiData(xlsx):
     
     SpeiValues, SpeiNormalizedValues, monthValues = readXlsx(df)
 
-    split= int(len(SpeiNormalizedValues)*parcelDataTrain)
-
-    speiTrainData = SpeiNormalizedValues[0:split]
-    speiTestData = SpeiNormalizedValues[split:]
-
-    monthTrainData = monthValues[0:split]
-    monthTestData = monthValues[split:]
+    speiTrainData, speiTestData, monthTrainData, monthTestData = train_test_split(SpeiNormalizedValues, monthValues, train_size=parcelDataTrain, shuffle=False)
+    split = len(speiTrainData
 
     return speiTrainData, speiTestData, monthTrainData, monthTestData, split
