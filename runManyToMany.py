@@ -12,11 +12,11 @@ for city in citiesList:
   os.makedirs(caminho) if not os.path.exists(caminho) else print(f"Pasta '{caminho}' já existe!")
 
 for city in citiesList:
-  model = FitNeuralNetwork('./Data/'+city+'.xlsx', city,showImages)
+  model = FitNeuralNetwork('./Data/'+city+'.xlsx', city, SHOW_IMAGES)
   citiesListAux = citiesList.copy()
   citiesListAux.remove(city)
   for cityAux in citiesListAux: 
     #Deve-se passar o caminho para o xlsx, o nome da Região e o modelo treinado;
-    ApplyTraining("./Data/"+cityAux+".xlsx", cityAux, model,showImages,city)
+    ApplyTraining("./Data/"+cityAux+".xlsx", cityAux, model, SHOW_IMAGES, city)
   
 PrintMetricsList()
