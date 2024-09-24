@@ -7,23 +7,19 @@ with open("NeuralNetwork\config.json") as arquivo:
 
 parcelDataTrain= dados_json['parcelDataTrain']
 
-def getSpeiValues(df):
+def readXlsx(df):
     SpeiValues = df["Series1"].to_numpy()
     SpeiNormalizedValues = (SpeiValues-np.min(SpeiValues))/np.max(SpeiValues-np.min(SpeiValues))
 
-    return SpeiValues, SpeiNormalizedValues
-
-def getMonthValues(df):
     monthValues = df["Data"].to_numpy()
 
-    return monthValues
+    return SpeiValues, SpeiNormalizedValues, monthValues
 
 def splitSpeiData(xlsx):
     df = pd.read_excel(xlsx)
     df.columns = df.columns.str.replace(' ', '')
     
-    SpeiValues, SpeiNormalizedValues = getSpeiValues(xlsx)
-    monthValues = getMonthValues(xlsx)
+    SpeiValues, SpeiNormalizedValues, monthValues = readXlsx(df)
 
     split= int(len(SpeiNormalizedValues)*parcelDataTrain)
 
