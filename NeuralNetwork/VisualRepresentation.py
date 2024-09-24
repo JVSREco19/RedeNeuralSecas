@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
+from NeuralNetwork.DataProcess import readXlsx
 
 def showSpeiData(xlsx, test_data, split, regionName,showImages,city):
     
