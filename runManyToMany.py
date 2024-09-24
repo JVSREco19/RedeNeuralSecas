@@ -3,7 +3,7 @@ from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork,PrintMet
 
 import os
 
-citiesList = [os.path.splitext(arquivo)[0] for arquivo in os.listdir('./Data')]
+citiesList = [os.path.splitext(arquivo)[0] for arquivo in os.listdir('./Data') if os.path.isfile(os.path.join('./Data', arquivo))]
 for city in citiesList:
   caminho = './Images/'+city
   if not os.path.exists(caminho):
