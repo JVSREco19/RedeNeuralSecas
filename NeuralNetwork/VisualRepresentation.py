@@ -3,7 +3,13 @@ import numpy as np
 
 from NeuralNetwork.DataProcess import readXlsx
 
-def showSpeiData(xlsx, test_data, split, regionName,showImages,city):
+def saveFig(filepath, city=False):
+    if(city):
+        plt.savefig(filepath + city)
+    else:
+        plt.savefig(filepath)
+
+def showSpeiData(xlsx, test_data, split, regionName, showImages, city):
     
     speiValues, speiNormalizedValues, monthValues = readXlsx(xlsx)
     
@@ -21,12 +27,10 @@ def showSpeiData(xlsx, test_data, split, regionName,showImages,city):
     plt.ylabel('SPEI (Normalizado)')
     plt.plot(monthValues[split:],test_data,'k',label='Parcela de Teste')
     plt.legend()
-    if(city):
-        plt.savefig('./Images/'+regionName+'/SPEI Data - Modelo '+ city)
-    else:
-        plt.savefig('./Images/'+regionName+'/SPEI Data')
     
-def showSpeiTest(xlsx, test_data, split, regionName,showImages,city):
+    saveFig(f'./Images/{regionName}/SPEI Data', city)
+    
+def showSpeiTest(xlsx, test_data, split, regionName, showImages, city):
     
     speiValues, speiNormalizedValues, monthValues = readXlsx(xlsx)
 
@@ -47,12 +51,10 @@ def showSpeiTest(xlsx, test_data, split, regionName,showImages,city):
     plt.legend()
     if(showImages):
         plt.show()
-    if(city):
-        plt.savefig('./Images/'+regionName+'/SPEI Data - Modelo ' + city)
-    else:
-        plt.savefig('./Images/'+regionName+'/SPEI Data')
+        
+    saveFig(f'./Images/{regionName}/SPEI Data', city)
     
-def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx,regionName,showImages,city):
+def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, regionName, showImages, city):
 
     trueValues = np.append(trainDataTrueValues, testDataTrueValues)
     predictions = np.append(trainPredictValues, testPredictValues)
@@ -78,13 +80,10 @@ def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictV
     if(showImages):
         plt.show()
     
-    if(city):
-        plt.savefig('./Images/'+regionName+'/Previsao - Modelo ' + city)
-    else:
-        plt.savefig('./Images/'+regionName+'/Previsao')
+    saveFig(f'./Images/{regionName}/Previsao', city)
     
     
-def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, regionName,showImages,city):
+def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, regionName, showImages, city):
 
     trueValues = np.append(trainDataTrueValues, testDataTrueValues)
     predictions = np.append(trainPredictValues, testPredictValues)
@@ -104,7 +103,5 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     plt.axline((0, 0), slope=1)
     if(showImages):
         plt.show()
-    if(city):
-        plt.savefig('./Images/'+regionName+'/distribuiçãoDoSPEI - Modelo '+ city)
-    else:
-        plt.savefig('./Images/'+regionName+'/distribuiçãoDoSPEI')
+        
+    saveFig(f'./Images/{regionName}/distribuiçãoDoSPEI', city)
