@@ -7,7 +7,7 @@ from NeuralNetwork.DataProcess import splitSpeiData
 from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest
 from NeuralNetwork.Metrics import getError
 
-metricsList = {}
+metricsCompendium = {}
 
 # Abra o arquivo JSON
 with open("NeuralNetwork\config.json") as arquivo:
@@ -92,13 +92,13 @@ def FitNeuralNetwork(xlsx, regionName,showImages):
 
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
     testErrors = getError(testDataTrueValues, testPredictValues)
-    if regionName not in metricsList:
-        metricsList[regionName] = {}
-    if regionName not in metricsList[regionName]:
-        metricsList[regionName][regionName] = {"trainErrors": [], "testErrors": []}
+    if regionName not in metricsCompendium:
+        metricsCompendium[regionName] = {}
+    if regionName not in metricsCompendium[regionName]:
+        metricsCompendium[regionName][regionName] = {"trainErrors": [], "testErrors": []}
         
-    metricsList[regionName][regionName]["trainErrors"].append(trainErrors)
-    metricsList[regionName][regionName]["testErrors"].append(testErrors)
+    metricsCompendium[regionName][regionName]["trainErrors"].append(trainErrors)
+    metricsCompendium[regionName][regionName]["testErrors"].append(testErrors)
 
     print("--------------Result for " + regionName +"---------------")
     print("---------------------Train-----------------------")
@@ -129,13 +129,14 @@ def ApplyTraining(xlsx, regionName, model,showImages,city):
 
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
     testErrors = getError(testDataTrueValues, testPredictValues)
-    if city not in metricsList:
-        metricsList[city] = {}
-    if regionName not in metricsList[city]:
-        metricsList[city][regionName] = {"trainErrors": [], "testErrors": []}
+    
+    if city not in metricsCompendium:
+        metricsCompendium[city] = {}
+    if regionName not in metricsCompendium[city]:
+        metricsCompendium[city][regionName] = {"trainErrors": [], "testErrors": []}
         
-    metricsList[city][regionName]["trainErrors"].append(trainErrors)
-    metricsList[city][regionName]["testErrors"].append(testErrors)
+    metricsCompendium[city][regionName]["trainErrors"].append(trainErrors)
+    metricsCompendium[city][regionName]["testErrors"].append(testErrors)
     
     print("--------------Result for " +  regionName + "---------------")
     print("---------------------Train-----------------------")
@@ -149,13 +150,13 @@ def ApplyTraining(xlsx, regionName, model,showImages,city):
     showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx,regionName,showImages,city)
     plt.close()
 
-def PrintMetricsList():
+def PrintmetricsCompendium():
     import pandas as pd
     # Lista de registros da planilha
     registros = []
 
     # Percorrendo os dados e adicionando os registros à lista
-    for regiao, cidades in metricsList.items():
+    for regiao, cidades in metricsCompendium.items():
         for cidade, metrics in cidades.items():
             # Adicionando registro de treinamento
             registro_treinamento = [f'{regiao}/{cidade}', 
