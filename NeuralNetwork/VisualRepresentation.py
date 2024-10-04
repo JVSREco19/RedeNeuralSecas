@@ -5,7 +5,7 @@ from NeuralNetwork.DataProcess import readXlsx
 
 def saveFig(plot, filepath, city=False):
     if(city):
-        plot.savefig(filepath + city)
+        plot.savefig(filepath + ' - Modelo ' + city)
     else:
         plot.savefig(filepath)
 
