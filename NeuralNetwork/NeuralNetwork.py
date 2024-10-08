@@ -27,7 +27,7 @@ def createNeuralNetwork(hidden_units, dense_units, input_shape, activation):
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
-def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues,showImages,regionName):
+def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, regionName, subRegionName):
 
     model = createNeuralNetwork( hidden_units= hiddenUnits, dense_units=predictionPoints, 
                                 input_shape=(totalPoints-predictionPoints,1), activation=['relu','sigmoid'])
@@ -41,16 +41,16 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues,showImages,re
     plt.legend(['loss'])
     if(showImages):
         plt.show()
-    plt.savefig('./Images/'+regionName+'/MSE')
+    plt.savefig(f'./Images/{regionName}/{subRegionName}/MSE')
     return model
 
 def cria_IN_OUT(data, janela):
     OUT_indices = np.arange(janela, len(data), janela)
     OUT = data[OUT_indices]
     lin_x = len(OUT)
-    IN = data[range(janela*lin_x)]
+    IN = data[range(janela*len(OUT))]
    
-    IN = np.reshape(IN, (lin_x, janela, 1))
+    IN = np.reshape(IN, (len(OUT), janela, 1))
 
     OUT_final = IN[:,-predictionPoints:,0]
     IN_final = IN[:,:-predictionPoints,:]
@@ -59,7 +59,7 @@ def cria_IN_OUT(data, janela):
     # print(IN_final)
     return IN_final, OUT_final
 
-def FitNeuralNetwork(xlsx, regionName,showImages):
+def FitNeuralNetwork(xlsx, regionName, subRegionName, showImages):
 
         #[0] = lista de dados do SPEI referentes à parcela de treinamento (80%)
         #[1] = lista de dados do SPEI referentes à parcela de teste (20%)
@@ -76,15 +76,15 @@ def FitNeuralNetwork(xlsx, regionName,showImages):
         #[1] = Dataset que contem a parcela de dados que será utilizada para validar se as predições da rede estão corretas(teste)
     testDataForPrediction, testDataTrueValues = cria_IN_OUT(testData, totalPoints)
 
-        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs serão utilizados para alimentar a predição da rede(treinamento)
-        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs serão preditos(treinamento)
+        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs foram utilizados para alimentar a predição da rede(treinamento)
+        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(treinamento)
     trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
 
-        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs serão utilizados para alimentar a predição da rede(teste)
-        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs serão preditos(teste)
+        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs foram utilizados para alimentar a predição da rede(teste)
+        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(teste)
     testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
 
-    model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues,showImages,regionName)
+    model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, regionName, subRegionName)
 
         #faz previsões e calcula os erros
     trainPredictValues = model.predict(trainDataForPrediction)
@@ -92,13 +92,14 @@ def FitNeuralNetwork(xlsx, regionName,showImages):
 
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
     testErrors = getError(testDataTrueValues, testPredictValues)
+    
     if regionName not in metricsCompendium:
         metricsCompendium[regionName] = {}
-    if regionName not in metricsCompendium[regionName]:
-        metricsCompendium[regionName][regionName] = {"trainErrors": [], "testErrors": []}
-        
-    metricsCompendium[regionName][regionName]["trainErrors"].append(trainErrors)
-    metricsCompendium[regionName][regionName]["testErrors"].append(testErrors)
+    if subRegionName not in metricsCompendium[regionName]:
+        metricsCompendium[regionName][subRegionName] = {"trainErrors": [], "testErrors": []}
+    
+    metricsCompendium[regionName][subRegionName]["trainErrors"] = trainErrors
+    metricsCompendium[regionName][subRegionName]["testErrors"]  = testErrors
 
     print("--------------Result for " + regionName +"---------------")
     print("---------------------Train-----------------------")
@@ -107,14 +108,14 @@ def FitNeuralNetwork(xlsx, regionName,showImages):
     print("---------------------Test------------------------")
     print(testErrors)
 
-    showSpeiData(xlsx, testData, split, regionName,showImages,regionName)
-    showSpeiTest(xlsx, testData, split, regionName,showImages,regionName)
-    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx,regionName,showImages,regionName)
-    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx,regionName,showImages,city=regionName)
+    showSpeiData(xlsx, testData, split, regionName, subRegionName, showImages, regionName)
+    showSpeiTest(xlsx, testData, split, regionName, subRegionName, showImages, regionName)
+    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, regionName, subRegionName, showImages, regionName)
+    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, regionName, subRegionName, showImages, city=regionName)
 
-    return model
+    return model, metricsCompendium
 
-def ApplyTraining(xlsx, regionName, model,showImages,city):
+def ApplyTraining(xlsx, regionName, subRegionName, model, showImages, city):
 
     trainData, testData, monthTrainData, monthTestData, split = splitSpeiData(xlsx)
 
@@ -130,49 +131,55 @@ def ApplyTraining(xlsx, regionName, model,showImages,city):
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
     testErrors = getError(testDataTrueValues, testPredictValues)
     
-    if city not in metricsCompendium:
-        metricsCompendium[city] = {}
-    if regionName not in metricsCompendium[city]:
-        metricsCompendium[city][regionName] = {"trainErrors": [], "testErrors": []}
-        
-    metricsCompendium[city][regionName]["trainErrors"].append(trainErrors)
-    metricsCompendium[city][regionName]["testErrors"].append(testErrors)
+    if regionName not in metricsCompendium:
+        metricsCompendium[regionName] = {}
+    if subRegionName not in metricsCompendium[regionName]:
+        metricsCompendium[regionName][subRegionName] = {"trainErrors": [], "testErrors": []}
     
-    print("--------------Result for " +  regionName + "---------------")
+    metricsCompendium[regionName][subRegionName]["trainErrors"] = trainErrors
+    metricsCompendium[regionName][subRegionName]["testErrors"]  = testErrors
+    
+    print("--------------Result for " +  regionName + "'s " + subRegionName + "---------------")
     print("---------------------Train-----------------------")
     print(trainErrors)
 
     print("---------------------Test------------------------")
     print(testErrors)
 
-    showSpeiData(xlsx, testData, split, regionName,showImages,city)
-    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx,regionName,showImages,city)
-    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx,regionName,showImages,city)
+    showSpeiData(xlsx, testData, split, regionName, subRegionName, showImages, city)
+    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, regionName, subRegionName, showImages, city)
+    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, regionName, subRegionName, showImages, city)
     plt.close()
+    
+    return metricsCompendium
 
-def PrintmetricsCompendium():
+def PrintMetricsList(metricsCompendium):
     import pandas as pd
-    # Lista de registros da planilha
-    registros = []
-
-    # Percorrendo os dados e adicionando os registros à lista
-    for regiao, cidades in metricsCompendium.items():
-        for cidade, metrics in cidades.items():
-            # Adicionando registro de treinamento
-            registro_treinamento = [f'{regiao}/{cidade}', 
-                                    metrics['trainErrors'][0]['MAE'], 
-                                    metrics['testErrors'][0]['MAE'], 
-                                    metrics['trainErrors'][0]['RMSE'], 
-                                    metrics['testErrors'][0]['RMSE'],
-                                    metrics['trainErrors'][0]['MSE'], 
-                                    metrics['testErrors'][0]['MSE'], 
-                                    metrics['trainErrors'][0]['R^2'], 
-                                    metrics['testErrors'][0]['R^2']]
-            registros.append(registro_treinamento)
-
-    # Criando DataFrame com os registros
-    df = pd.DataFrame(registros, columns=['Municipio Treinado/Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
+    
+    list_of_all_metrics_city_by_city = []
+    
+    for central_city_name, dict_of_bordering_cities in metricsCompendium.items():
+        for bordering_city_name, dict_of_measurement_types in dict_of_bordering_cities.items():
+            list_of_metrics_of_one_city = [f'{central_city_name}/{bordering_city_name}',
+                                           dict_of_measurement_types['testErrors' ]['MAE'],
+                                           dict_of_measurement_types['trainErrors']['MAE'],
+                                           
+                                           dict_of_measurement_types['testErrors' ]['RMSE'],
+                                           dict_of_measurement_types['trainErrors']['RMSE'],
+                                           
+                                           dict_of_measurement_types['testErrors' ]['MSE'],
+                                           dict_of_measurement_types['trainErrors']['MSE'],
+                                           
+                                           dict_of_measurement_types['testErrors' ]['R^2'],
+                                           dict_of_measurement_types['trainErrors']['R^2']
+                                           ]
+     #       print(list_of_metrics_of_one_city)
+            list_of_all_metrics_city_by_city.append(list_of_metrics_of_one_city)
+    
+    #print(list_of_metrics_of_one_city)
+    
+    df = pd.DataFrame(list_of_all_metrics_city_by_city,
+                      columns=['Municipio Treinado/Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
 
     # Escrevendo DataFrame em um arquivo Excel
     df.to_excel('metricas_modelo.xlsx', index=False)
-
