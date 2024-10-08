@@ -1,17 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from NeuralNetwork.DataProcess import readXlsx
+from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
 
 def saveFig(plot, filepath, city=False):
     if(city):
-        plot.savefig(filepath + ' - Modelo ' + city)
+        plt.savefig(filepath + ' - Modelo ' + city)
     else:
-        plot.savefig(filepath)
+        plt.savefig(filepath)
 
-def showSpeiData(xlsx, test_data, split, regionName, showImages, city):
+def showSpeiData(xlsx, test_data, split, regionName, subRegionName, showImages, city):
     
-    speiValues, speiNormalizedValues, monthValues = readXlsx(xlsx)
+    monthValues = getMonthValues(xlsx)
+    speiValues, speiNormalizedValues =  getSpeiValues(xlsx)
     
     plt.figure()
     plt.subplot(2,1,1)
@@ -28,11 +29,12 @@ def showSpeiData(xlsx, test_data, split, regionName, showImages, city):
     plt.plot(monthValues[split:],test_data,'k',label='Parcela de Teste')
     plt.legend()
     
-    saveFig(plt, f'./Images/{regionName}/SPEI Data', city)
+    saveFig(plt, f'./Images/{regionName}/{subRegionName}/SPEI Data', city)
     
-def showSpeiTest(xlsx, test_data, split, regionName, showImages, city):
+def showSpeiTest(xlsx, test_data, split, regionName, subRegionName, showImages, city):
     
-    speiValues, speiNormalizedValues, monthValues = readXlsx(xlsx)
+    monthValues = getMonthValues(xlsx)
+    speiValues, speiNormalizedValues =  getSpeiValues(xlsx)
 
     positiveSpei = speiValues.copy()
     negativeSpei = speiValues.copy()
@@ -51,17 +53,17 @@ def showSpeiTest(xlsx, test_data, split, regionName, showImages, city):
     plt.legend()
     if(showImages):
         plt.show()
-        
-    saveFig(plt, f'./Images/{regionName}/SPEI Data', city)
     
-def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, regionName, showImages, city):
+    saveFig(plt, f'./Images/{regionName}/{subRegionName}/SPEI Data', city)
+    
+def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, regionName, subRegionName, showImages, city):
 
     trueValues = np.append(trainDataTrueValues, testDataTrueValues)
     predictions = np.append(trainPredictValues, testPredictValues)
 
     reshapedMonth = np.append(trainMonthForPredictedValues, testMonthForPredictedValues)
 
-    speiValues, speiNormalizedValues, monthValues = readXlsx(xlsx)
+    SpeiValues, SpeiNormalizedValues = getSpeiValues(xlsx)
 
     speiMaxValue = np.max(SpeiValues)
     speiMinValue = np.min(SpeiValues)
@@ -80,15 +82,14 @@ def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictV
     if(showImages):
         plt.show()
     
-    saveFig(plt, f'./Images/{regionName}/Previsao', city)
+    saveFig(plt, f'./Images/{regionName}/{subRegionName}/Previsao', city)
     
-    
-def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, regionName, showImages, city):
+def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, regionName, subRegionName, showImages, city):
 
     trueValues = np.append(trainDataTrueValues, testDataTrueValues)
     predictions = np.append(trainPredictValues, testPredictValues)
 
-    speiValues, speiNormalizedValues, monthValues = readXlsx(xlsx)
+    SpeiValues, SpeiNormalizedValues = getSpeiValues(xlsx)
 
     speiMaxValue = np.max(SpeiValues)
     speiMinValue = np.min(SpeiValues)
@@ -104,4 +105,4 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     if(showImages):
         plt.show()
         
-    saveFig(plt, f'./Images/{regionName}/distribuiçãoDoSPEI', city)
+    saveFig(plt, f'./Images/{regionName}/{subRegionName}/distribuiçãoDoSPEI', city)
