@@ -29,10 +29,10 @@ def define_cities_of_interest(rootdir):
 
 def create_empty_image_directory_tree(dict_cities_of_interest, rootdir):
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
-        os.makedirs(f'{rootdir}/{central_city}/{central_city}')
+        os.makedirs(f'{rootdir}/cluster {central_city}/model {central_city}/city {central_city}')
         
         for bordering_city in list_of_bordering_cities:
-            os.makedirs(f'{rootdir}/{central_city}/{bordering_city}')
+            os.makedirs(f'{rootdir}/cluster {central_city}/model {central_city}/city {bordering_city}')
     
 def create_neural_network_models_for_central_cities(dict_cities_of_interest, rootdir):
     neural_network_models = {}

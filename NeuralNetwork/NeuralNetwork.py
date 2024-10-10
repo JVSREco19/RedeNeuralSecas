@@ -27,7 +27,7 @@ def createNeuralNetwork(hidden_units, dense_units, input_shape, activation):
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
-def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_for_training, city_for_predicting):
+def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting):
 
     model = createNeuralNetwork( hidden_units= hiddenUnits, dense_units=predictionPoints, 
                                 input_shape=(totalPoints-predictionPoints,1), activation=['relu','sigmoid'])
@@ -42,16 +42,16 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     plt.legend(['loss'])
     if(showImages):
         plt.show()
-    plt.savefig(f'./Images/{city_for_training}/{city_for_predicting}/MSE')
+    plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MSE')
     return model
 
 def cria_IN_OUT(data, janela):
     OUT_indices = np.arange(janela, len(data), janela)
     OUT = data[OUT_indices]
     lin_x = len(OUT)
-    IN = data[range(janela*len(OUT))]
+    IN = data[range(janela*lin_x)]
    
-    IN = np.reshape(IN, (len(OUT), janela, 1))
+    IN = np.reshape(IN, (lin_x, janela, 1))
 
     OUT_final = IN[:,-predictionPoints:,0]
     IN_final = IN[:,:-predictionPoints,:]
@@ -85,7 +85,7 @@ def FitNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
         #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(teste)
     testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
 
-    model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_for_training, city_for_predicting)
+    model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
 
         #faz previsões e calcula os erros
     trainPredictValues = model.predict(trainDataForPrediction, verbose = 0)
@@ -108,10 +108,10 @@ def FitNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f'\t\t\tTRAIN: {trainErrors}')    
     print(f'\t\t\tTEST : {testErrors}')
 
-    showSpeiData(xlsx, testData, split, city_for_training, city_for_predicting, showImages, city_for_training)
-    showSpeiTest(xlsx, testData, split, city_for_training, city_for_predicting, showImages, city_for_training)
-    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_for_training, city_for_predicting, showImages, city_for_training)
-    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_for_training, city_for_predicting, showImages, city=city_for_training)
+    showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showSpeiTest(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
 
     return model, metricsCompendium
 
@@ -145,9 +145,9 @@ def ApplyTraining(xlsx, city_cluster_name, city_for_training, city_for_predictin
     print(f'\t\tTRAIN: {trainErrors}')    
     print(f'\t\tTEST : {testErrors}')
 
-    showSpeiData(xlsx, testData, split, city_for_training, city_for_predicting, showImages, city)
-    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_for_training, city_for_predicting, showImages, city)
-    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_for_training, city_for_predicting, showImages, city)
+    showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     plt.close()
     
     return metricsCompendium
