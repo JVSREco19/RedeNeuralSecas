@@ -38,14 +38,16 @@ def create_neural_network_models_for_central_cities(dict_cities_of_interest, roo
     neural_network_models = {}
     
     for central_city in dict_cities_of_interest.keys():
-        model, metricsCompendium = FitNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', central_city, central_city, SHOW_IMAGES)
+        city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
+        model, metricsCompendium = FitNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', city_cluster_name, central_city, central_city, SHOW_IMAGES)
         neural_network_models[central_city] = model
     return neural_network_models, metricsCompendium
 
 def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, rootdir):
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
+        city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
         for bordering_city in list_of_bordering_cities:
-            metricsCompendium = ApplyTraining(f'{rootdir}/{central_city}/{bordering_city}.xlsx', central_city, bordering_city, neural_network_models[central_city], SHOW_IMAGES, bordering_city)
+            metricsCompendium = ApplyTraining(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, neural_network_models[central_city], SHOW_IMAGES, bordering_city)
     return metricsCompendium
 
 
