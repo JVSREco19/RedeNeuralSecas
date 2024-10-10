@@ -12,7 +12,7 @@ Onde a primeira coluna é o valor do SPEI e a segunda coluna é a data correspon
 
 Os dados podem ser adquiridos através deste repositório: [GenerateCitiesSPEI](https://github.com/JVSREco19/GenerateCitiesSPEI).
 
-A estrutura do diretório "Data" deve ser a seguinte, para rodar `OneToMany.py`:
+A estrutura do diretório "Data" deve ser similar à seguinte, para rodar `OneToMany.py`:
 ```
   ├───Data
   │   ├───ESPINOSA
