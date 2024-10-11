@@ -161,7 +161,8 @@ def PrintMetricsList(metricsCompendium):
         for central_city_name, dict_of_bordering_cities in dict_of_central_cities.items():
             for bordering_city_name, dict_of_measurement_types in dict_of_bordering_cities.items():
                 list_of_metrics_of_one_city = [f'{city_cluster_name}',
-                                               f'{central_city_name}/{bordering_city_name}',
+                                               f'{central_city_name}',
+                                               f'{bordering_city_name}',
                                                dict_of_measurement_types['testErrors' ]['MAE'],
                                                dict_of_measurement_types['trainErrors']['MAE'],
                                                
@@ -180,7 +181,7 @@ def PrintMetricsList(metricsCompendium):
     #print(list_of_metrics_of_one_city)
     
     df = pd.DataFrame(list_of_all_metrics_city_by_city,
-                      columns=['Agrupamento', 'Municipio Treinado/Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
+                      columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
 
     # Escrevendo DataFrame em um arquivo Excel
     df.to_excel('metricas_modelo.xlsx', index=False)
