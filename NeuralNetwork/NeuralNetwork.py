@@ -36,10 +36,13 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
 
     #treina a rede e mostra o gráfico do loss
     history=model.fit(trainDataForPrediction, trainDataTrueValues, epochs=numberOfEpochs, batch_size=1, verbose=0)
+        
     plt.figure()
     plt.plot(history.history['loss'],'k')
+    plt.xlabel('Epochs')
     plt.ylabel('Mean Squared Error (MSE)')
     plt.legend(['loss'])
+    
     if(showImages):
         plt.show()
     plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MSE')
