@@ -1,6 +1,7 @@
 #Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
 from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork,PrintMetricsList
 
+import tensorflow as tf
 import pandas as pd
 import numpy as np
 import json
@@ -41,6 +42,7 @@ def create_neural_network_models_for_central_cities(dict_cities_of_interest, roo
         city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
         model, metricsCompendium = FitNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', city_cluster_name, central_city, central_city, SHOW_IMAGES)
         neural_network_models[central_city] = model
+        tf.keras.backend.clear_session()
     return neural_network_models, metricsCompendium
 
 def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, rootdir):
