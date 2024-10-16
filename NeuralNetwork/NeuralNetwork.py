@@ -43,6 +43,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     if(showImages):
         plt.show()
     plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MSE')
+    plt.close()
     return model
 
 def cria_IN_OUT(data, janela):

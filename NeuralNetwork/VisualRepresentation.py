@@ -27,6 +27,7 @@ def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, c
     plt.legend()
     
     saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/SPEI Data', city_for_training, city_for_predicting)
+    plt.close()
     
 def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
@@ -52,6 +53,7 @@ def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, c
         plt.show()
     
     saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/SPEI Data', city_for_training, city_for_predicting)
+    plt.close()
     
 def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
 
@@ -80,6 +82,7 @@ def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictV
         plt.show()
     
     saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/Previsao', city_for_training, city_for_predicting)
+    plt.close()
     
 def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
 
@@ -103,3 +106,4 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
         plt.show()
         
     saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/distribuiçãoDoSPEI', city_for_training, city_for_predicting)
+    plt.close()
