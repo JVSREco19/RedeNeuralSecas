@@ -45,6 +45,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     plt.xlabel('Epochs')
     plt.ylabel('Mean Absolute Error (MAE)')
     plt.legend(['loss'])
+    plt.title(f'{city_for_training}: MAE')
     
     if(showImages):
         plt.show()
@@ -56,6 +57,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     plt.xlabel('Epochs')
     plt.ylabel('Root Mean Squared Error (RMSE)')
     plt.legend(['loss'])
+    plt.title(f'{city_for_training}: RMSE')
     
     if(showImages):
         plt.show()
@@ -67,6 +69,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     plt.xlabel('Epochs')
     plt.ylabel('Mean Squared Error (MSE)')
     plt.legend(['loss'])
+    plt.title(f'{city_for_training}: MSE')
     
     if(showImages):
         plt.show()

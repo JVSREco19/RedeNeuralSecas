@@ -3,8 +3,9 @@ import numpy as np
 
 from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
 
-def saveFig(plot, filepath, city_for_training, city_for_predicting):
-    plt.savefig(filepath + f' - Model {city_for_training} applied to {city_for_predicting}')
+def saveFig(plot, filename, city_cluster_name, city_for_training, city_for_predicting):
+    FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
+    plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}')
 
 def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
@@ -26,7 +27,7 @@ def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, c
     plt.plot(monthValues[split:],test_data,'k',label='Parcela de Teste')
     plt.legend()
     
-    saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/SPEI Data', city_for_training, city_for_predicting)
+    saveFig(plt, 'SPEI Data', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
     
 def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
@@ -47,12 +48,12 @@ def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, c
     color='red',alpha=0.5,interpolate=False, label='índices SPEI negativos')
     plt.xlabel('Ano')
     plt.ylabel('SPEI')
-    plt.title('SPEI Data - ' + city_for_training)
+    plt.title(f'{city_for_predicting}: SPEI Data')
     plt.legend()
     if(showImages):
         plt.show()
     
-    saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/SPEI Data', city_for_training, city_for_predicting)
+    saveFig(plt, 'SPEI Data (test)', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
     
 def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
@@ -77,11 +78,11 @@ def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictV
     plt.legend(['Verdadeiros', 'Previstos'])
     plt.xlabel('Data')
     plt.ylabel('SPEI')
-    plt.title('Valores verdadeiros e previstos para o final das séries.')
+    plt.title(f'{city_for_predicting}: valores verdadeiros e previstos para o final das séries')
     if(showImages):
         plt.show()
     
-    saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/Previsao', city_for_training, city_for_predicting)
+    saveFig(plt, 'Previsao', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
     
 def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
@@ -102,8 +103,10 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     plt.xlabel('SPEI Verdadeiros')
     plt.ylabel('SPEI Previstos')
     plt.axline((0, 0), slope=1)
+    plt.title(f'{city_for_predicting}: SPEI (distribuição)')
+    
     if(showImages):
         plt.show()
         
-    saveFig(plt, f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/distribuiçãoDoSPEI', city_for_training, city_for_predicting)
+    saveFig(plt, 'distribuiçãoDoSPEI', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
