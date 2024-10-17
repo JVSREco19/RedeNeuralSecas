@@ -24,7 +24,8 @@ def createNeuralNetwork(hidden_units, dense_units, input_shape, activation):
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.compile(loss='mse', metrics=['mae', tf.keras.metrics.RootMeanSquaredError(), 'mse'], optimizer='adam')
+    #to be added: tf.keras.metrics.R2Score(name='r2_score', dtype=tf.float32)
     return model
 
 def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting):
@@ -32,13 +33,37 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     model = createNeuralNetwork( hidden_units= hiddenUnits, dense_units=predictionPoints, 
                                 input_shape=(totalPoints-predictionPoints,1), activation=['relu','sigmoid'])
     #print(model.summary())
-    print(f'\tCreated neural network model for {city_for_training}')
+    print(f'\tCreated neural network model for {city_for_training}.')
 
     #treina a rede e mostra o gráfico do loss
+    print(f'\t\tFitting neural network model for {city_for_training}...')
     history=model.fit(trainDataForPrediction, trainDataTrueValues, epochs=numberOfEpochs, batch_size=1, verbose=0)
-        
+    print(f'\t\tFitted neural network model for {city_for_training}.')
+    
     plt.figure()
-    plt.plot(history.history['loss'],'k')
+    plt.plot(history.history['mae'],'k')
+    plt.xlabel('Epochs')
+    plt.ylabel('Mean Absolute Error (MAE)')
+    plt.legend(['loss'])
+    
+    if(showImages):
+        plt.show()
+    plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MAE')
+    plt.close()
+    
+    plt.figure()
+    plt.plot(history.history['root_mean_squared_error'],'k')
+    plt.xlabel('Epochs')
+    plt.ylabel('Root Mean Squared Error (RMSE)')
+    plt.legend(['loss'])
+    
+    if(showImages):
+        plt.show()
+    plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/RMSE')
+    plt.close()
+    
+    plt.figure()
+    plt.plot(history.history['mse'],'k')
     plt.xlabel('Epochs')
     plt.ylabel('Mean Squared Error (MSE)')
     plt.legend(['loss'])
@@ -47,6 +72,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
         plt.show()
     plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MSE')
     plt.close()
+    
     return model
 
 def cria_IN_OUT(data, janela):
