@@ -118,16 +118,16 @@ def ApplyTraining(xlsx, city_cluster_name, city_for_training, city_for_predictin
     trainData, testData, monthTrainData, monthTestData, split = splitSpeiData(xlsx)
 
     trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(trainData, totalPoints)
-    testDataForPrediction, testDataTrueValues = cria_IN_OUT(testData, totalPoints)
+    testDataForPrediction , testDataTrueValues  = cria_IN_OUT(testData , totalPoints)
 
     trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
-    testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
+    testMonthsForPrediction , testMonthForPredictedValues  = cria_IN_OUT(monthTestData , totalPoints)
 
     trainPredictValues = model.predict(trainDataForPrediction, verbose = 0)
     testPredictValues  = model.predict(testDataForPrediction , verbose = 0)
 
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
-    testErrors = getError(testDataTrueValues, testPredictValues)
+    testErrors  = getError(testDataTrueValues , testPredictValues)
     
     if city_cluster_name not in metricsCompendium:
         metricsCompendium[city_cluster_name] = {}
@@ -182,3 +182,5 @@ def PrintMetricsList(metricsCompendium):
 
     # Escrevendo DataFrame em um arquivo Excel
     df.to_excel('metricas_modelo.xlsx', index=False)
+
+    return df

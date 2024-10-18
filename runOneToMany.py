@@ -1,5 +1,6 @@
 #Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
-from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork,PrintMetricsList
+from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork, PrintMetricsList
+from NeuralNetwork.VisualRepresentation import DrawMetricsBoxPlots
 
 import tensorflow as tf
 import os
@@ -67,4 +68,6 @@ print('APPLYING: START')
 metricsCompendium = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
 print('APPLYING: END')
 
-PrintMetricsList(metricsCompendium)
+metrics_df = PrintMetricsList(metricsCompendium)
+
+DrawMetricsBoxPlots(metrics_df, SHOW_IMAGES)

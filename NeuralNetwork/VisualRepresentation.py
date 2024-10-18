@@ -3,9 +3,13 @@ import numpy as np
 
 from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
 
-def saveFig(plot, filename, city_cluster_name, city_for_training, city_for_predicting):
-    FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
-    plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}')
+def saveFig(plot, filename, city_cluster_name, city_for_training, city_for_predicting=None):
+    if city_for_predicting:
+        FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
+        plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}')
+    else:
+        FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/'
+        plt.savefig(FILEPATH + filename + f' - Model {city_for_training}')
 
 def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
@@ -34,9 +38,6 @@ def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, c
     
     monthValues = getMonthValues(xlsx)
     speiValues, speiNormalizedValues =  getSpeiValues(xlsx)
-
-    positiveSpei = speiValues.copy()
-    negativeSpei = speiValues.copy()
 
     y1positive=np.array(speiValues)>=0
     y1negative = np.array(speiValues)<=0
@@ -123,8 +124,7 @@ def showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training,
     if(showImages):
         plt.show()
     
-    saveFig(plt, 'MAE', city_cluster_name, city_for_training, city_for_training)
-    #plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MAE')
+    saveFig(plt, 'MAE', city_cluster_name, city_for_training)
     plt.close()
     
     # RMSE plot:
@@ -138,8 +138,7 @@ def showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training,
     if(showImages):
         plt.show()
     
-    saveFig(plt, 'RMSE', city_cluster_name, city_for_training, city_for_training)
-    #plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/RMSE')
+    saveFig(plt, 'RMSE', city_cluster_name, city_for_training)
     plt.close()
     
     # MSE plot:
@@ -153,6 +152,69 @@ def showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training,
     if(showImages):
         plt.show()
     
-    saveFig(plt, 'MSE', city_cluster_name, city_for_training, city_for_training)
-    #plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MSE')
+    saveFig(plt, 'MSE', city_cluster_name, city_for_training)
     plt.close()
+
+def DrawMetricsBoxPlots(metrics_df, showImages):
+    metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+    list_of_cities_for_training = metrics_df['Municipio Treinado'].unique()
+
+    import matplotlib.pyplot as plt
+    MAE_dict  = {}
+    RMSE_dict = {}
+    MSE_dict  = {}
+
+    for model_name in list_of_cities_for_training:
+        MAE_dict [model_name] = {}
+        RMSE_dict[model_name] = {}
+        MSE_dict [model_name] = {}
+        
+        metrics_current_model_df = metrics_df[ metrics_df['Municipio Treinado'] == model_name ]
+        
+        MAE_dict[model_name]['MAE Treinamento'] = metrics_current_model_df['MAE Treinamento'].to_list()
+        MAE_dict[model_name]['MAE Validação']   = metrics_current_model_df['MAE Validação']  .to_list()
+
+        RMSE_dict[model_name]['RMSE Treinamento'] = metrics_current_model_df['RMSE Treinamento'].to_list()
+        RMSE_dict[model_name]['RMSE Validação']   = metrics_current_model_df['RMSE Validação']  .to_list()
+        
+        MSE_dict [model_name]['MSE Treinamento'] = metrics_current_model_df['MSE Treinamento'].to_list()
+        MSE_dict [model_name]['MSE Validação']   = metrics_current_model_df['MSE Validação']  .to_list()
+        
+        # MAE plot:
+        plt.boxplot([MAE_dict[model_name]['MAE Treinamento'], MAE_dict[model_name]['MAE Validação']], tick_labels=['MAE training', 'MAE testing'])
+        plt.title('Box Plots of Metrics')
+        plt.ylabel('Metric Value')
+        plt.title(f'MAE of model {model_name}')
+        plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
+        
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, 'MAE Boxplots', model_name, model_name)
+        plt.close()
+        
+        # RMSE plot:
+        plt.boxplot([RMSE_dict[model_name]['RMSE Treinamento'], RMSE_dict[model_name]['RMSE Validação']], tick_labels=['RMSE training', 'RMSE testing'])
+        plt.title('Box Plots of Metrics')
+        plt.ylabel('Metric Value')
+        plt.title(f'RMSE of model {model_name}')
+        plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
+        
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, 'RMSE Boxplots', model_name, model_name)
+        plt.close()
+        
+        # MSE plot:
+        plt.boxplot([MSE_dict[model_name]['MSE Treinamento'], MSE_dict[model_name]['MSE Validação']], tick_labels=['MSE training', 'MSE testing'])
+        plt.title('Box Plots of Metrics')
+        plt.ylabel('Metric Value')
+        plt.title(f'MSE of model {model_name}')
+        plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
+        
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, 'MSE Boxplots', model_name, model_name)
+        plt.close()
