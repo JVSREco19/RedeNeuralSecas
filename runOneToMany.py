@@ -2,10 +2,8 @@
 from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork,PrintMetricsList
 
 import tensorflow as tf
-import pandas as pd
-import numpy as np
-import json
 import os
+import shutil
 
 def define_cities_of_interest(rootdir):
     # Gets the names of the directories inside rootdir and defines them as the central cities:
@@ -29,6 +27,8 @@ def define_cities_of_interest(rootdir):
     return dict_cities_of_interest
 
 def create_empty_image_directory_tree(dict_cities_of_interest, rootdir):
+    shutil.rmtree(f'{rootdir}')
+    
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         os.makedirs(f'{rootdir}/cluster {central_city}/model {central_city}/city {central_city}')
         

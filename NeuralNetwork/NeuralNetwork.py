@@ -1,10 +1,9 @@
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, showNeuralNetworkModelMetrics
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -40,41 +39,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     history=model.fit(trainDataForPrediction, trainDataTrueValues, epochs=numberOfEpochs, batch_size=1, verbose=0)
     print(f'\t\tFitted neural network model for {city_for_training}.')
     
-    plt.figure()
-    plt.plot(history.history['mae'],'k')
-    plt.xlabel('Epochs')
-    plt.ylabel('Mean Absolute Error (MAE)')
-    plt.legend(['loss'])
-    plt.title(f'{city_for_training}: MAE')
-    
-    if(showImages):
-        plt.show()
-    plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MAE')
-    plt.close()
-    
-    plt.figure()
-    plt.plot(history.history['root_mean_squared_error'],'k')
-    plt.xlabel('Epochs')
-    plt.ylabel('Root Mean Squared Error (RMSE)')
-    plt.legend(['loss'])
-    plt.title(f'{city_for_training}: RMSE')
-    
-    if(showImages):
-        plt.show()
-    plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/RMSE')
-    plt.close()
-    
-    plt.figure()
-    plt.plot(history.history['mse'],'k')
-    plt.xlabel('Epochs')
-    plt.ylabel('Mean Squared Error (MSE)')
-    plt.legend(['loss'])
-    plt.title(f'{city_for_training}: MSE')
-    
-    if(showImages):
-        plt.show()
-    plt.savefig(f'./Images/cluster {city_cluster_name}/model {city_for_training}/MSE')
-    plt.close()
+    showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training, showImages)
     
     return model
 
@@ -181,7 +146,6 @@ def ApplyTraining(xlsx, city_cluster_name, city_for_training, city_for_predictin
     showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    plt.close()
     
     return metricsCompendium
 
