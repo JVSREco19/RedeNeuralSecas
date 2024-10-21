@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import statistics
+import pprint
 
 from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
 
@@ -167,24 +169,23 @@ def DrawMetricsBoxPlots(metrics_df, showImages):
     list_of_models_names  = metrics_df['Municipio Treinado'].unique()
     
     metrics_dict = dict.fromkeys(list_of_metrics_names)
-    for metric_name, value in metrics_dict.items():
+    for metric_name in metrics_dict.keys():
         metrics_dict[metric_name] = dict.fromkeys(list_of_metrics_types)
         
-        for metric_type, valye in metrics_dict[metric_name].items():
+        for metric_type in metrics_dict[metric_name].keys():
             metrics_dict[metric_name][metric_type] = dict.fromkeys(list_of_models_names)
     
     # Filling the dictionary:
     for metric_name in list_of_metrics_names:
         for metric_type in list_of_metrics_types:
             for model_name in list_of_models_names:
-                #print(f'metrics_dict[{metric_name}][{metric_type}][{model_name}]')
                 metrics_dict[metric_name][metric_type][model_name] = metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list()
     
     # Plotting the graphs:
     for metric_name in list_of_metrics_names:
         for metric_type in list_of_metrics_types:
             plt.boxplot(metrics_dict[metric_name][metric_type].values(), tick_labels=metrics_dict[metric_name][metric_type].keys())
-            plt.title('Box Plots of Metrics')
+            plt.xlabel('Machine Learning models')
             plt.ylabel(f'{metric_name} {metric_type} values')
             plt.title(f'Comparison of performance of different models ({metric_name})')
             plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
@@ -193,4 +194,39 @@ def DrawMetricsBoxPlots(metrics_df, showImages):
                 plt.show()
             
             saveFig(plt, f'BoxPlots. {metric_name}. {metric_type}.')
+            plt.close()
+
+def DrawMetricsBarPlots(metrics_df, showImages):
+    metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+    
+    # Creation of the empty dictionary:
+    list_of_metrics_names = ['MAE', 'RMSE', 'MSE'] # To-do: implement also R²
+    list_of_metrics_types = ['Treinamento', 'Validação']
+    list_of_models_names  = metrics_df['Municipio Treinado'].unique()
+    
+    metrics_averages_dict = dict.fromkeys(list_of_metrics_names)
+    for metric_name in metrics_averages_dict.keys():
+        metrics_averages_dict[metric_name] = dict.fromkeys(list_of_metrics_types)
+        
+        for metric_type in metrics_averages_dict[metric_name].keys():
+            metrics_averages_dict[metric_name][metric_type] = dict.fromkeys(list_of_models_names)
+    
+    # Filling the dictionary:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:
+            for model_name in list_of_models_names:
+                average = statistics.mean( metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list() )
+                metrics_averages_dict[metric_name][metric_type][model_name] = average
+    
+    # Plotting the graphs:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:        
+            plt.barh(metrics_averages_dict[metric_name][metric_type].keys(), metrics_averages_dict[metric_name][metric_type].values(), color ='maroon')
+            plt.xlabel(f'Average {metric_name} {metric_type}')
+            plt.ylabel("Machine Learning models")
+            plt.title(f'Comparison of performance of different models ({metric_name})')
+            if(showImages):
+                plt.show()
+            
+            saveFig(plt, f'BarPlots. {metric_name}. {metric_type}.')
             plt.close()
