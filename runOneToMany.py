@@ -28,7 +28,8 @@ def define_cities_of_interest(rootdir):
     return dict_cities_of_interest
 
 def create_empty_image_directory_tree(dict_cities_of_interest, rootdir):
-    shutil.rmtree(f'{rootdir}')
+    if os.path.isdir(rootdir):
+        shutil.rmtree(rootdir)
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         os.makedirs(f'{rootdir}/cluster {central_city}/model {central_city}/city {central_city}')
