@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pprint
 
 from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
 
@@ -13,7 +12,7 @@ def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city
         plt.savefig(FILEPATH + filename + f' - Model {city_for_training}')
     else:
         FILEPATH = f'./Images/'
-        plt.savefig(FILEPATH + filename)
+        plt.savefig(FILEPATH + filename, bbox_inches="tight")
 
 def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
@@ -161,113 +160,37 @@ def showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training,
     
 def DrawMetricsBoxPlots(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-       
+    
+    # Creation of the empty dictionary:
+    list_of_metrics_names = ['MAE', 'RMSE', 'MSE']
     list_of_metrics_types = ['Treinamento', 'Validação']
-    MAE_dict  = dict.fromkeys(list_of_metrics_types)
-    RMSE_dict = dict.fromkeys(list_of_metrics_types)
-    MSE_dict  = dict.fromkeys(list_of_metrics_types)
+    list_of_models_names  = metrics_df['Municipio Treinado'].unique()
     
-    list_of_models_names = metrics_df['Municipio Treinado'].unique()
-    MAE_dict ['Treinamento']  = dict.fromkeys(list_of_models_names)
-    MAE_dict ['Validação']    = dict.fromkeys(list_of_models_names)
-    
-    RMSE_dict['Treinamento'] = dict.fromkeys(list_of_models_names)
-    RMSE_dict['Validação']   = dict.fromkeys(list_of_models_names)
-    
-    MSE_dict ['Treinamento'] = dict.fromkeys(list_of_models_names)
-    MSE_dict ['Validação']   = dict.fromkeys(list_of_models_names)
-    
-    for model_name in list_of_models_names:
-        #Narrowing down the DataFrame:
-        metrics_current_model_df = metrics_df[ metrics_df['Municipio Treinado'] == model_name ]
+    metrics_dict = dict.fromkeys(list_of_metrics_names)
+    for metric_name, value in metrics_dict.items():
+        metrics_dict[metric_name] = dict.fromkeys(list_of_metrics_types)
         
-        MAE_df  = metrics_current_model_df[ ['Municipio Previsto', 'MAE Treinamento' , 'MAE Validação' ] ]
-        RMSE_df = metrics_current_model_df[ ['Municipio Previsto', 'RMSE Treinamento', 'RMSE Validação'] ]
-        MSE_df  = metrics_current_model_df[ ['Municipio Previsto', 'MSE Treinamento' , 'MSE Validação' ] ]
-        
-        MAE_dict ['Treinamento'][model_name] = MAE_df['MAE Treinamento'].to_list()
-        MAE_dict ['Validação'  ][model_name] = MAE_df['MAE Validação'  ].to_list()
-        
-        RMSE_dict['Treinamento'][model_name] = RMSE_df['RMSE Treinamento'].to_list()
-        RMSE_dict['Validação'  ][model_name] = RMSE_df['RMSE Validação'  ].to_list()
-        
-        MSE_dict ['Treinamento'][model_name] = MSE_df['MSE Treinamento'].to_list()
-        MSE_dict ['Validação'  ][model_name] = MSE_df['MSE Validação'  ].to_list()
-        
-    # Plot. MAE. Training:
-    plt.boxplot(MAE_dict['Treinamento'].values(), tick_labels=MAE_dict['Treinamento'].keys())
-    plt.title('Box Plots of Metrics')
-    plt.ylabel('Training MAE values')
-    plt.title('Comparison of performance of different models (MAE)')
-    plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-    plt.xticks(rotation=45)
-    if(showImages):
-        plt.show()
+        for metric_type, valye in metrics_dict[metric_name].items():
+            metrics_dict[metric_name][metric_type] = dict.fromkeys(list_of_models_names)
     
-    saveFig(plt, 'BoxPlots. MAE. Training.')
-    plt.close()
+    # Filling the dictionary:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:
+            for model_name in list_of_models_names:
+                #print(f'metrics_dict[{metric_name}][{metric_type}][{model_name}]')
+                metrics_dict[metric_name][metric_type][model_name] = metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list()
     
-    # Plot. RMSE. Training:
-    plt.boxplot(RMSE_dict['Treinamento'].values(), tick_labels=RMSE_dict['Treinamento'].keys())
-    plt.title('Box Plots of Metrics')
-    plt.ylabel('Training RMSE values')
-    plt.title('Comparison of performance of different models (RMSE)')
-    plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-    plt.xticks(rotation=45)
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'BoxPlots. RMSE. Training.')
-    plt.close()
-    
-    # Plot. MSE. Training:
-    plt.boxplot(MSE_dict['Treinamento'].values(), tick_labels=MSE_dict['Treinamento'].keys())
-    plt.title('Box Plots of Metrics')
-    plt.ylabel('Training MSE values')
-    plt.title('Comparison of performance of different models (MSE)')
-    plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-    plt.xticks(rotation=45)
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'BoxPlots. MSE. Training.')
-    plt.close()
-    
-    # Plot. MAE. Validation:
-    plt.boxplot(MAE_dict['Validação'].values(), tick_labels=MAE_dict['Validação'].keys())
-    plt.title('Box Plots of Metrics')
-    plt.ylabel('Validation MAE values')
-    plt.title('Comparison of performance of different models (MAE)')
-    plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-    plt.xticks(rotation=45)
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'BoxPlots. MAE. Validation.')
-    plt.close()
-    
-    # Plot. RMSE. Validation:
-    plt.boxplot(RMSE_dict['Validação'].values(), tick_labels=RMSE_dict['Validação'].keys())
-    plt.title('Box Plots of Metrics')
-    plt.ylabel('Validation RMSE values')
-    plt.title('Comparison of performance of different models (RMSE)')
-    plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-    plt.xticks(rotation=45)
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'BoxPlots. RMSE. Validation.')
-    plt.close()
-    
-    # Plot. MSE. Validation:
-    plt.boxplot(MSE_dict['Validação'].values(), tick_labels=MSE_dict['Validação'].keys())
-    plt.title('Box Plots of Metrics')
-    plt.ylabel('Validation MSE values')
-    plt.title('Comparison of performance of different models (MSE)')
-    plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-    plt.xticks(rotation=45)
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'BoxPlots. MSE. Validation.')
-    plt.close()
+    # Plotting the graphs:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:
+            plt.boxplot(metrics_dict[metric_name][metric_type].values(), tick_labels=metrics_dict[metric_name][metric_type].keys())
+            plt.title('Box Plots of Metrics')
+            plt.ylabel(f'{metric_name} {metric_type} values')
+            plt.title(f'Comparison of performance of different models ({metric_name})')
+            plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
+            plt.xticks(rotation=45)
+            if(showImages):
+                plt.show()
+            
+            saveFig(plt, f'BoxPlots. {metric_name}. {metric_type}.')
+            plt.close()
