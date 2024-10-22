@@ -3,7 +3,7 @@ import numpy as np
 import statistics
 import pprint
 
-from NeuralNetwork.DataProcess import getMonthValues, getSpeiValues
+from NeuralNetwork.DataProcess import readXlsx
 
 def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
     if city_for_predicting:
@@ -18,8 +18,7 @@ def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city
 
 def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
-    monthValues = getMonthValues(xlsx)
-    speiValues, speiNormalizedValues =  getSpeiValues(xlsx)
+    speiValues, speiNormalizedValues, monthValues =  readXlsx(xlsx)
     
     plt.figure()
     plt.subplot(2,1,1)
@@ -41,8 +40,7 @@ def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, c
     
 def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
-    monthValues = getMonthValues(xlsx)
-    speiValues, speiNormalizedValues =  getSpeiValues(xlsx)
+    speiValues, speiNormalizedValues, monthValues =  readXlsx(xlsx)
 
     y1positive=np.array(speiValues)>=0
     y1negative = np.array(speiValues)<=0
@@ -69,7 +67,7 @@ def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictV
 
     reshapedMonth = np.append(trainMonthForPredictedValues, testMonthForPredictedValues)
 
-    SpeiValues, SpeiNormalizedValues = getSpeiValues(xlsx)
+    SpeiValues, SpeiNormalizedValues, monthValues = readXlsx(xlsx)
 
     speiMaxValue = np.max(SpeiValues)
     speiMinValue = np.min(SpeiValues)
@@ -96,7 +94,7 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     trueValues = np.append(trainDataTrueValues, testDataTrueValues)
     predictions = np.append(trainPredictValues, testPredictValues)
 
-    SpeiValues, SpeiNormalizedValues = getSpeiValues(xlsx)
+    SpeiValues, SpeiNormalizedValues, monthValues = readXlsx(xlsx)
 
     speiMaxValue = np.max(SpeiValues)
     speiMinValue = np.min(SpeiValues)
