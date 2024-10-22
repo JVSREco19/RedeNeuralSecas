@@ -67,20 +67,24 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
         #[4] = valor inteiro da posição que o dataset foi splitado
     trainData, testData, monthTrainData, monthTestData, split = splitSpeiData(xlsx)
 
-        #[0] = Dataset que contem a parcela de dados que será utilizada para alimentar a predição da rede(treinamento)
-        #[1] = Dataset que contem a parcela de dados que será utilizada para validar se as predições da rede estão corretas(treinamento)
+        # Dataset que contém a parcela de dados que será utilizadda para...
+        #[0] = ... alimentar a predição da rede(treinamento)
+        #[1] = ... validar se as predições da rede estão corretas(treinamento)
     trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(trainData, totalPoints)
 
-        #[0] = Dataset que contem a parcela de dados que será utilizada para alimentar a predição da rede(teste)
-        #[1] = Dataset que contem a parcela de dados que será utilizada para validar se as predições da rede estão corretas(teste)
+        # Dataset que contém a parcela de dados que será utilizadda para...
+        #[0] = ... alimentar a predição da rede(teste)
+        #[1] = ... validar se as predições da rede estão corretas(teste)
     testDataForPrediction, testDataTrueValues = cria_IN_OUT(testData, totalPoints)
 
-        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs foram utilizados para alimentar a predição da rede(treinamento)
-        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(treinamento)
+        # Dataset que contém a parcela dos mses nos quais...
+        #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede(treinamento)
+        #[1] = ... os SPEIs foram preditos(treinamento)
     trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
 
-        #[0] = Dataset que contem a parcela dos meses nos quais os SPEIs foram utilizados para alimentar a predição da rede(teste)
-        #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(teste)
+        # Dataset que contém a parcela dos mses nos quais...
+        #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede(teste)
+        #[1] = ... os SPEIs foram preditos(teste)
     testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
 
     if training:
