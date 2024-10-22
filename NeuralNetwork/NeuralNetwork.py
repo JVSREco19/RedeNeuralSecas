@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import json
+import pprint
 
 from NeuralNetwork.DataProcess import splitSpeiData
 from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph
@@ -58,8 +59,7 @@ def cria_IN_OUT(data, janela):
     # print(IN_final)
     return IN_final, OUT_final
 
-def FitNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
-
+def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
         #[0] = lista de dados do SPEI referentes à parcela de treinamento (80%)
         #[1] = lista de dados do SPEI referentes à parcela de teste (20%)
         #[2] = lista de datas referentes à parcela de treinamento (80%)
@@ -83,14 +83,15 @@ def FitNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
         #[1] = Dataset que contem a parcela dos meses nos quais os SPEIs foram preditos(teste)
     testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
 
-    model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
+    if training:
+        model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
 
         #faz previsões e calcula os erros
     trainPredictValues = model.predict(trainDataForPrediction, verbose = 0)
     testPredictValues  = model.predict(testDataForPrediction , verbose = 0)
 
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
-    testErrors = getError(testDataTrueValues, testPredictValues)
+    testErrors  = getError(testDataTrueValues , testPredictValues)
     
     if city_cluster_name not in metricsCompendium:
         metricsCompendium[city_cluster_name] = {}
@@ -107,47 +108,14 @@ def FitNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f'\t\t\tTEST : {testErrors}')
 
     showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showSpeiTest(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    
+    if training:
+        showSpeiTest(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+        
     showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
 
     return model, metricsCompendium
-
-def ApplyTraining(xlsx, city_cluster_name, city_for_training, city_for_predicting, model, showImages, city):
-
-    trainData, testData, monthTrainData, monthTestData, split = splitSpeiData(xlsx)
-
-    trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(trainData, totalPoints)
-    testDataForPrediction , testDataTrueValues  = cria_IN_OUT(testData , totalPoints)
-
-    trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
-    testMonthsForPrediction , testMonthForPredictedValues  = cria_IN_OUT(monthTestData , totalPoints)
-
-    trainPredictValues = model.predict(trainDataForPrediction, verbose = 0)
-    testPredictValues  = model.predict(testDataForPrediction , verbose = 0)
-
-    trainErrors = getError(trainDataTrueValues, trainPredictValues)
-    testErrors  = getError(testDataTrueValues , testPredictValues)
-    
-    if city_cluster_name not in metricsCompendium:
-        metricsCompendium[city_cluster_name] = {}
-    if city_for_training not in metricsCompendium[city_cluster_name]:
-        metricsCompendium[city_cluster_name][city_for_training] = {}
-    if city_for_predicting not in metricsCompendium[city_cluster_name][city_for_training]:
-        metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {"trainErrors": [], "testErrors": []}
-    
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]["trainErrors"] = trainErrors
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]["testErrors"]  = testErrors
-    
-    print("\t--------------Result for " +  city_for_training + "'s " + city_for_predicting + "---------------")
-    print(f'\t\tTRAIN: {trainErrors}')    
-    print(f'\t\tTEST : {testErrors}')
-
-    showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    
-    return metricsCompendium
 
 def PrintMetricsList(metricsCompendium):
     import pandas as pd
