@@ -1,6 +1,6 @@
 #Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
 from NeuralNetwork.NeuralNetwork import ApplyTraining, FitNeuralNetwork, PrintMetricsList
-from NeuralNetwork.VisualRepresentation import DrawMetricsBoxPlots, DrawMetricsBarPlots
+from NeuralNetwork.VisualRepresentation import DrawMetricsBoxPlots, DrawMetricsBarPlots, DrawMetricsHistograms
 
 import tensorflow as tf
 import os
@@ -71,5 +71,6 @@ print('APPLYING: END')
 
 metrics_df = PrintMetricsList(metricsCompendium)
 
-DrawMetricsBoxPlots(metrics_df, SHOW_IMAGES)
-DrawMetricsBarPlots(metrics_df, SHOW_IMAGES)
+DrawMetricsBoxPlots  (metrics_df, SHOW_IMAGES)
+DrawMetricsBarPlots  (metrics_df, SHOW_IMAGES)
+DrawMetricsHistograms(metrics_df, SHOW_IMAGES)

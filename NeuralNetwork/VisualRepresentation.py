@@ -11,9 +11,9 @@ def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city
         plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}')
     elif city_for_training:
         FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/'
-        plt.savefig(FILEPATH + filename + f' - Model {city_for_training}')
+        plt.savefig(FILEPATH + filename + f' - Model {city_for_training}.png')
     else:
-        FILEPATH = f'./Images/'
+        FILEPATH = './Images/'
         plt.savefig(FILEPATH + filename, bbox_inches="tight")
 
 def showSpeiData(xlsx, test_data, split, city_cluster_name, city_for_training, city_for_predicting, showImages):
@@ -170,7 +170,7 @@ def DrawMetricsBoxPlots(metrics_df, showImages):
             if(showImages):
                 plt.show()
             
-            saveFig(plt, f'BoxPlots. {metric_name}. {metric_type}.')
+            saveFig(plt, f'Box Plots. {metric_name}. {metric_type}.')
             plt.close()
 
 def DrawMetricsBarPlots(metrics_df, showImages):
@@ -205,5 +205,40 @@ def DrawMetricsBarPlots(metrics_df, showImages):
             if(showImages):
                 plt.show()
             
-            saveFig(plt, f'BarPlots. {metric_name}. {metric_type}.')
+            saveFig(plt, f'Bar Plots. {metric_name}. {metric_type}.')
             plt.close()
+
+def DrawMetricsHistograms(metrics_df, showImages):
+    metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+    
+    # Creation of the empty dictionary:
+    list_of_metrics_names = ['MAE', 'RMSE']
+    list_of_metrics_types = ['Treinamento', 'Validação']
+    list_of_models_names  = metrics_df['Municipio Treinado'].unique()
+    
+    metrics_dict = dict.fromkeys(list_of_metrics_names)
+    for metric_name in metrics_dict.keys():
+        metrics_dict[metric_name] = dict.fromkeys(list_of_metrics_types)
+        
+        for metric_type in metrics_dict[metric_name].keys():
+            metrics_dict[metric_name][metric_type] = dict.fromkeys(list_of_models_names)
+    
+    # Filling the dictionary:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:
+            for model_name in list_of_models_names:
+                metrics_dict[metric_name][metric_type][model_name] = metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list()
+    
+    # Plotting the graphs:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:
+            for model_name in list_of_models_names:
+                plt.hist(metrics_dict[metric_name][metric_type][model_name])
+                plt.title(f'Historgram of {metric_name} ({metric_type}) of model {model_name}')
+                plt.xlabel(f'{metric_name} {metric_type}')
+                plt.ylabel('Frequency')
+                if(showImages):
+                    plt.show()
+                
+                saveFig(plt, f'Histograms. {metric_name}. {metric_type}.', model_name, model_name)
+                plt.close()
