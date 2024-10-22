@@ -6,7 +6,8 @@ from sklearn.model_selection import train_test_split
 with open("./NeuralNetwork/config.json") as arquivo:
     dados_json = json.load(arquivo)
 
-parcelDataTrain= dados_json['parcelDataTrain']
+parcelDataTrain  = dados_json['parcelDataTrain']
+predictionPoints = dados_json['predictionPoints']
 
 def readXlsx(xlsx):
     df = pd.read_excel(xlsx)
@@ -26,3 +27,18 @@ def splitSpeiData(xlsx):
     split = len(speiTrainData)
     
     return speiTrainData, speiTestData, monthTrainData, monthTestData, split
+
+def cria_IN_OUT(data, janela):
+    OUT_indices = np.arange(janela, len(data), janela)
+    OUT = data[OUT_indices]
+    lin_x = len(OUT)
+    IN = data[range(janela*lin_x)]
+   
+    IN = np.reshape(IN, (lin_x, janela, 1))
+
+    OUT_final = IN[:,-predictionPoints:,0]
+    IN_final = IN[:,:-predictionPoints,:]
+    # print(OUT_final)
+    # print('-------------------------\n')
+    # print(IN_final)
+    return IN_final, OUT_final

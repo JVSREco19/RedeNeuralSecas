@@ -1,9 +1,7 @@
 import tensorflow as tf
-import numpy as np
 import json
-import pprint
 
-from NeuralNetwork.DataProcess import splitSpeiData
+from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
 from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph
 from NeuralNetwork.Metrics import getError
 
@@ -43,21 +41,6 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     DrawModelsLineGraph(history, city_cluster_name, city_for_training, showImages)
     
     return model
-
-def cria_IN_OUT(data, janela):
-    OUT_indices = np.arange(janela, len(data), janela)
-    OUT = data[OUT_indices]
-    lin_x = len(OUT)
-    IN = data[range(janela*lin_x)]
-   
-    IN = np.reshape(IN, (lin_x, janela, 1))
-
-    OUT_final = IN[:,-predictionPoints:,0]
-    IN_final = IN[:,:-predictionPoints,:]
-    # print(OUT_final)
-    # print('-------------------------\n')
-    # print(IN_final)
-    return IN_final, OUT_final
 
 def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
         #[0] = lista de dados do SPEI referentes à parcela de treinamento (80%)
