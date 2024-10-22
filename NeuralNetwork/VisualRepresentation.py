@@ -1,14 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import statistics
-import pprint
 
 from NeuralNetwork.DataProcess import readXlsx
 
 def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
     if city_for_predicting:
         FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
-        plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}')
+        plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}.png')
     elif city_for_training:
         FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/'
         plt.savefig(FILEPATH + filename + f' - Model {city_for_training}.png')
@@ -240,3 +239,17 @@ def DrawMetricsHistograms(metrics_df, showImages):
                 
                 saveFig(plt, f'Histograms. {metric_name}. {metric_type}.', model_name, model_name)
                 plt.close()
+
+def ShowResidualPlots(true_values, predicted_values, dataset_type, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    residuals = true_values - predicted_values
+    
+    plt.scatter(predicted_values, residuals, alpha=0.5)
+    plt.axhline(y=0, color='r', linestyle='--')
+    plt.xlabel('Predicted Values')
+    plt.ylabel('Residuals')
+    plt.title(f'Residual Plot for {dataset_type} Data. Model {city_for_training} applied to {city_for_predicting}.')
+    if(showImages):
+        plt.show()
+    
+    saveFig(plt, f'Residual Plots {dataset_type}', city_cluster_name, city_for_training, city_for_predicting)
+    plt.close()

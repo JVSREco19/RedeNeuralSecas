@@ -1,8 +1,9 @@
 import tensorflow as tf
 import json
+import matplotlib.pyplot as plt
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph, ShowResidualPlots
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -94,8 +95,10 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f'\t\t\tTRAIN: {trainErrors}')    
     print(f'\t\t\tTEST : {testErrors}')
 
-    showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    ShowResidualPlots(trainDataTrueValues, trainPredictValues, 'Training', city_cluster_name, city_for_training, city_for_predicting, showImages)
+    ShowResidualPlots(testDataTrueValues , testPredictValues , 'Testing' , city_cluster_name, city_for_training, city_for_predicting, showImages)
     
+    showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     if training:
         showSpeiTest(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
         
