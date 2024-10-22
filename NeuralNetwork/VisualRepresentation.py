@@ -117,48 +117,25 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     saveFig(plt, 'distribuiçãoDoSPEI', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
 
-def showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training, showImages):
-    # MAE plot:
-    plt.figure()
-    plt.plot(history.history['mae'],'k')
-    plt.xlabel('Epochs')
-    plt.ylabel('Mean Absolute Error (MAE)')
-    plt.legend(['loss'])
-    plt.title(f'{city_for_training}: MAE')
+def DrawModelsLineGraph(history, city_cluster_name, city_for_training, showImages):
+    metrics_dict = {'mae' : 'Mean Absolute Error',
+                    'rmse': 'Root Mean Squared Error',
+                    'mse' : 'Mean Squared Error'
+                    }
     
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'MAE', city_cluster_name, city_for_training)
-    plt.close()
-    
-    # RMSE plot:
-    plt.figure()
-    plt.plot(history.history['root_mean_squared_error'],'k')
-    plt.xlabel('Epochs')
-    plt.ylabel('Root Mean Squared Error (RMSE)')
-    plt.legend(['loss'])
-    plt.title(f'{city_for_training}: RMSE')
-    
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'RMSE', city_cluster_name, city_for_training)
-    plt.close()
-    
-    # MSE plot:
-    plt.figure()
-    plt.plot(history.history['mse'],'k')
-    plt.xlabel('Epochs')
-    plt.ylabel('Mean Squared Error (MSE)')
-    plt.legend(['loss'])
-    plt.title(f'{city_for_training}: MSE')
-    
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, 'MSE', city_cluster_name, city_for_training)
-    plt.close()
+    for metric_shortname, metric_longname in metrics_dict.items():
+        plt.figure()
+        plt.plot(history.history[metric_shortname],'k')
+        plt.xlabel('Epochs')
+        plt.ylabel(f'{metric_longname} ({metric_shortname.upper()})')
+        plt.legend(['loss'])
+        plt.title(f'{city_for_training}: {metric_shortname.upper()}')
+        
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, f'Line Graph. {metric_shortname.upper()}', city_cluster_name, city_for_training)
+        plt.close()
     
 def DrawMetricsBoxPlots(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.

@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, showNeuralNetworkModelMetrics
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -23,7 +23,7 @@ def createNeuralNetwork(hidden_units, dense_units, input_shape, activation):
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
-    model.compile(loss='mse', metrics=['mae', tf.keras.metrics.RootMeanSquaredError(), 'mse'], optimizer='adam')
+    model.compile(loss='mse', metrics=['mae', tf.keras.metrics.RootMeanSquaredError(name='rmse'), 'mse'], optimizer='adam')
     #to be added: tf.keras.metrics.R2Score(name='r2_score', dtype=tf.float32)
     return model
 
@@ -39,7 +39,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     history=model.fit(trainDataForPrediction, trainDataTrueValues, epochs=numberOfEpochs, batch_size=1, verbose=0)
     print(f'\t\tFitted neural network model for {city_for_training}.')
     
-    showNeuralNetworkModelMetrics(history, city_cluster_name, city_for_training, showImages)
+    DrawModelsLineGraph(history, city_cluster_name, city_for_training, showImages)
     
     return model
 
