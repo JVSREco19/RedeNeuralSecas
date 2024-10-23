@@ -2,7 +2,7 @@ import tensorflow as tf
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph, ShowResidualPlots
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelLineGraph, ShowResidualPlots
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -37,7 +37,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     history=model.fit(trainDataForPrediction, trainDataTrueValues, epochs=numberOfEpochs, batch_size=1, verbose=0)
     print(f'\t\tFitted neural network model for {city_for_training}.')
     
-    DrawModelsLineGraph(history, city_cluster_name, city_for_training, showImages)
+    DrawModelLineGraph(history, city_cluster_name, city_for_training, showImages)
     
     return model
 

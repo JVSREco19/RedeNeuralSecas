@@ -114,26 +114,36 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     saveFig(plt, 'distribuiçãoDoSPEI', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
 
-def DrawModelsLineGraph(history, city_cluster_name, city_for_training, showImages):
-    metrics_dict = {'mae' : 'Mean Absolute Error',
-                    'rmse': 'Root Mean Squared Error',
-                    'mse' : 'Mean Squared Error',
-                    'r2'  : 'R²'
-                    }
+def DrawModelLineGraph(history, city_cluster_name, city_for_training, showImages):
     
-    for metric_shortname, metric_longname in metrics_dict.items():
-        plt.figure()
-        plt.plot(history.history[metric_shortname],'k')
-        plt.xlabel('Epochs (training)')
-        plt.ylabel(f'{metric_longname} ({metric_shortname.upper()})')
-        plt.legend(['loss'])
-        plt.title(f'{city_for_training}: {metric_shortname.upper()}')
-        
-        if(showImages):
-            plt.show()
-        
-        saveFig(plt, f'Line Graph. {metric_shortname.upper()}', city_cluster_name, city_for_training)
-        plt.close()
+    fig, axs = plt.subplots(2, 2, sharex=True)
+    
+    axs[0, 0].plot(history.history['mae'] , 'tab:blue')
+    axs[0, 0].set_title('MAE')
+    axs[0, 0].legend(['loss'])
+    
+    axs[0, 1].plot(history.history['rmse'], 'tab:orange')
+    axs[0, 1].set_title('RMSE')
+    axs[0, 1].legend(['loss'])
+    
+    axs[1, 0].plot(history.history['mse'] , 'tab:green')
+    axs[1, 0].set_title('MSE')
+    axs[1, 0].legend(['loss'])
+    
+    axs[1, 1].plot(history.history['r2']  , 'tab:red')
+    axs[1, 1].set_title('R²')
+    axs[1, 1].legend(['explanation power'])
+    
+    for ax in axs[1]: # axs[1] = 2nd row
+        ax.set(xlabel='Epochs (training)')
+    
+    plt.suptitle(f'Model {city_for_training}')
+
+    if(showImages):
+        plt.show()
+    
+    saveFig(plt, 'Line Graph.', city_cluster_name, city_for_training)
+    plt.close()
     
 def DrawMetricsBoxPlots(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
