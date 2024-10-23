@@ -117,13 +117,14 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
 def DrawModelsLineGraph(history, city_cluster_name, city_for_training, showImages):
     metrics_dict = {'mae' : 'Mean Absolute Error',
                     'rmse': 'Root Mean Squared Error',
-                    'mse' : 'Mean Squared Error'
+                    'mse' : 'Mean Squared Error',
+                    'r2'  : 'R²'
                     }
     
     for metric_shortname, metric_longname in metrics_dict.items():
         plt.figure()
         plt.plot(history.history[metric_shortname],'k')
-        plt.xlabel('Epochs')
+        plt.xlabel('Epochs (training)')
         plt.ylabel(f'{metric_longname} ({metric_shortname.upper()})')
         plt.legend(['loss'])
         plt.title(f'{city_for_training}: {metric_shortname.upper()}')
@@ -174,7 +175,7 @@ def DrawMetricsBarPlots(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
     
     # Creation of the empty dictionary:
-    list_of_metrics_names = ['MAE', 'RMSE', 'MSE'] # To-do: implement also R²
+    list_of_metrics_names = ['MAE', 'RMSE', 'MSE', 'R^2']
     list_of_metrics_types = ['Treinamento', 'Validação']
     list_of_models_names  = metrics_df['Municipio Treinado'].unique()
     

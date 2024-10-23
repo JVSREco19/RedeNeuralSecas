@@ -1,6 +1,5 @@
 import tensorflow as tf
 import json
-import matplotlib.pyplot as plt
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
 from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelsLineGraph, ShowResidualPlots
@@ -19,19 +18,18 @@ hiddenUnits      = dados_json['hiddenUnits']
 
 def createNeuralNetwork(hidden_units, dense_units, input_shape, activation):
     model = tf.keras.Sequential()   
-    model.add(tf.keras.layers.LSTM(hidden_units,input_shape=input_shape,activation=activation[0]))
+    model.add(tf.keras.Input(shape=input_shape))
+    model.add(tf.keras.layers.LSTM(hidden_units,activation=activation[0]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
     model.add(tf.keras.layers.Dense(units=dense_units,activation=activation[1]))
-    model.compile(loss='mse', metrics=['mae', tf.keras.metrics.RootMeanSquaredError(name='rmse'), 'mse'], optimizer='adam')
-    #to be added: tf.keras.metrics.R2Score(name='r2_score', dtype=tf.float32)
+    model.compile(loss='mse', metrics=['mae', tf.keras.metrics.RootMeanSquaredError(name='rmse'), 'mse', tf.keras.metrics.R2Score(name="r2")], optimizer='adam')
     return model
 
 def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting):
 
     model = createNeuralNetwork( hidden_units= hiddenUnits, dense_units=predictionPoints, 
                                 input_shape=(totalPoints-predictionPoints,1), activation=['relu','sigmoid'])
-    #print(model.summary())
     print(f'\tCreated neural network model for {city_for_training}.')
 
     #treina a rede e mostra o gráfico do loss
@@ -130,10 +128,7 @@ def PrintMetricsList(metricsCompendium):
                                                dict_of_measurement_types['testErrors' ]['R^2'],
                                                dict_of_measurement_types['trainErrors']['R^2']
                                                ]
-         #       print(list_of_metrics_of_one_city)
                 list_of_all_metrics_city_by_city.append(list_of_metrics_of_one_city)
-    
-    #print(list_of_metrics_of_one_city)
     
     df = pd.DataFrame(list_of_all_metrics_city_by_city,
                       columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
