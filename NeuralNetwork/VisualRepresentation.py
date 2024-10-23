@@ -144,7 +144,15 @@ def DrawModelLineGraph(history, city_cluster_name, city_for_training, showImages
     
     saveFig(plt, 'Line Graph.', city_cluster_name, city_for_training)
     plt.close()
-    
+
+def define_box_properties(plot_name, color_code, label):
+	for k, v in plot_name.items():
+		plt.setp(plot_name.get(k), color=color_code)
+		
+	# use plot function to draw a small line to name the legend.
+	plt.plot([], c=color_code, label=label)
+	plt.legend()
+
 def DrawMetricsBoxPlots(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
     
@@ -168,18 +176,26 @@ def DrawMetricsBoxPlots(metrics_df, showImages):
     
     # Plotting the graphs:
     for metric_name in list_of_metrics_names:
-        for metric_type in list_of_metrics_types:
-            plt.boxplot(metrics_dict[metric_name][metric_type].values(), tick_labels=metrics_dict[metric_name][metric_type].keys())
-            plt.xlabel('Machine Learning models')
-            plt.ylabel(f'{metric_name} {metric_type} values')
-            plt.title(f'Comparison of performance of different models ({metric_name})')
-            plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
-            plt.xticks(rotation=45)
-            if(showImages):
-                plt.show()
-            
-            saveFig(plt, f'Box Plots. {metric_name}. {metric_type}.')
-            plt.close()
+        training_plot   = plt.boxplot(metrics_dict[metric_name]['Treinamento'].values(), positions=np.array(np.arange(len(metrics_dict[metric_name]['Treinamento' ].values())))*2.0-0.35)
+        validation_plot = plt.boxplot(metrics_dict[metric_name]['Validação'  ].values(), positions=np.array(np.arange(len(metrics_dict[metric_name]['Validação'   ].values())))*2.0+0.35)
+    
+        # setting colors for each groups
+        define_box_properties(training_plot  , '#D7191C', 'Training'  )
+        define_box_properties(validation_plot, '#2C7BB6', 'Validation')
+    
+        # set the x label values
+        plt.xticks(np.arange(0, len(metrics_dict[metric_name]['Validação'].keys()) * 2, 2), metrics_dict[metric_name]['Validação'].keys(), rotation=45)
+        
+        plt.title(f'Comparison of performance of different models ({metric_name})')
+        plt.xlabel('Machine Learning models')
+        plt.ylabel(f'{metric_name} values')
+        plt.grid(axis='y', linestyle=':', color='gray', linewidth=0.7)
+        
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, f'Box Plots. {metric_name}.')
+        plt.close()
 
 def DrawMetricsBarPlots(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
@@ -203,6 +219,7 @@ def DrawMetricsBarPlots(metrics_df, showImages):
                 average = statistics.mean( metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list() )
                 metrics_averages_dict[metric_name][metric_type][model_name] = average
     
+    # Plotting the graphs:
     for metric_name in list_of_metrics_names:
         Y_axis = np.arange(len(list_of_models_names)) 
         
@@ -212,7 +229,7 @@ def DrawMetricsBarPlots(metrics_df, showImages):
         
         plt.yticks(Y_axis, list_of_models_names, rotation=45)
         plt.ylabel("Machine Learning models")
-        plt.xlabel(metric_name if metric_name != 'R^2' else 'R²')
+        plt.xlabel(f'Average {metric_name}' if metric_name != 'R^2' else 'Average R²')
         plt.title ("Comparison of performance of different models")
         plt.legend()
         
