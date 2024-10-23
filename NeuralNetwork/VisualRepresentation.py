@@ -203,18 +203,24 @@ def DrawMetricsBarPlots(metrics_df, showImages):
                 average = statistics.mean( metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list() )
                 metrics_averages_dict[metric_name][metric_type][model_name] = average
     
-    # Plotting the graphs:
     for metric_name in list_of_metrics_names:
-        for metric_type in list_of_metrics_types:        
-            plt.barh(metrics_averages_dict[metric_name][metric_type].keys(), metrics_averages_dict[metric_name][metric_type].values(), color ='maroon')
-            plt.xlabel(f'Average {metric_name} {metric_type}')
-            plt.ylabel("Machine Learning models")
-            plt.title(f'Comparison of performance of different models ({metric_name})')
-            if(showImages):
-                plt.show()
-            
-            saveFig(plt, f'Bar Plots. {metric_name}. {metric_type}.')
-            plt.close()
+        Y_axis = np.arange(len(list_of_models_names)) 
+        
+        # 0.4: width of the bars; 0.2: distance between the groups
+        plt.barh(Y_axis - 0.2, metrics_averages_dict[metric_name]['Treinamento'].values(), 0.4, label = 'Training')
+        plt.barh(Y_axis + 0.2, metrics_averages_dict[metric_name]['Validação']  .values()  , 0.4, label = 'Validation')
+        
+        plt.yticks(Y_axis, list_of_models_names, rotation=45)
+        plt.ylabel("Machine Learning models")
+        plt.xlabel(metric_name if metric_name != 'R^2' else 'R²')
+        plt.title ("Comparison of performance of different models")
+        plt.legend()
+        
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, f'Bar Plots. {metric_name}.')
+        plt.close()
 
 def DrawMetricsHistograms(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
