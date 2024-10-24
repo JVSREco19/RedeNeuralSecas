@@ -116,7 +116,7 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
 
 def DrawModelLineGraph(history, city_cluster_name, city_for_training, showImages):
     
-    fig, axs = plt.subplots(2, 2, sharex=True)
+    fig, axs = plt.subplots(nrows=2, ncols=2, sharex=True)
     
     axs[0, 0].plot(history.history['mae'] , 'tab:blue')
     axs[0, 0].set_title('MAE')
@@ -259,20 +259,20 @@ def DrawMetricsHistograms(metrics_df, showImages):
         for metric_type in list_of_metrics_types:
             for model_name in list_of_models_names:
                 metrics_dict[metric_name][metric_type][model_name] = metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list()
-    
+
     # Plotting the graphs:
     for metric_name in list_of_metrics_names:
-        for metric_type in list_of_metrics_types:
-            for model_name in list_of_models_names:
-                plt.hist(metrics_dict[metric_name][metric_type][model_name])
-                plt.title(f'Historgram of {metric_name} ({metric_type}) of model {model_name}')
-                plt.xlabel(f'{metric_name} {metric_type}')
-                plt.ylabel('Frequency')
-                if(showImages):
-                    plt.show()
-                
-                saveFig(plt, f'Histograms. {metric_name}. {metric_type}.', model_name, model_name)
-                plt.close()
+        for model_name in list_of_models_names:
+            x = [ metrics_dict[metric_name]['Treinamento'][model_name], metrics_dict[metric_name]['Validação'][model_name] ]
+            plt.hist(x, density=True, histtype='bar', color=['red', 'green'], label=['Treinamento', 'Validação'])
+            plt.legend()
+            plt.title(f'Histogram of {metric_name} of model {model_name}')
+            
+            if(showImages):
+                plt.show()
+            
+            saveFig(plt, f'Histograms. {metric_name}. {metric_type}.', model_name, model_name)
+            plt.close()
 
 def ShowResidualPlots(true_values, predicted_values, dataset_type, city_cluster_name, city_for_training, city_for_predicting, showImages):
     residuals = true_values - predicted_values
