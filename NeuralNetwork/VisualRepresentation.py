@@ -154,9 +154,7 @@ def define_box_properties(plot_name, color_code, label):
 	plt.plot([], c=color_code, label=label)
 	plt.legend()
 
-def DrawMetricsBoxPlots(metrics_df, showImages):
-    metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-    
+def DrawMetricsBoxPlots(metrics_df, showImages):   
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE', 'MSE']
     list_of_metrics_types = ['Treinamento', 'Validação']
@@ -199,8 +197,6 @@ def DrawMetricsBoxPlots(metrics_df, showImages):
         plt.close()
 
 def DrawMetricsBarPlots(metrics_df, showImages):
-    metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-    
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE', 'MSE', 'R^2']
     list_of_metrics_types = ['Treinamento', 'Validação']
@@ -249,8 +245,6 @@ def define_normal_distribution(axis, x_values):
     return x, p
 
 def DrawMetricsHistograms(metrics_df, showImages):
-    metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-    
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE']
     list_of_metrics_types = ['Treinamento', 'Validação']
@@ -335,3 +329,53 @@ def ShowR2ScatterPlots(true_values, predicted_values, dataset_type, city_cluster
     
     saveFig(plt, f'R² Scatter Plot {dataset_type}', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
+
+def DrawMetricsRadarPlots(metrics_df, showImages):
+    # Creation of the empty dictionary:
+    list_of_metrics_names = ['MAE', 'RMSE', 'MSE', 'R^2']
+    list_of_metrics_types = ['Treinamento', 'Validação']
+    list_of_models_names  = metrics_df['Municipio Treinado'].unique()
+    
+    metrics_averages_dict = dict.fromkeys(list_of_metrics_names)
+    for metric_name in metrics_averages_dict.keys():
+        metrics_averages_dict[metric_name] = dict.fromkeys(list_of_metrics_types)
+        
+        for metric_type in metrics_averages_dict[metric_name].keys():
+            metrics_averages_dict[metric_name][metric_type] = dict.fromkeys(list_of_models_names)
+    
+    # Filling the dictionary:
+    for metric_name in list_of_metrics_names:
+        for metric_type in list_of_metrics_types:
+            for model_name in list_of_models_names:
+                average = statistics.mean( metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list() )
+                metrics_averages_dict[metric_name][metric_type][model_name] = average
+    
+    # Plotting the graphs:
+    for metric_type in list_of_metrics_types:
+        for model_name in list_of_models_names:
+            values     = [ metrics_averages_dict['MAE' ][metric_type][model_name],
+                           metrics_averages_dict['RMSE'][metric_type][model_name],
+                           metrics_averages_dict['MSE' ][metric_type][model_name],
+                           metrics_averages_dict['R^2' ][metric_type][model_name] ]
+            
+            # Compute angle for each category:
+            angles = np.linspace(0, 2 * np.pi, len(list_of_metrics_names), endpoint=False).tolist() + [0]
+            
+            plt.polar (angles, values + values[:1], color='red', linewidth=1)
+            plt.fill  (angles, values + values[:1], color='red', alpha=0.25)
+            plt.xticks(angles[:-1], list_of_metrics_names)
+            
+            # To prevent the radial labels from overlapping:
+            ax = plt.subplot(111, polar=True)
+            ax.set_theta_offset(np.pi / 2)   # Set the offset
+            ax.set_theta_direction(-1)       # Set direction to clockwise
+    
+            
+            plt.title (f'Performance of model {model_name} ({metric_type})')
+            plt.tight_layout()
+            
+            if(showImages):
+                plt.show()
+                
+            saveFig(plt, f'Radar Plots. {model_name}. {metric_name}. {metric_type}.', model_name, model_name)
+            plt.close()
