@@ -309,9 +309,29 @@ def ShowResidualPlots(true_values, predicted_values, dataset_type, city_cluster_
     plt.axhline(y=0, color='r', linestyle='--')
     plt.xlabel('Predicted Values')
     plt.ylabel('Residuals')
-    plt.title(f'Residual Plot for {dataset_type} Data. Model {city_for_training} applied to {city_for_predicting}.')
+    plt.title(f'Residual Plot for {dataset_type} data. Model {city_for_training} applied to {city_for_predicting}.')
     if(showImages):
         plt.show()
     
     saveFig(plt, f'Residual Plots {dataset_type}', city_cluster_name, city_for_training, city_for_predicting)
+    plt.close()
+    
+def ShowR2ScatterPlots(true_values, predicted_values, dataset_type, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    
+    plt.scatter(true_values, predicted_values, label = 'R²')
+    
+    # Generates a single line by creating `x_vals`, a sequence of 100 evenly spaced values between the min and max values in true_values
+    flattened_values = np.ravel(true_values)
+    x_vals = np.linspace(min(flattened_values), max(flattened_values), 100)
+    plt.plot(x_vals, x_vals, color='red', label='x=y')  # Line will only appear once
+    
+    plt.title(f'R² {dataset_type} data. Model {city_for_training} applied to {city_for_predicting}.')
+    plt.xlabel('True values')
+    plt.ylabel('Predicted values')
+    plt.legend()
+        
+    if(showImages):
+        plt.show()
+    
+    saveFig(plt, f'R² Scatter Plot {dataset_type}', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()

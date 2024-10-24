@@ -2,7 +2,7 @@ import tensorflow as tf
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelLineGraph, ShowResidualPlots
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelLineGraph, ShowResidualPlots, ShowR2ScatterPlots
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -95,6 +95,9 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
 
     ShowResidualPlots(trainDataTrueValues, trainPredictValues, 'Training', city_cluster_name, city_for_training, city_for_predicting, showImages)
     ShowResidualPlots(testDataTrueValues , testPredictValues , 'Testing' , city_cluster_name, city_for_training, city_for_predicting, showImages)
+    
+    ShowR2ScatterPlots(trainDataTrueValues, trainPredictValues, 'Training', city_cluster_name, city_for_training, city_for_predicting, showImages)
+    ShowR2ScatterPlots(testDataTrueValues , testPredictValues , 'Testing' , city_cluster_name, city_for_training, city_for_predicting, showImages)
     
     showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     if training:
