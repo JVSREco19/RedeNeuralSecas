@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import statistics
+from scipy.stats import norm
 
 from NeuralNetwork.DataProcess import readXlsx
 
@@ -239,6 +240,14 @@ def DrawMetricsBarPlots(metrics_df, showImages):
         saveFig(plt, f'Bar Plots. {metric_name}.')
         plt.close()
 
+def define_normal_distribution(axis, x_values):
+    mu, std = norm.fit(x_values)
+    xmin, xmax = axis.get_xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p = norm.pdf(x, mu, std)
+    
+    return x, p
+
 def DrawMetricsHistograms(metrics_df, showImages):
     metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
     
@@ -268,9 +277,17 @@ def DrawMetricsHistograms(metrics_df, showImages):
         fig, axs = plt.subplots(nrows=1, ncols=2)
         
         axs[0].hist(x_MAE , density=True, histtype='bar', color=['red', 'green'], label=['Treinamento', 'Validação'])
+        x, p = define_normal_distribution(axs[0], x_MAE[0])
+        axs[0].plot(x, p, 'red', linewidth=2)
+        x, p = define_normal_distribution(axs[0], x_MAE[1])
+        axs[0].plot(x, p, 'green', linewidth=2)
         axs[0].set_title('MAE')
         
         axs[1].hist(x_RMSE, density=True, histtype='bar', color=['red', 'green'], label=['Treinamento', 'Validação'])
+        x, p = define_normal_distribution(axs[1], x_RMSE[0])
+        axs[1].plot(x, p, 'red', linewidth=2)
+        x, p = define_normal_distribution(axs[1], x_RMSE[1])
+        axs[1].plot(x, p, 'green', linewidth=2)
         axs[1].set_title('RMSE')
         
         for ax in axs.flat:
