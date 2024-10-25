@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import statistics
 from scipy.stats import norm
+import pprint
 
 from NeuralNetwork.DataProcess import readXlsx
 
@@ -42,7 +43,7 @@ def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, c
     
     speiValues, speiNormalizedValues, monthValues =  readXlsx(xlsx)
 
-    y1positive=np.array(speiValues)>=0
+    y1positive = np.array(speiValues)>=0
     y1negative = np.array(speiValues)<=0
 
     plt.figure()
@@ -390,3 +391,62 @@ def drawMetricsRadarPlots(metrics_df, showImages):
                 
             saveFig(plt, f'Radar Plots. {model_name}. {metric_name}. {metric_type}.', model_name, model_name)
             plt.close()
+
+def showRMSETaylorDiagrams(training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    # Standard Deviation:
+    train_predictions_std_dev = np.std(training_predicted_values)
+    test_predictions_std_dev  = np.std(testing_predicted_values )
+    
+    print(f'\t\t\tTRAIN: STD Dev {train_predictions_std_dev}')
+    print(f'\t\t\tTEST : STD Dev {test_predictions_std_dev }')
+    
+    # Correlation Coefficient:
+    train_data_model_corr = np.corrcoef(training_predicted_values, training_true_values)[0, 1]
+    test_data_model_corr  = np.corrcoef(testing_predicted_values , testing_true_values )[0, 1]
+    
+    print(f'\t\t\tTRAIN: correlation {train_data_model_corr} ')
+    print(f'\t\t\tTEST : correlation {test_data_model_corr}')
+    
+    # Plotting the graph: 
+    std_ref = 1.0                                                    # Reference standard deviation
+    std_dev = [train_predictions_std_dev, test_predictions_std_dev]  # Standard deviations of models
+    corr    = [train_data_model_corr    , test_data_model_corr    ]  # Correlation coefficients of models
+    
+    # Create an empty Taylor Diagram:
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+    ax.set_thetalim(0, np.pi / 2)    # restrict the view of the polar plot to the first quadrant
+    ax.set_theta_zero_location('E')  # Set 0 degrees at the right
+    ax.set_theta_direction(1)        # Counter-clockwise direction
+    
+    ax.set_ylim(min(std_dev) * 0.8, max(std_dev) * 1.2)   # 20% margin
+    ax.set_yticks(np.arange(0, max(std_dev) * 1.2, 0.1))  # Adjust tick marks accordingly
+    
+    correlation_range = np.arange(0, 1.1, 0.1)  # Values from 0 to 1, inclusive
+    theta = np.arccos(correlation_range)        # Convert to angles
+    ax.set_xticks(theta)                        # Set the ticks at calculated angles
+    ax.set_xticklabels([f'{c:.1f}' for c in correlation_range], color='blue')  # Use correlation values as labels
+    
+    ax.yaxis.grid(color='black')
+    ax.xaxis.grid(color='blue' )
+    
+    ax.set_xlabel('Standard Deviation', labelpad=20)
+    ax.set_ylabel('Standard Deviation')
+    #ax.text(np.pi / 4, 1.7, 'Pearson Correlation Coefficient', rotation=-45, ha='center', va='center', color='blue')
+    ax.set_title(f'Taylor Diagram of model {city_for_training} applied to {city_for_predicting}')
+    
+    # Fill in the Taylor Diagram:
+    theta = np.arccos(corr)
+    ax.plot(theta, std_dev,  'ro', label='Models')
+    ax.plot( [0], [std_ref], 'mo', label='Reference')
+    plt.legend()
+    
+    for i in range(len(std_dev)):
+        ax.text(theta[i], std_dev[i] + 0.05, 'test/train', ha='center', va='bottom')
+    
+    fig.tight_layout()
+    
+    if(showImages):
+        plt.show()
+        
+    saveFig(plt, 'Taylor Diagram.', city_cluster_name, city_for_training, city_for_predicting)
+    plt.close()

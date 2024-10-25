@@ -1,8 +1,9 @@
 import tensorflow as tf
+import pandas     as pd
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots, showRMSETaylorDiagrams
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -27,7 +28,6 @@ def createNeuralNetwork(hidden_units, dense_units, input_shape, activation):
     return model
 
 def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting):
-
     model = createNeuralNetwork( hidden_units= hiddenUnits, dense_units=predictionPoints, 
                                 input_shape=(totalPoints-predictionPoints,1), activation=['relu','sigmoid'])
     print(f'\tCreated neural network model for {city_for_training}.')
@@ -43,56 +43,53 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
 
 def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
         #[0] = lista de dados do SPEI referentes à parcela de treinamento (80%)
-        #[1] = lista de dados do SPEI referentes à parcela de teste (20%)
-        #[2] = lista de datas referentes à parcela de treinamento (80%)
-        #[3] = lista de datas referentes à parcela de teste (20%)
+        #[1] = lista de dados do SPEI referentes à parcela de teste       (20%)
+        #[2] = lista de datas referentes à parcela de treinamento         (80%)
+        #[3] = lista de datas referentes à parcela de teste               (20%)
         #[4] = valor inteiro da posição que o dataset foi splitado
     trainData, testData, monthTrainData, monthTestData, split = splitSpeiData(xlsx)
 
-        # Dataset que contém a parcela de dados que será utilizadda para...
-        #[0] = ... alimentar a predição da rede(treinamento)
-        #[1] = ... validar se as predições da rede estão corretas(treinamento)
-    trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(trainData, totalPoints)
-
-        # Dataset que contém a parcela de dados que será utilizadda para...
-        #[0] = ... alimentar a predição da rede(teste)
-        #[1] = ... validar se as predições da rede estão corretas(teste)
-    testDataForPrediction, testDataTrueValues = cria_IN_OUT(testData, totalPoints)
+        # Dataset que contém a parcela de dados que será utilizada para...
+        #[0] = ... alimentar a predição da rede
+        #[1] = ... validar se as predições da rede estão corretas
+    trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(trainData, totalPoints) # Treinamento
+    testDataForPrediction , testDataTrueValues  = cria_IN_OUT(testData , totalPoints) # Teste
 
         # Dataset que contém a parcela dos meses nos quais...
-        #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede(treinamento)
-        #[1] = ... os SPEIs foram preditos(treinamento)
-    trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
-
-        # Dataset que contém a parcela dos meses nos quais...
-        #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede(teste)
-        #[1] = ... os SPEIs foram preditos(teste)
-    testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
+        #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede
+        #[1] = ... os SPEIs foram preditos
+    trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints) # Treinamento
+    testMonthsForPrediction , testMonthForPredictedValues  = cria_IN_OUT(monthTestData , totalPoints) # Teste
 
     if training:
         model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
 
-        #faz previsões e calcula os erros
     trainPredictValues = model.predict(trainDataForPrediction, verbose = 0)
     testPredictValues  = model.predict(testDataForPrediction , verbose = 0)
 
+    # RMSE, MSE, MAE, R²:
     trainErrors = getError(trainDataTrueValues, trainPredictValues)
-    testErrors  = getError(testDataTrueValues , testPredictValues)
+    testErrors  = getError(testDataTrueValues , testPredictValues )
     
     if city_cluster_name not in metricsCompendium:
         metricsCompendium[city_cluster_name] = {}
     if city_for_training not in metricsCompendium[city_cluster_name]:
         metricsCompendium[city_cluster_name][city_for_training] = {}
     if city_for_predicting not in metricsCompendium[city_cluster_name][city_for_training]:
-        metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {"trainErrors": [], "testErrors": []}
+        metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {'trainErrors': [], 'testErrors': []}
     
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]["trainErrors"] = trainErrors
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]["testErrors"]  = testErrors
+    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['trainErrors'] = trainErrors
+    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['testErrors' ] = testErrors
 
-    print("\t\t--------------Result for " + city_for_training +"---------------")
-    print(f'\t\t\tTRAIN: {trainErrors}')    
-    print(f'\t\t\tTEST : {testErrors}')
-
+    if training == True:
+        print(f'\t\t--------------Result for {city_for_training} (training)---------------')
+    else:
+        print(f'\t\t--------------Result for {city_for_training} applied to {city_for_predicting}---------------')
+    print(f'\t\t\tTRAIN: {trainErrors}')
+    print(f'\t\t\tTEST : {testErrors} ')
+        
+    # Plots:
+    showRMSETaylorDiagrams(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showResidualPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showR2ScatterPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     
@@ -105,9 +102,7 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
 
     return model, metricsCompendium
 
-def PrintMetricsList(metricsCompendium):
-    import pandas as pd
-    
+def PrintMetricsList(metricsCompendium):   
     list_of_all_metrics_city_by_city = []
     
     for city_cluster_name, dict_of_central_cities in metricsCompendium.items():

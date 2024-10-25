@@ -72,7 +72,7 @@ print('APPLYING: END')
 metrics_df = PrintMetricsList(metricsCompendium)
 metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
 
-drawMetricsBoxPlots  (metrics_df, SHOW_IMAGES)
-drawMetricsBarPlots  (metrics_df, SHOW_IMAGES)
-drawMetricsHistograms(metrics_df, SHOW_IMAGES)
-drawMetricsRadarPlots(metrics_df, SHOW_IMAGES)
+drawMetricsBoxPlots   (metrics_df, SHOW_IMAGES)
+drawMetricsBarPlots   (metrics_df, SHOW_IMAGES)
+drawMetricsHistograms (metrics_df, SHOW_IMAGES)
+drawMetricsRadarPlots (metrics_df, SHOW_IMAGES)
