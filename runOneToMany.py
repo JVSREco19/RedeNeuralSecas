@@ -1,6 +1,6 @@
 #Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
 from NeuralNetwork.NeuralNetwork import UseNeuralNetwork, PrintMetricsList
-from NeuralNetwork.VisualRepresentation import DrawMetricsBoxPlots, DrawMetricsBarPlots, DrawMetricsHistograms, DrawMetricsRadarPlots
+from NeuralNetwork.VisualRepresentation import drawMetricsBoxPlots, drawMetricsBarPlots, drawMetricsHistograms, drawMetricsRadarPlots
 
 import tensorflow as tf
 import os
@@ -72,7 +72,7 @@ print('APPLYING: END')
 metrics_df = PrintMetricsList(metricsCompendium)
 metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
 
-DrawMetricsBoxPlots  (metrics_df, SHOW_IMAGES)
-DrawMetricsBarPlots  (metrics_df, SHOW_IMAGES)
-DrawMetricsHistograms(metrics_df, SHOW_IMAGES)
-DrawMetricsRadarPlots(metrics_df, SHOW_IMAGES)
+drawMetricsBoxPlots  (metrics_df, SHOW_IMAGES)
+drawMetricsBarPlots  (metrics_df, SHOW_IMAGES)
+drawMetricsHistograms(metrics_df, SHOW_IMAGES)
+drawMetricsRadarPlots(metrics_df, SHOW_IMAGES)

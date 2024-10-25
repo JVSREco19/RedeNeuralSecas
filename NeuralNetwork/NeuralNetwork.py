@@ -2,7 +2,7 @@ import tensorflow as tf
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, DrawModelLineGraph, ShowResidualPlots, ShowR2ScatterPlots
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -37,7 +37,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     history=model.fit(trainDataForPrediction, trainDataTrueValues, epochs=numberOfEpochs, batch_size=1, verbose=0)
     print(f'\t\tFitted neural network model for {city_for_training}.')
     
-    DrawModelLineGraph(history, city_cluster_name, city_for_training, showImages)
+    drawModelLineGraph(history, city_cluster_name, city_for_training, showImages)
     
     return model
 
@@ -59,12 +59,12 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
         #[1] = ... validar se as predições da rede estão corretas(teste)
     testDataForPrediction, testDataTrueValues = cria_IN_OUT(testData, totalPoints)
 
-        # Dataset que contém a parcela dos mses nos quais...
+        # Dataset que contém a parcela dos meses nos quais...
         #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede(treinamento)
         #[1] = ... os SPEIs foram preditos(treinamento)
     trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints)
 
-        # Dataset que contém a parcela dos mses nos quais...
+        # Dataset que contém a parcela dos meses nos quais...
         #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede(teste)
         #[1] = ... os SPEIs foram preditos(teste)
     testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(monthTestData, totalPoints)
@@ -93,11 +93,8 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f'\t\t\tTRAIN: {trainErrors}')    
     print(f'\t\t\tTEST : {testErrors}')
 
-    ShowResidualPlots(trainDataTrueValues, trainPredictValues, 'Training', city_cluster_name, city_for_training, city_for_predicting, showImages)
-    ShowResidualPlots(testDataTrueValues , testPredictValues , 'Testing' , city_cluster_name, city_for_training, city_for_predicting, showImages)
-    
-    ShowR2ScatterPlots(trainDataTrueValues, trainPredictValues, 'Training', city_cluster_name, city_for_training, city_for_predicting, showImages)
-    ShowR2ScatterPlots(testDataTrueValues , testPredictValues , 'Testing' , city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showResidualPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showR2ScatterPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     
     showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     if training:

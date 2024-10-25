@@ -115,7 +115,7 @@ def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPr
     saveFig(plt, 'distribuiçãoDoSPEI', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
 
-def DrawModelLineGraph(history, city_cluster_name, city_for_training, showImages):
+def drawModelLineGraph(history, city_cluster_name, city_for_training, showImages):
     
     fig, axs = plt.subplots(nrows=2, ncols=2, sharex=True)
     
@@ -154,7 +154,7 @@ def define_box_properties(plot_name, color_code, label):
 	plt.plot([], c=color_code, label=label)
 	plt.legend()
 
-def DrawMetricsBoxPlots(metrics_df, showImages):   
+def drawMetricsBoxPlots(metrics_df, showImages):   
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE', 'MSE']
     list_of_metrics_types = ['Treinamento', 'Validação']
@@ -196,7 +196,7 @@ def DrawMetricsBoxPlots(metrics_df, showImages):
         saveFig(plt, f'Box Plots. {metric_name}.')
         plt.close()
 
-def DrawMetricsBarPlots(metrics_df, showImages):
+def drawMetricsBarPlots(metrics_df, showImages):
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE', 'MSE', 'R^2']
     list_of_metrics_types = ['Treinamento', 'Validação']
@@ -244,7 +244,7 @@ def define_normal_distribution(axis, x_values):
     
     return x, p
 
-def DrawMetricsHistograms(metrics_df, showImages):
+def drawMetricsHistograms(metrics_df, showImages):
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE']
     list_of_metrics_types = ['Treinamento', 'Validação']
@@ -296,41 +296,52 @@ def DrawMetricsHistograms(metrics_df, showImages):
         saveFig(plt, 'Histograms.', model_name, model_name)
         plt.close()
 
-def ShowResidualPlots(true_values, predicted_values, dataset_type, city_cluster_name, city_for_training, city_for_predicting, showImages):
-    residuals = true_values - predicted_values
+def showResidualPlots(training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    predicted_values = {'Training': training_predicted_values,
+                        'Testing' :  testing_predicted_values}
     
-    plt.scatter(predicted_values, residuals, alpha=0.5)
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.xlabel('Predicted Values')
-    plt.ylabel('Residuals')
-    plt.title(f'Residual Plot for {dataset_type} data. Model {city_for_training} applied to {city_for_predicting}.')
-    if(showImages):
-        plt.show()
+    residuals        = {'Training': training_true_values - predicted_values['Training'],
+                        'Testing' :  testing_true_values - predicted_values['Testing' ]}
     
-    saveFig(plt, f'Residual Plots {dataset_type}', city_cluster_name, city_for_training, city_for_predicting)
-    plt.close()
-    
-def ShowR2ScatterPlots(true_values, predicted_values, dataset_type, city_cluster_name, city_for_training, city_for_predicting, showImages):
-    
-    plt.scatter(true_values, predicted_values, label = 'R²')
-    
-    # Generates a single line by creating `x_vals`, a sequence of 100 evenly spaced values between the min and max values in true_values
-    flattened_values = np.ravel(true_values)
-    x_vals = np.linspace(min(flattened_values), max(flattened_values), 100)
-    plt.plot(x_vals, x_vals, color='red', label='x=y')  # Line will only appear once
-    
-    plt.title(f'R² {dataset_type} data. Model {city_for_training} applied to {city_for_predicting}.')
-    plt.xlabel('True values')
-    plt.ylabel('Predicted values')
-    plt.legend()
+    for training_or_testing, residual_values in residuals.items():
+        plt.scatter(predicted_values[training_or_testing], residuals[training_or_testing], alpha=0.5)
+        plt.axhline(y=0, color='r', linestyle='--')
+        plt.xlabel('Predicted Values')
+        plt.ylabel('Residuals')
+        plt.title(f'Residual Plot for {training_or_testing} data. Model {city_for_training} applied to {city_for_predicting}.')
+        if(showImages):
+            plt.show()
         
-    if(showImages):
-        plt.show()
-    
-    saveFig(plt, f'R² Scatter Plot {dataset_type}', city_cluster_name, city_for_training, city_for_predicting)
-    plt.close()
+        saveFig(plt, f'Residual Plots {training_or_testing}', city_cluster_name, city_for_training, city_for_predicting)
+        plt.close()
 
-def DrawMetricsRadarPlots(metrics_df, showImages):
+def showR2ScatterPlots(training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):    
+    true_values      = {'Training': training_true_values,
+                        'Testing' :  testing_true_values}
+    
+    predicted_values = {'Training': training_predicted_values,
+                        'Testing' :  testing_predicted_values}
+    
+    for training_or_testing in ['Training', 'Testing']:
+        plt.scatter(true_values[training_or_testing], predicted_values[training_or_testing], label = 'R²')
+        
+        # Generates a single line by creating `x_vals`, a sequence of 100 evenly spaced values between the min and max values in true_values
+        flattened_values = np.ravel(true_values[training_or_testing])
+        x_vals = np.linspace(min(flattened_values), max(flattened_values), 100)
+        plt.plot(x_vals, x_vals, color='red', label='x=y')  # Line will only appear once
+        
+        plt.title(f'R² {training_or_testing} data. Model {city_for_training} applied to {city_for_predicting}.')
+        plt.xlabel('True values')
+        plt.ylabel('Predicted values')
+        plt.legend()
+            
+        if(showImages):
+            plt.show()
+        
+        saveFig(plt, f'R² Scatter Plot {training_or_testing}', city_cluster_name, city_for_training, city_for_predicting)
+        plt.close()
+
+def drawMetricsRadarPlots(metrics_df, showImages):
     # Creation of the empty dictionary:
     list_of_metrics_names = ['MAE', 'RMSE', 'MSE', 'R^2']
     list_of_metrics_types = ['Treinamento', 'Validação']
