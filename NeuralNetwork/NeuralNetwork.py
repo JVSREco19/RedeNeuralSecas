@@ -9,7 +9,7 @@ from NeuralNetwork.Metrics import getError
 metricsCompendium = {}
 
 # Abra o arquivo JSON
-with open("NeuralNetwork\config.json") as arquivo:
+with open("NeuralNetwork/config.json") as arquivo:
     dados_json = json.load(arquivo)
 
 totalPoints      = dados_json['totalPoints']

@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import statistics
 from scipy.stats import norm
-import pprint
 
 from NeuralNetwork.DataProcess import readXlsx
 
@@ -409,8 +408,8 @@ def showRMSETaylorDiagrams(training_true_values, training_predicted_values, test
     
     # Plotting the graph: 
     std_ref = 1.0                                                    # Reference standard deviation
-    std_dev = [train_predictions_std_dev, test_predictions_std_dev]  # Standard deviations of models
-    corr    = [train_data_model_corr    , test_data_model_corr    ]  # Correlation coefficients of models
+    models_std_dev = [train_predictions_std_dev, test_predictions_std_dev]  # Standard deviations of models
+    models_corr    = [train_data_model_corr    , test_data_model_corr    ]  # Correlation coefficients of models
     
     # Create an empty Taylor Diagram:
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
@@ -418,8 +417,8 @@ def showRMSETaylorDiagrams(training_true_values, training_predicted_values, test
     ax.set_theta_zero_location('E')  # Set 0 degrees at the right
     ax.set_theta_direction(1)        # Counter-clockwise direction
     
-    ax.set_ylim(min(std_dev) * 0.8, max(std_dev) * 1.2)   # 20% margin
-    ax.set_yticks(np.arange(0, max(std_dev) * 1.2, 0.1))  # Adjust tick marks accordingly
+    ax.set_ylim(min(models_std_dev) * 0.8, max(models_std_dev) * 1.2)   # 20% margin
+    ax.set_yticks(np.arange(0, max(models_std_dev) * 1.2, 0.1))  # Adjust tick marks accordingly
     
     correlation_range = np.arange(0, 1.1, 0.1)  # Values from 0 to 1, inclusive
     theta = np.arccos(correlation_range)        # Convert to angles
@@ -435,13 +434,13 @@ def showRMSETaylorDiagrams(training_true_values, training_predicted_values, test
     ax.set_title(f'Taylor Diagram of model {city_for_training} applied to {city_for_predicting}')
     
     # Fill in the Taylor Diagram:
-    theta = np.arccos(corr)
-    ax.plot(theta, std_dev,  'ro', label='Models')
-    ax.plot( [0], [std_ref], 'mo', label='Reference')
+    theta = np.arccos(models_corr)
+    ax.plot(theta, models_std_dev,  'ro', label='Models')
+    ax.plot( [0], [std_ref]      , 'mo', label='Reference')
     plt.legend()
     
-    for i in range(len(std_dev)):
-        ax.text(theta[i], std_dev[i] + 0.05, 'test/train', ha='center', va='bottom')
+    ax.text(theta[0], train_predictions_std_dev + 0.005, 'train', ha='center', va='bottom')
+    ax.text(theta[1], test_predictions_std_dev  + 0.005, 'test' , ha='center', va='bottom')
     
     fig.tight_layout()
     
