@@ -433,10 +433,7 @@ def showRMSETaylorDiagrams(training_true_values, training_predicted_values, test
     #### Set the y-ticks
     yticks = np.arange(0, max(models_std_dev) * 1.2, 0.1)
     ax.set_yticks(yticks)
-    
-    if degrees == 180:
-        for tick in yticks:   # Adds the left-side (negative) ticks
-            if tick != 0.0: ax.text(np.pi, tick, f'-{tick:.1f}', ha='center', va='center', color='black', fontsize=10) # perfectly aligned horizontally, but need to be a bit lower
+    if degrees == 180: ax.yaxis.set_tick_params(labelright=True) # (counterintuitively) Adds labels to the left half of the plot
 
     ### Axis labels    :
     ax.set_xlabel('Standard Deviation')
