@@ -3,7 +3,7 @@ import pandas     as pd
 import json
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
-from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots, showRMSETaylorDiagrams
+from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots, showTaylorDiagrams
 from NeuralNetwork.Metrics import getError
 
 metricsCompendium = {}
@@ -89,7 +89,7 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f'\t\t\tTEST : {testErrors} ')
         
     # Plots:
-    showRMSETaylorDiagrams(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showTaylorDiagrams(trainErrors['RMSE'], testErrors['RMSE'], trainData, testData, trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showResidualPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showR2ScatterPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     

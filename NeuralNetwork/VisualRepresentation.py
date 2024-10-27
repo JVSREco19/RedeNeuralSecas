@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import statistics
 from scipy.stats import norm
+import skill_metrics as sm
 
 from NeuralNetwork.DataProcess import readXlsx
 
@@ -391,11 +392,14 @@ def drawMetricsRadarPlots(metrics_df, showImages):
             saveFig(plt, f'Radar Plots. {model_name}. {metric_name}. {metric_type}.', model_name, model_name)
             plt.close()
 
-def showRMSETaylorDiagrams(training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
+def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data, training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
     # Calculate precision measures:
     ## Standard Deviation:
     train_predictions_std_dev = np.std(training_predicted_values)
     test_predictions_std_dev  = np.std(testing_predicted_values )
+    
+    combined_data             = np.concatenate([training_data, testing_data])
+    observed_std_dev          = np.std(combined_data)
     
     print(f'\t\t\tTRAIN: STD Dev {train_predictions_std_dev}')
     print(f'\t\t\tTEST : STD Dev {test_predictions_std_dev }')
@@ -403,56 +407,22 @@ def showRMSETaylorDiagrams(training_true_values, training_predicted_values, test
     ## Correlation Coefficient:
     train_data_model_corr = np.corrcoef(training_predicted_values, training_true_values)[0, 1]
     test_data_model_corr  = np.corrcoef(testing_predicted_values , testing_true_values )[0, 1]
-    ### If both values are positive, the left part of the semicircle (negative values) isn't needed:
-    degrees =  90 if (train_data_model_corr > 0) and (test_data_model_corr > 0) else 180
     
     print(f'\t\t\tTRAIN: correlation {train_data_model_corr}')
     print(f'\t\t\tTEST : correlation {test_data_model_corr}' )
     
-    # Plots the graph: 
-    std_ref = 1.0                                                           # Reference standard deviation
-    models_std_dev = [train_predictions_std_dev, test_predictions_std_dev]  # Standard deviations of models
-    models_corr    = [train_data_model_corr    , test_data_model_corr    ]  # Correlation coefficients of models
-    
-    ## Create an empty Taylor Diagram:
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.set_thetalim(thetamin=0, thetamax=degrees) # thetamax = 90° or 180°
-    ax.set_theta_zero_location('E')               # Set 0 degrees at the right
-    ax.set_theta_direction(1)                     # Counter-clockwise direction
-    
-    ### X axis (angular):
-    ax.xaxis.grid     (color='blue' )
-    correlation_range = np.arange( 0 if degrees == 90 else -1, 1.1, 0.1)  # min. is 0 if 90° or -1 if 180º (max. 1.1 is discarded, real max. is 1)
-    ax.set_xticks     (np.arccos(correlation_range))                      # Set the ticks at calculated angles (converted by arccos)
-    ax.set_xticklabels([f'{c:.1f}' for c in correlation_range], color='blue', fontsize=10 if degrees == 90 else 7)  # Use correlation values as labels
-    
-    ### Y axis (radial):
-    ax.yaxis.grid(color='black')
-    ax.set_ylim(min(models_std_dev) * 0.8, max(models_std_dev) * 1.2)   # 20% margin
-    
-    #### Set the y-ticks
-    yticks = np.arange(0, max(models_std_dev) * 1.2, 0.1)
-    ax.set_yticks(yticks)
-    if degrees == 180: ax.yaxis.set_tick_params(labelright=True) # (counterintuitively) Adds labels to the left half of the plot
+    # First array element = reference series; the others = predicted series.
+    sdev  = np.array([observed_std_dev, train_predictions_std_dev, test_predictions_std_dev])
+    crmsd = np.array([       0        , training_RMSE            , testing_RMSE            ])
+    ccoef = np.array([       1        , train_data_model_corr    , test_data_model_corr    ])
+    label = ['Non-Dimensional Observation', 'Train', 'Test']
 
-    ### Axis labels    :
-    ax.set_xlabel('Standard Deviation')
-    ax.xaxis.set_label_coords(0.5, 0.15 if degrees == 180 else -0.1)
-    if   degrees ==  90: ax.set_ylabel('Standard Deviation', labelpad=4)
-    ax.text(np.pi / (4.2 if degrees == 90 else 2), 0.26, 'Pearson Correlation Coefficient', ha='center', va='center', color='blue', rotation = -45 if degrees == 90 else 0)
+    sm.taylor_diagram(sdev, crmsd, ccoef, markerLabel = label, 
+                      styleOBS = '-', colOBS = 'r', markerOBS = 'o', titleOBS = 'observation')
     
-    ax.set_title(f'Model {city_for_training} applied to {city_for_predicting}')
-    
-    ## Fill in the Taylor Diagram:
-    ax.plot(np.arccos(models_corr), models_std_dev,  'ro', label='Models'   )
-    ax.plot(    [0], [std_ref]    ,                  'mo', label='Reference')
-    plt.legend()
-    
-    ax.text(np.arccos(train_data_model_corr), train_predictions_std_dev + 0.005, 'train', ha='center', va='bottom')
-    ax.text(np.arccos(test_data_model_corr ), test_predictions_std_dev  + 0.005, 'test' , ha='center', va='bottom')
-    
-    fig.tight_layout()
-    
+    plt.title (f'Model {city_for_training} applied to {city_for_predicting}')
+    plt.tight_layout()
+
     if(showImages):
         plt.show()
         
