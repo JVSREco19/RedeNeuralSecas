@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import numpy as np
 import statistics
 from scipy.stats import norm
@@ -393,7 +394,8 @@ def drawMetricsRadarPlots(metrics_df, showImages):
             plt.close()
 
 def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data, training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
-    # Calculate precision measures:
+    
+# Calculate precision measures:
     ## Standard Deviation:
     train_predictions_std_dev = np.std(training_predicted_values)
     test_predictions_std_dev  = np.std(testing_predicted_values )
@@ -410,21 +412,108 @@ def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data,
     
     print(f'\t\t\tTRAIN: correlation {train_data_model_corr}')
     print(f'\t\t\tTEST : correlation {test_data_model_corr}' )
+   
+    # Plot graph:
+    LEGEND_SUBPLOT = 2
     
-    # First array element = reference series; the others = predicted series.
-    sdev  = np.array([observed_std_dev, train_predictions_std_dev, test_predictions_std_dev])
-    crmsd = np.array([       0        , training_RMSE            , testing_RMSE            ])
-    ccoef = np.array([       1        , train_data_model_corr    , test_data_model_corr    ])
-    label = ['Non-Dimensional Observation', 'Train', 'Test']
+    SUBPLOTS_DATA = [
+        {
+            "axis_idx": 0,
+            "title": "(a) Train",
+            "y_label": True,
+            "x_label": False,
+            "observed": (observed_std_dev, 0.00, 1.00),
+            "modeled": {
+                "Model \u03B1": (train_predictions_std_dev, training_RMSE, train_data_model_corr),
+                "Model \u03B2": (test_predictions_std_dev,  testing_RMSE,  test_data_model_corr)
+            }
+        }, {
+            "axis_idx": 1,
+            "title": "(b) Test",
+            "y_label": False,
+            "x_label": False,
+            "observed": (observed_std_dev, 0.00, 1.00),
+            "modeled": {
+                "Model \u03B1": (train_predictions_std_dev, training_RMSE, train_data_model_corr),
+                "Model \u03B2": (test_predictions_std_dev,  testing_RMSE,  test_data_model_corr)
+            }
+        }
+    ]
+    
+    MARKERS = {
+        "Observed": {
+            "marker": "^",
+            "color_edge": "#000000",
+            "color_face": "#000000",
+            "markersize": 9
+        },
+        "Model \u03B1": {
+            "marker": "o",
+            "color_edge": "#000000",
+            "color_face": "#777777",
+            "markersize": 9
+        },
+        "Model \u03B2": {
+            "marker": "D",
+            "color_edge": "#AA0000",
+            "color_face": "#DD3333",
+            "markersize": 9
+        }
+    }    
+    
+    plt.rcParams.update({'font.size': 9, 'font.family': 'Times New Roman'})
+    
+    fig_size = (3*2.8, 2*2.8)
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=fig_size, sharey=True)
+    
+    for subplot_data in SUBPLOTS_DATA:
+        ax = axs[subplot_data["axis_idx"]]
+        ax.set(adjustable='box', aspect='equal')
 
-    sm.taylor_diagram(sdev, crmsd, ccoef, markerLabel = label, rmsLabelFormat = '0:.1f',
-                      styleOBS = '-', colOBS = 'r', markerOBS = 'o', titleOBS = 'observation')
+        ax.set_ylim(0, max([observed_std_dev, train_predictions_std_dev, test_predictions_std_dev]) * 1.2)   # 20% margin
+        
+        stdev, rmse, ccoef = subplot_data["observed"]
+        
+        sm.taylor_diagram(ax, np.asarray((stdev, stdev)), np.asarray((rmse, rmse)), np.asarray((ccoef, ccoef)), markercolors = {"face": MARKERS["Observed"]["color_edge"], "edge": MARKERS["Observed"]["color_face"]}, markersize = MARKERS["Observed"]["markersize"], markersymbol = MARKERS["Observed"]["marker"], styleOBS = ':', colOBS = MARKERS["Observed"]["color_edge"], alpha = 1.0, titleSTD = 'off', titleRMS = 'off', showlabelsRMS = 'on', tickRMS = [0.1, 0.15, 0.20], rmsLabelFormat = '0:.2f', colRMS = '#AAAADD', tickRMSangle = 115, styleRMS = '--', colscor = {'grid': '#DDDDDD', 'tick_labels': '#000000', 'title': '#000000'}, colsstd = {'grid': '#DDDDDD', 'tick_labels': '#000000', 'ticks': '#DDDDDD', 'title': '#000000'}, styleCOR='-', styleSTD='-', colframe='#DDDDDD', labelweight='normal', titlecorshape='linear')
     
-    plt.title (f'Model {city_for_training} applied to {city_for_predicting}', y=1.8)
+        ax.text(stdev, -0.01, "Obsv.", verticalalignment="top", horizontalalignment="center", fontsize=9+1, fontweight="bold")
+    
+        # create one overlay for each model marker
+        for model_id, (stdev, rmse, ccoef) in subplot_data["modeled"].items():
+            marker = MARKERS[model_id]
+            sm.taylor_diagram(ax, np.asarray((stdev, stdev)), np.asarray((rmse, rmse)), np.asarray((ccoef, ccoef)), markersymbol = marker["marker"], markercolors = {"face": marker["color_face"], "edge": marker["color_edge"]}, markersize = marker["markersize"], alpha = 1.0, overlay = 'on', styleCOR = '-', styleSTD = '-')
+    
+        ax.set_title(subplot_data["title"], loc="left", y=1.1)
+    
+        if subplot_data["y_label"]:
+            ax.set_ylabel("Standard Deviation", fontfamily='Times New Roman',
+                          fontsize=9+2)
+    
+        if subplot_data["x_label"]:
+            ax.set_xlabel("Standard Deviation", fontfamily='Times New Roman',
+                          fontsize=9+2)
+        else:
+            ax.set_xticklabels(ax.get_xticklabels(), color=ax.get_facecolor())
+    
+    ax = axs[LEGEND_SUBPLOT]
+    ax.axis('off')
+    
+    legend_handles = []
+    legend_handles.append(mlines.Line2D([], [],
+                          color='#AAAADD',
+                          linestyle='--',
+                          label="RMSE"))
+    
+    for marker_label, marker_desc in MARKERS.items():
+        marker = mlines.Line2D([], [], marker=marker_desc["marker"], markersize=marker_desc["markersize"], markerfacecolor=marker_desc["color_face"], markeredgecolor=marker_desc["color_edge"], linestyle='None', label=marker_label)
+        legend_handles.append(marker)
+    ax.legend(handles=legend_handles, loc="center")    
+    
+    plt.suptitle(f'Model {city_for_training} applied to {city_for_predicting}', y=0.85)
     plt.tight_layout()
-
-    #if(showImages):
-    plt.show()
+    
+    if(showImages):
+        plt.show()
         
     saveFig(plt, 'Taylor Diagram.', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
