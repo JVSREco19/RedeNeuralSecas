@@ -417,14 +417,14 @@ def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data,
     ccoef = np.array([       1        , train_data_model_corr    , test_data_model_corr    ])
     label = ['Non-Dimensional Observation', 'Train', 'Test']
 
-    sm.taylor_diagram(sdev, crmsd, ccoef, markerLabel = label, 
+    sm.taylor_diagram(sdev, crmsd, ccoef, markerLabel = label, rmsLabelFormat = '0:.1f',
                       styleOBS = '-', colOBS = 'r', markerOBS = 'o', titleOBS = 'observation')
     
-    plt.title (f'Model {city_for_training} applied to {city_for_predicting}')
+    plt.title (f'Model {city_for_training} applied to {city_for_predicting}', y=1.8)
     plt.tight_layout()
 
-    if(showImages):
-        plt.show()
+    #if(showImages):
+    plt.show()
         
     saveFig(plt, 'Taylor Diagram.', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
