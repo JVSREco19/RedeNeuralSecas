@@ -42,24 +42,19 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     return model
 
 def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
-        #[0] = lista de dados do SPEI referentes à parcela de treinamento (80%)
-        #[1] = lista de dados do SPEI referentes à parcela de teste       (20%)
-        #[2] = lista de datas referentes à parcela de treinamento         (80%)
-        #[3] = lista de datas referentes à parcela de teste               (20%)
-        #[4] = valor inteiro da posição que o dataset foi splitado
-    trainData, testData, monthTrainData, monthTestData, split = splitSpeiData(xlsx)
+    SPEI_dict, months_dict, split = splitSpeiData(xlsx)
 
         # Dataset que contém a parcela de dados que será utilizada para...
         #[0] = ... alimentar a predição da rede
         #[1] = ... validar se as predições da rede estão corretas
-    trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(trainData, totalPoints) # Treinamento
-    testDataForPrediction , testDataTrueValues  = cria_IN_OUT(testData , totalPoints) # Teste
+    trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(SPEI_dict['Train'], totalPoints) # Treinamento
+    testDataForPrediction , testDataTrueValues  = cria_IN_OUT(SPEI_dict['Test'] , totalPoints) # Teste
 
         # Dataset que contém a parcela dos meses nos quais...
         #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede
         #[1] = ... os SPEIs foram preditos
-    trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(monthTrainData, totalPoints) # Treinamento
-    testMonthsForPrediction , testMonthForPredictedValues  = cria_IN_OUT(monthTestData , totalPoints) # Teste
+    trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(months_dict['Train'], totalPoints) # Treinamento
+    testMonthsForPrediction , testMonthForPredictedValues  = cria_IN_OUT(months_dict['Test'] , totalPoints) # Teste
 
     if training:
         model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
@@ -89,13 +84,13 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f'\t\t\tTEST : {testErrors} ')
         
     # Plots:
-    showTaylorDiagrams(trainErrors['RMSE'], testErrors['RMSE'], trainData, testData, trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showTaylorDiagrams(trainErrors['RMSE'], testErrors['RMSE'], SPEI_dict['Train'], SPEI_dict['Test'], trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showResidualPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showR2ScatterPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
     
-    showSpeiData(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showSpeiData(xlsx, SPEI_dict['Test'], split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     if training:
-        showSpeiTest(xlsx, testData, split, city_cluster_name, city_for_training, city_for_predicting, showImages)
+        showSpeiTest(xlsx, SPEI_dict['Test'], split, city_cluster_name, city_for_training, city_for_predicting, showImages)
         
     showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
