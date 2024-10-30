@@ -406,8 +406,8 @@ def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data,
     print(f'\t\t\tTEST : STD Dev {test_predictions_std_dev }')
     
     ## Correlation Coefficient:
-    train_data_model_corr =  np.corrcoef(training_predicted_values, training_true_values)[0, 1]
-    test_data_model_corr  =  np.corrcoef(testing_predicted_values , testing_true_values )[0, 1]
+    train_data_model_corr = np.corrcoef(training_predicted_values, training_true_values)[0, 1]
+    test_data_model_corr  = np.corrcoef(testing_predicted_values , testing_true_values )[0, 1]
     
     print(f'\t\t\tTRAIN: correlation {train_data_model_corr}')
     print(f'\t\t\tTEST : correlation {test_data_model_corr}' )
@@ -417,19 +417,25 @@ def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data,
     ccoef = np.array([       1.       , train_data_model_corr    , test_data_model_corr    ])
     rmse  = np.array([       0.       , training_RMSE            , testing_RMSE            ])
     
+    # Plotting:
+    ## If both are positive, 90° (2 squares), if one of them is negative, 180° (2 rectangles)
+    figsize = (2*8, 2*5) if (train_data_model_corr > 0 and test_data_model_corr > 0) else (2*8, 2*3)
     
-    # Must set figure size here to prevent legend from being cut off
-    plt.figure(num=1, figsize=(8, 6))
-
-    sm.taylor_diagram(sdev,rmse,ccoef, markerLabel = label, markerLabelColor = 'r', 
-                      markerLegend = 'on', markerColor = 'r',
-                      styleOBS = '-', colOBS = 'r', markerobs = 'o',
-                      markerSize = 6, tickRMS = [0.0, 0.05, 0.1, 0.15, 0.2],
-                      tickRMSangle = 115, showlabelsRMS = 'on',
-                      titleRMS = 'on', titleOBS = 'Obs')    
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=figsize, sharey=True)
+    AVAILABLE_AXES = {'a) Training': 0, 'b) Testing': 1}
+    for axs_title, axs_number in AVAILABLE_AXES.items():
+        ax = axs[axs_number]
+        ax.set_title(axs_title, loc="left", y=1.1)
+        ax.set(adjustable='box', aspect='equal')
+        sm.taylor_diagram(ax, sdev, rmse, ccoef, markerLabel = label, markerLabelColor = 'r', 
+                          markerLegend = 'on', markerColor = 'r',
+                          styleOBS = '-', colOBS = 'r', markerobs = 'o',
+                          markerSize = 6, tickRMS = [0.0, 0.05, 0.1, 0.15, 0.2],
+                          tickRMSangle = 115, showlabelsRMS = 'on',
+                          titleRMS = 'on', titleOBS = 'Obs')
+    plt.suptitle (f'Model {city_for_training} applied to {city_for_predicting}')
+    fig.tight_layout()
     
-    plt.title (f'Model {city_for_training} applied to {city_for_predicting}', y=1.2)
-
     if(showImages):
         plt.show()
         
