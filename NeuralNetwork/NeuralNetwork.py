@@ -78,15 +78,15 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     print(f"\t\t\tTEST : {errors_dict['Test'] }")
         
     # Plots:
-    showTaylorDiagrams(errors_dict['Train']['RMSE'], errors_dict['Test']['RMSE'], SPEI_dict['Train'], SPEI_dict['Test'], dataTrueValues_dict['Train'], predictValues_dict['Train'], dataTrueValues_dict['Test'], predictValues_dict['Test'], city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showResidualPlots (dataTrueValues_dict['Train'], predictValues_dict['Train'], dataTrueValues_dict['Test'], predictValues_dict['Test'], city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showR2ScatterPlots(dataTrueValues_dict['Train'], predictValues_dict['Train'], dataTrueValues_dict['Test'], predictValues_dict['Test'], city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showResidualPlots (dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showR2ScatterPlots(dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
     
     showSpeiData(xlsx, SPEI_dict['Test'], split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     if training:
         showSpeiTest(xlsx, SPEI_dict['Test'], split, city_cluster_name, city_for_training, city_for_predicting, showImages)
         
-    showPredictionResults(dataTrueValues_dict, predictValues_dict, monthForPredicted_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionResults      (dataTrueValues_dict, predictValues_dict, monthForPredicted_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionsDistribution(dataTrueValues_dict, predictValues_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
 
     return model, metricsCompendium

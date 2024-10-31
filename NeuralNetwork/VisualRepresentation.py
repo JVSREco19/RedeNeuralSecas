@@ -296,15 +296,12 @@ def drawMetricsHistograms(metrics_df, showImages):
         saveFig(plt, 'Histograms.', model_name, model_name)
         plt.close()
 
-def showResidualPlots(training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
-    predicted_values = {'Training': training_predicted_values,
-                        'Testing' :  testing_predicted_values}
+def showResidualPlots(true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    residuals        = {'Train': true_values_dict['Train'] - predicted_values_dict['Train'],
+                        'Test' : true_values_dict['Test' ] - predicted_values_dict['Test' ]}
     
-    residuals        = {'Training': training_true_values - predicted_values['Training'],
-                        'Testing' :  testing_true_values - predicted_values['Testing' ]}
-    
-    for training_or_testing, residual_values in residuals.items():
-        plt.scatter(predicted_values[training_or_testing], residuals[training_or_testing], alpha=0.5)
+    for training_or_testing in ['Train', 'Test']:
+        plt.scatter(predicted_values_dict[training_or_testing], residuals[training_or_testing], alpha=0.5)
         plt.axhline(y=0, color='r', linestyle='--')
         plt.xlabel('Predicted Values')
         plt.ylabel('Residuals')
@@ -315,18 +312,12 @@ def showResidualPlots(training_true_values, training_predicted_values, testing_t
         saveFig(plt, f'Residual Plots {training_or_testing}', city_cluster_name, city_for_training, city_for_predicting)
         plt.close()
 
-def showR2ScatterPlots(training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):    
-    true_values      = {'Training': training_true_values,
-                        'Testing' :  testing_true_values}
-    
-    predicted_values = {'Training': training_predicted_values,
-                        'Testing' :  testing_predicted_values}
-    
-    for training_or_testing in ['Training', 'Testing']:
-        plt.scatter(true_values[training_or_testing], predicted_values[training_or_testing], label = 'R²')
+def showR2ScatterPlots(true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting, showImages):    
+    for training_or_testing in ['Train', 'Test']:
+        plt.scatter(true_values_dict[training_or_testing], predicted_values_dict[training_or_testing], label = 'R²')
         
         # Generates a single line by creating `x_vals`, a sequence of 100 evenly spaced values between the min and max values in true_values
-        flattened_values = np.ravel(true_values[training_or_testing])
+        flattened_values = np.ravel(true_values_dict[training_or_testing])
         x_vals = np.linspace(min(flattened_values), max(flattened_values), 100)
         plt.plot(x_vals, x_vals, color='red', label='x=y')  # Line will only appear once
         
@@ -391,29 +382,29 @@ def drawMetricsRadarPlots(metrics_df, showImages):
             saveFig(plt, f'Radar Plots. {model_name}. {metric_name}. {metric_type}.', model_name, model_name)
             plt.close()
 
-def showTaylorDiagrams(training_RMSE, testing_RMSE, training_data, testing_data, training_true_values, training_predicted_values, testing_true_values, testing_predicted_values, city_cluster_name, city_for_training, city_for_predicting, showImages):
+def showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages):
     # Calculate precision measures:
     ## Standard Deviation:
-    train_predictions_std_dev = np.std(training_predicted_values)
-    test_predictions_std_dev  = np.std(testing_predicted_values )
+    train_predictions_std_dev = np.std(predictValues_dict['Train'])
+    test_predictions_std_dev  = np.std(predictValues_dict['Test' ])
     
-    combined_data             = np.concatenate([training_data, testing_data])
+    combined_data             = np.concatenate([SPEI_dict['Train'], SPEI_dict['Test']])
     observed_std_dev          = np.std(combined_data)
     
     print(f'\t\t\tTRAIN: STD Dev {train_predictions_std_dev}')
     print(f'\t\t\tTEST : STD Dev {test_predictions_std_dev }')
     
     ## Correlation Coefficient:
-    train_data_model_corr = np.corrcoef(training_predicted_values, training_true_values)[0, 1]
-    test_data_model_corr  = np.corrcoef(testing_predicted_values , testing_true_values )[0, 1]
+    train_data_model_corr = np.corrcoef(predictValues_dict['Train'], dataTrueValues_dict['Train'])[0, 1]
+    test_data_model_corr  = np.corrcoef(predictValues_dict['Test' ], dataTrueValues_dict['Test' ])[0, 1]
     
     print(f'\t\t\tTRAIN: correlation {train_data_model_corr}')
     print(f'\t\t\tTEST : correlation {test_data_model_corr}' )
     
-    label =          [      'Obs'     ,          'Train'         ,          'Test'         ]
-    sdev  = np.array([observed_std_dev, train_predictions_std_dev, test_predictions_std_dev])
-    ccoef = np.array([       1.       , train_data_model_corr    , test_data_model_corr    ])
-    rmse  = np.array([       0.       , training_RMSE            , testing_RMSE            ])
+    label =          [      'Obs'     ,          'Train'            ,           'Test'           ]
+    sdev  = np.array([observed_std_dev, train_predictions_std_dev   , test_predictions_std_dev   ])
+    ccoef = np.array([       1.       , train_data_model_corr       , test_data_model_corr       ])
+    rmse  = np.array([       0.       , errors_dict['Train']['RMSE'], errors_dict['Test']['RMSE']])
     
     # Plotting:
     ## If both are positive, 90° (2 squares), if one of them is negative, 180° (2 rectangles)
