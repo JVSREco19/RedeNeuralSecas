@@ -42,19 +42,18 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     return model
 
 def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
+    
+    # SPEI_dict  .keys() = ['Train', 'Test']
+    # months_dict.keys() = ['Train', 'Test']
     SPEI_dict, months_dict, split = splitSpeiData(xlsx)
 
-        # Dataset que contém a parcela de dados que será utilizada para...
-        #[0] = ... alimentar a predição da rede
-        #[1] = ... validar se as predições da rede estão corretas
-    trainDataForPrediction, trainDataTrueValues = cria_IN_OUT(SPEI_dict['Train'], totalPoints) # Treinamento
-    testDataForPrediction , testDataTrueValues  = cria_IN_OUT(SPEI_dict['Test'] , totalPoints) # Teste
-
-        # Dataset que contém a parcela dos meses nos quais...
-        #[0] = ... os SPEIs foram utilizados para alimentar a predição da rede
-        #[1] = ... os SPEIs foram preditos
-    trainMonthsForPrediction, trainMonthForPredictedValues = cria_IN_OUT(months_dict['Train'], totalPoints) # Treinamento
-    testMonthsForPrediction , testMonthForPredictedValues  = cria_IN_OUT(months_dict['Test'] , totalPoints) # Teste
+    # IN : "(train, test)DataForPrediction": alimentar a predição da rede
+    # OUT: "(train, test)DataTrueValues"   : validar se as predições da rede estão corretas
+    trainDataForPrediction, trainDataTrueValues, testDataForPrediction, testDataTrueValues = cria_IN_OUT(SPEI_dict, totalPoints) # trainData_dict (to-do)
+    
+    # IN : "(train, test)MonthsForPrediction"    : os SPEIs foram utilizados para alimentar a predição da rede
+    # OUT: "(train, test)MonthForPredictedValues": os SPEIs foram preditos
+    trainMonthsForPrediction, trainMonthForPredictedValues, testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(months_dict, totalPoints) # trainMonths_dict (to-do)
 
     if training:
         model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
