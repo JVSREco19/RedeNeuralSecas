@@ -8,7 +8,8 @@ def getError(actual, prediction):
         'R^2'  : tf.keras.metrics.R2Score             (class_aggregation='variance_weighted_average')
     }
 
-    metrics_values = {'RMSE': None, 'MSE': None, 'MAE': None, 'R^2': None}
+    metrics_values = dict.fromkeys(metrics.keys())
+    
     for metric_name, metric_function in metrics.items():
         metric_function.update_state(actual, prediction)
         metrics_values[metric_name] = metric_function.result().numpy()

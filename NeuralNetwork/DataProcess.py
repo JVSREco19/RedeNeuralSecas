@@ -31,7 +31,7 @@ def splitSpeiData(xlsx):
     
     return SPEI_dict, months_dict, split
 
-def cria_IN_OUT(data_dict, janela):   
+def cria_IN_OUT(data_dict, janela):
     DATA_TYPES_LIST = ['Train', 'Test']
     OUT_final_dict  = dict.fromkeys(DATA_TYPES_LIST)
     IN_final_dict   = dict.fromkeys(DATA_TYPES_LIST)
@@ -47,4 +47,4 @@ def cria_IN_OUT(data_dict, janela):
         OUT_final_dict[train_or_test] = IN[:,-predictionPoints:,0]
         IN_final_dict [train_or_test] = IN[:,:-predictionPoints,:]
     
-    return IN_final_dict['Train'], OUT_final_dict['Train'], IN_final_dict['Test'], OUT_final_dict['Test']
+    return IN_final_dict, OUT_final_dict

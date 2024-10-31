@@ -62,25 +62,24 @@ def showSpeiTest(xlsx, test_data, split, city_cluster_name, city_for_training, c
     saveFig(plt, 'SPEI Data (test)', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
     
-def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
+def showPredictionResults(dataTrueValues_dict, predictValues_dict, monthForPredicted_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    trueValues  = np.append(dataTrueValues_dict['Train'], dataTrueValues_dict['Test'])
+    predictions = np.append( predictValues_dict['Train'],  predictValues_dict['Test'])
 
-    trueValues = np.append(trainDataTrueValues, testDataTrueValues)
-    predictions = np.append(trainPredictValues, testPredictValues)
-
-    reshapedMonth = np.append(trainMonthForPredictedValues, testMonthForPredictedValues)
+    reshapedMonth = np.append(monthForPredicted_dict['Train'], monthForPredicted_dict['Test'])
 
     SpeiValues, SpeiNormalizedValues, monthValues = readXlsx(xlsx)
 
     speiMaxValue = np.max(SpeiValues)
     speiMinValue = np.min(SpeiValues)
 
-    trueValues_denormalized = (trueValues * (speiMaxValue - speiMinValue) + speiMinValue)
+    trueValues_denormalized  = (trueValues  * (speiMaxValue - speiMinValue) + speiMinValue)
     predictions_denormalized = (predictions * (speiMaxValue - speiMinValue) + speiMinValue)
 
     plt.figure()
     plt.plot(reshapedMonth,trueValues_denormalized)
     plt.plot(reshapedMonth,predictions_denormalized)
-    plt.axvline(trainMonthForPredictedValues[-1][-1], color='r')
+    plt.axvline(monthForPredicted_dict['Train'][-1][-1], color='r')
     plt.legend(['Verdadeiros', 'Previstos'])
     plt.xlabel('Data')
     plt.ylabel('SPEI')
@@ -91,17 +90,16 @@ def showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictV
     saveFig(plt, 'Previsao', city_cluster_name, city_for_training, city_for_predicting)
     plt.close()
     
-def showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
-
-    trueValues = np.append(trainDataTrueValues, testDataTrueValues)
-    predictions = np.append(trainPredictValues, testPredictValues)
+def showPredictionsDistribution(dataTrueValues_dict, predictValues_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages):
+    trueValues  = np.append(dataTrueValues_dict['Train'], dataTrueValues_dict['Test'])
+    predictions = np.append( predictValues_dict['Train'],  predictValues_dict['Test'])
 
     SpeiValues, SpeiNormalizedValues, monthValues = readXlsx(xlsx)
 
     speiMaxValue = np.max(SpeiValues)
     speiMinValue = np.min(SpeiValues)
 
-    trueValues_denormalized = (trueValues * (speiMaxValue - speiMinValue) + speiMinValue)
+    trueValues_denormalized  = (trueValues  * (speiMaxValue - speiMinValue) + speiMinValue)
     predictions_denormalized = (predictions * (speiMaxValue - speiMinValue) + speiMinValue)
 
     plt.figure()

@@ -42,28 +42,23 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     return model
 
 def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
-    
-    # SPEI_dict  .keys() = ['Train', 'Test']
-    # months_dict.keys() = ['Train', 'Test']
-    SPEI_dict, months_dict, split = splitSpeiData(xlsx)
+    SPEI_dict, months_dict, split = splitSpeiData(xlsx) #(SPEI/months)_dict.keys() = ['Train', 'Test']
 
-    # IN : "(train, test)DataForPrediction": alimentar a predição da rede
-    # OUT: "(train, test)DataTrueValues"   : validar se as predições da rede estão corretas
-    trainDataForPrediction, trainDataTrueValues, testDataForPrediction, testDataTrueValues = cria_IN_OUT(SPEI_dict, totalPoints) # trainData_dict (to-do)
-    
-    # IN : "(train, test)MonthsForPrediction"    : os SPEIs foram utilizados para alimentar a predição da rede
-    # OUT: "(train, test)MonthForPredictedValues": os SPEIs foram preditos
-    trainMonthsForPrediction, trainMonthForPredictedValues, testMonthsForPrediction, testMonthForPredictedValues = cria_IN_OUT(months_dict, totalPoints) # trainMonths_dict (to-do)
+    #         IN            ,           OUT          : 
+    dataForPrediction_dict  , dataTrueValues_dict    = cria_IN_OUT(SPEI_dict  , totalPoints)
+    monthsForPrediction_dict, monthForPredicted_dict = cria_IN_OUT(months_dict, totalPoints)
 
     if training:
-        model = trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, city_cluster_name, city_for_training, city_for_predicting)
+        model = trainNeuralNetwork(dataForPrediction_dict['Train'], dataTrueValues_dict['Train'], showImages, city_cluster_name, city_for_training, city_for_predicting)
 
-    trainPredictValues = model.predict(trainDataForPrediction, verbose = 0)
-    testPredictValues  = model.predict(testDataForPrediction , verbose = 0)
+    predictValues_dict = {'Train': model.predict(dataForPrediction_dict['Train'], verbose = 0),
+                          'Test' : model.predict(dataForPrediction_dict['Test'] , verbose = 0)
+                         }
 
     # RMSE, MSE, MAE, R²:
-    trainErrors = getError(trainDataTrueValues, trainPredictValues)
-    testErrors  = getError(testDataTrueValues , testPredictValues )
+    errors_dict = {'Train': getError(dataTrueValues_dict['Train'], predictValues_dict['Train']),
+                   'Test' : getError(dataTrueValues_dict['Test'] , predictValues_dict['Test'] )
+                  }
     
     if city_cluster_name not in metricsCompendium:
         metricsCompendium[city_cluster_name] = {}
@@ -72,27 +67,27 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     if city_for_predicting not in metricsCompendium[city_cluster_name][city_for_training]:
         metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {'trainErrors': [], 'testErrors': []}
     
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['trainErrors'] = trainErrors
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['testErrors' ] = testErrors
+    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['trainErrors'] = errors_dict['Train']
+    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['testErrors' ] = errors_dict['Test']
 
     if training == True:
         print(f'\t\t--------------Result for {city_for_training} (training)---------------')
     else:
         print(f'\t\t--------------Result for {city_for_training} applied to {city_for_predicting}---------------')
-    print(f'\t\t\tTRAIN: {trainErrors}')
-    print(f'\t\t\tTEST : {testErrors} ')
+    print(f"\t\t\tTRAIN: {errors_dict['Train']}")
+    print(f"\t\t\tTEST : {errors_dict['Test'] }")
         
     # Plots:
-    showTaylorDiagrams(trainErrors['RMSE'], testErrors['RMSE'], SPEI_dict['Train'], SPEI_dict['Test'], trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showResidualPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showR2ScatterPlots(trainDataTrueValues, trainPredictValues, testDataTrueValues, testPredictValues, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showTaylorDiagrams(errors_dict['Train']['RMSE'], errors_dict['Test']['RMSE'], SPEI_dict['Train'], SPEI_dict['Test'], dataTrueValues_dict['Train'], predictValues_dict['Train'], dataTrueValues_dict['Test'], predictValues_dict['Test'], city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showResidualPlots (dataTrueValues_dict['Train'], predictValues_dict['Train'], dataTrueValues_dict['Test'], predictValues_dict['Test'], city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showR2ScatterPlots(dataTrueValues_dict['Train'], predictValues_dict['Train'], dataTrueValues_dict['Test'], predictValues_dict['Test'], city_cluster_name, city_for_training, city_for_predicting, showImages)
     
     showSpeiData(xlsx, SPEI_dict['Test'], split, city_cluster_name, city_for_training, city_for_predicting, showImages)
     if training:
         showSpeiTest(xlsx, SPEI_dict['Test'], split, city_cluster_name, city_for_training, city_for_predicting, showImages)
         
-    showPredictionResults(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, trainMonthForPredictedValues, testMonthForPredictedValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
-    showPredictionsDistribution(trainDataTrueValues, testDataTrueValues, trainPredictValues, testPredictValues, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionResults(dataTrueValues_dict, predictValues_dict, monthForPredicted_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showPredictionsDistribution(dataTrueValues_dict, predictValues_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
 
     return model, metricsCompendium
 
