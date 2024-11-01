@@ -41,7 +41,7 @@ def trainNeuralNetwork(trainDataForPrediction, trainDataTrueValues, showImages, 
     
     return model
 
-def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
+def useNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages, model=None, training=True):
     SPEI_dict, months_dict, split = splitSpeiData(xlsx) #(SPEI/months)_dict.keys() = ['Train', 'Test']
 
     #         IN            ,           OUT          : 
@@ -52,32 +52,31 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
         model = trainNeuralNetwork(dataForPrediction_dict['Train'], dataTrueValues_dict['Train'], showImages, city_cluster_name, city_for_training, city_for_predicting)
 
     predictValues_dict = {'Train': model.predict(dataForPrediction_dict['Train'], verbose = 0),
-                          'Test' : model.predict(dataForPrediction_dict['Test'] , verbose = 0)
+                          'Test' : model.predict(dataForPrediction_dict['Test' ], verbose = 0)
                          }
 
     # RMSE, MSE, MAE, R²:
     errors_dict = {'Train': getError(dataTrueValues_dict['Train'], predictValues_dict['Train']),
-                   'Test' : getError(dataTrueValues_dict['Test'] , predictValues_dict['Test'] )
+                   'Test' : getError(dataTrueValues_dict['Test' ], predictValues_dict['Test' ])
                   }
     
-    if city_cluster_name not in metricsCompendium:
-        metricsCompendium[city_cluster_name] = {}
-    if city_for_training not in metricsCompendium[city_cluster_name]:
-        metricsCompendium[city_cluster_name][city_for_training] = {}
-    if city_for_predicting not in metricsCompendium[city_cluster_name][city_for_training]:
-        metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {'trainErrors': [], 'testErrors': []}
+    writeErrorsOnMetricsCompendium(city_cluster_name, city_for_training, city_for_predicting, errors_dict)
     
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['trainErrors'] = errors_dict['Train']
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['testErrors' ] = errors_dict['Test']
+    printErrors(errors_dict, training, city_for_training, city_for_predicting)
+    
+    plotModelPlots(showImages, city_cluster_name, city_for_training, city_for_predicting, errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, xlsx, split, monthForPredicted_dict, training)
+    
+    return model, metricsCompendium
 
+def printErrors(errors_dict, training, city_for_training, city_for_predicting):
     if training == True:
         print(f'\t\t--------------Result for {city_for_training} (training)---------------')
     else:
         print(f'\t\t--------------Result for {city_for_training} applied to {city_for_predicting}---------------')
     print(f"\t\t\tTRAIN: {errors_dict['Train']}")
     print(f"\t\t\tTEST : {errors_dict['Test'] }")
-        
-    # Plots:
+
+def plotModelPlots(showImages, city_cluster_name, city_for_training, city_for_predicting, errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, xlsx, split, monthForPredicted_dict, training):
     showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showResidualPlots (dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showR2ScatterPlots(dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
@@ -89,9 +88,18 @@ def UseNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     showPredictionResults      (dataTrueValues_dict, predictValues_dict, monthForPredicted_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionsDistribution(dataTrueValues_dict, predictValues_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
 
-    return model, metricsCompendium
+def writeErrorsOnMetricsCompendium(city_cluster_name, city_for_training, city_for_predicting, errors_dict):
+    if city_cluster_name not in metricsCompendium:
+        metricsCompendium[city_cluster_name] = {}
+    if city_for_training not in metricsCompendium[city_cluster_name]:
+        metricsCompendium[city_cluster_name][city_for_training] = {}
+    if city_for_predicting not in metricsCompendium[city_cluster_name][city_for_training]:
+        metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {'trainErrors': [], 'testErrors': []}
 
-def PrintMetricsList(metricsCompendium):   
+    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['trainErrors'] = errors_dict['Train']
+    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['testErrors' ] = errors_dict['Test']
+
+def printMetricsList(metricsCompendium):   
     list_of_all_metrics_city_by_city = []
     
     for city_cluster_name, dict_of_central_cities in metricsCompendium.items():

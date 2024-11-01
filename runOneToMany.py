@@ -1,5 +1,5 @@
 #Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
-from NeuralNetwork.NeuralNetwork import UseNeuralNetwork, PrintMetricsList
+from NeuralNetwork.NeuralNetwork import useNeuralNetwork, printMetricsList
 from NeuralNetwork.VisualRepresentation import drawMetricsBoxPlots, drawMetricsBarPlots, drawMetricsHistograms, drawMetricsRadarPlots
 
 import tensorflow as tf
@@ -42,7 +42,7 @@ def create_neural_network_models_for_central_cities(dict_cities_of_interest, roo
     
     for central_city in dict_cities_of_interest.keys():
         city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
-        model, metricsCompendium = UseNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', city_cluster_name, central_city, central_city, SHOW_IMAGES, training=True)       
+        model, metricsCompendium = useNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', city_cluster_name, central_city, central_city, SHOW_IMAGES, training=True)       
         neural_network_models[central_city] = model
         tf.keras.backend.clear_session()
     return neural_network_models, metricsCompendium
@@ -51,7 +51,7 @@ def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, ne
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
         for bordering_city in list_of_bordering_cities:
-            model, metricsCompendium = UseNeuralNetwork(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, SHOW_IMAGES, neural_network_models[central_city], training=False)           
+            model, metricsCompendium = useNeuralNetwork(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, SHOW_IMAGES, neural_network_models[central_city], training=False)           
     return metricsCompendium
 
 
@@ -69,7 +69,7 @@ print('APPLYING: START')
 metricsCompendium = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
 print('APPLYING: END')
 
-metrics_df = PrintMetricsList(metricsCompendium)
+metrics_df = printMetricsList(metricsCompendium)
 metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
 
 drawMetricsBoxPlots   (metrics_df, SHOW_IMAGES)
