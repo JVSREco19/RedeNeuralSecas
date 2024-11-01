@@ -31,20 +31,18 @@ def splitSpeiData(xlsx):
     
     return SPEI_dict, months_dict, split
 
-def cria_IN_OUT(data_dict, janela):
+def cria_IN_OUT(data_dict, window_size):
     DATA_TYPES_LIST = ['Train', 'Test']
-    OUT_final_dict  = dict.fromkeys(DATA_TYPES_LIST)
-    IN_final_dict   = dict.fromkeys(DATA_TYPES_LIST)
+    output_dict     = dict.fromkeys(DATA_TYPES_LIST)
+    input_dict      = dict.fromkeys(DATA_TYPES_LIST)
     
     for train_or_test in DATA_TYPES_LIST:
-        OUT_indices = np.arange(janela, len(data_dict[train_or_test]), janela)
-        OUT         = data_dict[train_or_test][OUT_indices]
+        num_windows = len(data_dict[train_or_test])//window_size
         
-        lin_x       = len(OUT)
-        IN          = data_dict[train_or_test][range(janela*lin_x)]
-        IN          = np.reshape(IN, (lin_x, janela, 1))    
+        data        = data_dict[train_or_test][:(window_size * num_windows)]
+        data        = np.reshape(data, (num_windows, window_size, 1))    
         
-        OUT_final_dict[train_or_test] = IN[:,-predictionPoints:,0]
-        IN_final_dict [train_or_test] = IN[:,:-predictionPoints,:]
+        output_dict[train_or_test] = data[:,-predictionPoints:,0]
+        input_dict [train_or_test] = data[:,:-predictionPoints,:]
     
-    return IN_final_dict, OUT_final_dict
+    return input_dict, output_dict
