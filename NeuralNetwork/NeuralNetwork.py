@@ -6,7 +6,7 @@ from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
 from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots, showTaylorDiagrams
 from NeuralNetwork.Metrics import getError
 
-metricsCompendium = {}
+metrics_df = pd.DataFrame(columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
 
 # Abra o arquivo JSON
 with open("NeuralNetwork/config.json") as arquivo:
@@ -60,13 +60,30 @@ def useNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
                    'Test' : getError(dataTrueValues_dict['Test' ], predictValues_dict['Test' ])
                   }
     
-    writeErrorsOnMetricsCompendium(city_cluster_name, city_for_training, city_for_predicting, errors_dict)
+    writeErrors(errors_dict, city_cluster_name, city_for_training, city_for_predicting)
     
     printErrors(errors_dict, training, city_for_training, city_for_predicting)
     
     plotModelPlots(showImages, city_cluster_name, city_for_training, city_for_predicting, errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, xlsx, split, monthForPredicted_dict, training)
     
-    return model, metricsCompendium
+    return model, metrics_df
+
+def writeErrors(errors_dict, city_cluster_name, city_for_training, city_for_predicting):
+    row = {
+        'Agrupamento'       : city_cluster_name            ,
+        'Municipio Treinado': city_for_training            ,
+        'Municipio Previsto': city_for_predicting          ,
+        'MAE Treinamento'   : errors_dict['Train']['MAE' ] ,
+        'MAE Validação'     : errors_dict['Test' ]['MAE' ] ,
+        'RMSE Treinamento'  : errors_dict['Train']['RMSE'] ,
+        'RMSE Validação'    : errors_dict['Test' ]['RMSE'] ,
+        'MSE Treinamento'   : errors_dict['Train']['MSE' ] ,
+        'MSE Validação'     : errors_dict['Test' ]['MSE' ] ,
+        'R^2 Treinamento'   : errors_dict['Train']['R^2' ] ,
+        'R^2 Validação'     : errors_dict['Test' ]['R^2' ]
+    }
+    global metrics_df
+    metrics_df = pd.concat([metrics_df, pd.DataFrame([row])], ignore_index=True)
 
 def printErrors(errors_dict, training, city_for_training, city_for_predicting):
     if training == True:
@@ -87,45 +104,3 @@ def plotModelPlots(showImages, city_cluster_name, city_for_training, city_for_pr
         
     showPredictionResults      (dataTrueValues_dict, predictValues_dict, monthForPredicted_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showPredictionsDistribution(dataTrueValues_dict, predictValues_dict, xlsx, city_cluster_name, city_for_training, city_for_predicting, showImages)
-
-def writeErrorsOnMetricsCompendium(city_cluster_name, city_for_training, city_for_predicting, errors_dict):
-    if city_cluster_name not in metricsCompendium:
-        metricsCompendium[city_cluster_name] = {}
-    if city_for_training not in metricsCompendium[city_cluster_name]:
-        metricsCompendium[city_cluster_name][city_for_training] = {}
-    if city_for_predicting not in metricsCompendium[city_cluster_name][city_for_training]:
-        metricsCompendium[city_cluster_name][city_for_training][city_for_predicting] = {'trainErrors': [], 'testErrors': []}
-
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['trainErrors'] = errors_dict['Train']
-    metricsCompendium[city_cluster_name][city_for_training][city_for_predicting]['testErrors' ] = errors_dict['Test']
-
-def printMetricsList(metricsCompendium):   
-    list_of_all_metrics_city_by_city = []
-    
-    for city_cluster_name, dict_of_central_cities in metricsCompendium.items():
-        for central_city_name, dict_of_bordering_cities in dict_of_central_cities.items():
-            for bordering_city_name, dict_of_measurement_types in dict_of_bordering_cities.items():
-                list_of_metrics_of_one_city = [f'{city_cluster_name}',
-                                               f'{central_city_name}',
-                                               f'{bordering_city_name}',
-                                               dict_of_measurement_types['testErrors' ]['MAE'],
-                                               dict_of_measurement_types['trainErrors']['MAE'],
-                                               
-                                               dict_of_measurement_types['testErrors' ]['RMSE'],
-                                               dict_of_measurement_types['trainErrors']['RMSE'],
-                                               
-                                               dict_of_measurement_types['testErrors' ]['MSE'],
-                                               dict_of_measurement_types['trainErrors']['MSE'],
-                                               
-                                               dict_of_measurement_types['testErrors' ]['R^2'],
-                                               dict_of_measurement_types['trainErrors']['R^2']
-                                               ]
-                list_of_all_metrics_city_by_city.append(list_of_metrics_of_one_city)
-    
-    df = pd.DataFrame(list_of_all_metrics_city_by_city,
-                      columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
-
-    # Escrevendo DataFrame em um arquivo Excel
-    df.to_excel('metricas_modelo.xlsx', index=False)
-
-    return df
