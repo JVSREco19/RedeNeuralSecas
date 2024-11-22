@@ -5,6 +5,7 @@ from scipy.stats import norm
 import skill_metrics as sm
 
 from NeuralNetwork.DataProcess import readXlsx
+from NeuralNetwork.Metrics     import getTaylorMetrics
 
 def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
     if city_for_predicting:
@@ -382,32 +383,43 @@ def drawMetricsRadarPlots(metrics_df, showImages):
             plt.close()
 
 def showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages):
-    # Calculate precision measures:
-    ## Standard Deviation:
-    train_predictions_std_dev = np.std(predictValues_dict['Train'])
-    test_predictions_std_dev  = np.std(predictValues_dict['Test' ])
+    '''
+    Generate a double Taylor Diagram (a - training, b - testing) for one machine learning model.
+
+    Parameters
+    ----------
+    errors_dict : dictionary
+        Error metrics RMSE, MSE, MAE and R², organized under 'Train' and 'Test' keys.
+    SPEI_dict : dictionary
+        Real SPEI data, organized under 'Train' and 'Test' keys.
+    dataTrueValues_dict : dictionary
+        SPEI data for output, for comparing the results of the predictions, organized under 'Train' and 'Test' keys.
+    predictValues_dict : dictionary
+        SPEI values that were predicted by the machine learning model, organized under 'Train' and 'Test' keys.
+    city_cluster_name : string
+        Name of the cluster of cities being considered.
+    city_for_training : string
+        Name of the city from which data was used to train the machine learning model.
+    city_for_predicting : string
+        Name of the city from which data was used to make predictions using the machine learning model.
+    showImages : bool
+        Show the graph? True or false.
+
+    Returns
+    -------
+    None.
+
+    '''
+    observed_std_dev, predictions_std_dev, correlation_coefficient = getTaylorMetrics(SPEI_dict, dataTrueValues_dict, predictValues_dict)
     
-    combined_data             = np.concatenate([SPEI_dict['Train'], SPEI_dict['Test']])
-    observed_std_dev          = np.std(combined_data)
-    
-    print(f'\t\t\tTRAIN: STD Dev {train_predictions_std_dev}')
-    print(f'\t\t\tTEST : STD Dev {test_predictions_std_dev }')
-    
-    ## Correlation Coefficient:
-    train_data_model_corr = np.corrcoef(predictValues_dict['Train'], dataTrueValues_dict['Train'])[0, 1]
-    test_data_model_corr  = np.corrcoef(predictValues_dict['Test' ], dataTrueValues_dict['Test' ])[0, 1]
-    
-    print(f'\t\t\tTRAIN: correlation {train_data_model_corr}')
-    print(f'\t\t\tTEST : correlation {test_data_model_corr}' )
-    
-    label =          [      'Obs'     ,          'Train'            ,           'Test'           ]
-    sdev  = np.array([observed_std_dev, train_predictions_std_dev   , test_predictions_std_dev   ])
-    ccoef = np.array([       1.       , train_data_model_corr       , test_data_model_corr       ])
-    rmse  = np.array([       0.       , errors_dict['Train']['RMSE'], errors_dict['Test']['RMSE']])
+    label =          [      'Obs'     ,                         'Train'         ,                         'Test'         ]
+    sdev  = np.array([observed_std_dev, predictions_std_dev    ['Train']        , predictions_std_dev    ['Test']        ])
+    ccoef = np.array([       1.       , correlation_coefficient['Train']        , correlation_coefficient['Test']        ])
+    rmse  = np.array([       0.       , errors_dict            ['Train']['RMSE'], errors_dict            ['Test']['RMSE']])
     
     # Plotting:
     ## If both are positive, 90° (2 squares), if one of them is negative, 180° (2 rectangles)
-    figsize = (2*8, 2*5) if (train_data_model_corr > 0 and test_data_model_corr > 0) else (2*8, 2*3)
+    figsize = (2*8, 2*5) if (correlation_coefficient['Train'] > 0 and correlation_coefficient['Test'] > 0) else (2*8, 2*3)
     
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=figsize, sharey=True)
     AVAILABLE_AXES = {'a) Training': 0, 'b) Testing': 1}
@@ -422,7 +434,7 @@ def showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValue
                           tickRMSangle = 115, showlabelsRMS = 'on',
                           titleRMS = 'on', titleOBS = 'Obs')
     plt.suptitle (f'Model {city_for_training} applied to {city_for_predicting}')
-    fig.tight_layout()
+    fig.tight_layout(pad = 1.5)
     
     if(showImages):
         plt.show()
