@@ -4,9 +4,9 @@ import json
 
 from NeuralNetwork.DataProcess import splitSpeiData, cria_IN_OUT
 from NeuralNetwork.VisualRepresentation import showPredictionResults, showPredictionsDistribution, showSpeiData, showSpeiTest, drawModelLineGraph, showResidualPlots, showR2ScatterPlots, showTaylorDiagrams
-from NeuralNetwork.Metrics import getError
+from NeuralNetwork.Metrics import getError, getTaylorMetrics
 
-metrics_df = pd.DataFrame(columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação'])
+metrics_df = pd.DataFrame(columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação', 'Desvio Padrão Obs.', 'Desvio Padrão Pred. Treinamento', 'Desvio Padrão Pred. Validação', 'Coef. de Correlação Treinamento', 'Coef. de Correlação Validação'])       
 
 # Abra o arquivo JSON
 with open("NeuralNetwork/config.json") as arquivo:
@@ -60,7 +60,7 @@ def useNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
                    'Test' : getError(dataTrueValues_dict['Test' ], predictValues_dict['Test' ])
                   }
     
-    writeErrors(errors_dict, city_cluster_name, city_for_training, city_for_predicting)
+    writeErrors(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting)
     
     printErrors(errors_dict, training, city_for_training, city_for_predicting)
     
@@ -68,19 +68,26 @@ def useNeuralNetwork(xlsx, city_cluster_name, city_for_training, city_for_predic
     
     return model, metrics_df
 
-def writeErrors(errors_dict, city_cluster_name, city_for_training, city_for_predicting):
+def writeErrors(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting):
+    observed_std_dev, predictions_std_dev, correlation_coefficient = getTaylorMetrics(SPEI_dict, dataTrueValues_dict, predictValues_dict)
+    
     row = {
-        'Agrupamento'       : city_cluster_name            ,
-        'Municipio Treinado': city_for_training            ,
-        'Municipio Previsto': city_for_predicting          ,
-        'MAE Treinamento'   : errors_dict['Train']['MAE' ] ,
-        'MAE Validação'     : errors_dict['Test' ]['MAE' ] ,
-        'RMSE Treinamento'  : errors_dict['Train']['RMSE'] ,
-        'RMSE Validação'    : errors_dict['Test' ]['RMSE'] ,
-        'MSE Treinamento'   : errors_dict['Train']['MSE' ] ,
-        'MSE Validação'     : errors_dict['Test' ]['MSE' ] ,
-        'R^2 Treinamento'   : errors_dict['Train']['R^2' ] ,
-        'R^2 Validação'     : errors_dict['Test' ]['R^2' ]
+        'Agrupamento'                    : city_cluster_name                        ,
+        'Municipio Treinado'             : city_for_training                        ,
+        'Municipio Previsto'             : city_for_predicting                      ,
+        'MAE Treinamento'                : errors_dict            ['Train']['MAE' ] ,
+        'MAE Validação'                  : errors_dict            ['Test' ]['MAE' ] ,
+        'RMSE Treinamento'               : errors_dict            ['Train']['RMSE'] ,
+        'RMSE Validação'                 : errors_dict            ['Test' ]['RMSE'] ,
+        'MSE Treinamento'                : errors_dict            ['Train']['MSE' ] ,
+        'MSE Validação'                  : errors_dict            ['Test' ]['MSE' ] ,
+        'R^2 Treinamento'                : errors_dict            ['Train']['R^2' ] ,
+        'R^2 Validação'                  : errors_dict            ['Test' ]['R^2' ] ,
+        'Desvio Padrão Obs.'             : observed_std_dev                         ,
+        'Desvio Padrão Pred. Treinamento': predictions_std_dev    ['Train']         ,
+        'Desvio Padrão Pred. Validação'  : predictions_std_dev    ['Test' ]         ,
+        'Coef. de Correlação Treinamento': correlation_coefficient['Train']         ,
+        'Coef. de Correlação Validação'  : correlation_coefficient['Test' ]
     }
     global metrics_df
     metrics_df = pd.concat([metrics_df, pd.DataFrame([row])], ignore_index=True)
@@ -94,7 +101,7 @@ def printErrors(errors_dict, training, city_for_training, city_for_predicting):
     print(f"\t\t\tTEST : {errors_dict['Test'] }")
 
 def plotModelPlots(showImages, city_cluster_name, city_for_training, city_for_predicting, errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, xlsx, split, monthForPredicted_dict, training):
-    showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
+    showTaylorDiagrams(metrics_df, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showResidualPlots (dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
     showR2ScatterPlots(dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages)
     

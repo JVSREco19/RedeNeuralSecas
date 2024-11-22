@@ -5,7 +5,6 @@ from scipy.stats import norm
 import skill_metrics as sm
 
 from NeuralNetwork.DataProcess import readXlsx
-from NeuralNetwork.Metrics     import getTaylorMetrics
 
 def saveFig(plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
     if city_for_predicting:
@@ -382,44 +381,22 @@ def drawMetricsRadarPlots(metrics_df, showImages):
             saveFig(plt, f'Radar Plots. {model_name}. {metric_name}. {metric_type}.', model_name, model_name)
             plt.close()
 
-def showTaylorDiagrams(errors_dict, SPEI_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting, showImages):
-    '''
-    Generate a double Taylor Diagram (a - training, b - testing) for one machine learning model.
-
-    Parameters
-    ----------
-    errors_dict : dictionary
-        Error metrics RMSE, MSE, MAE and R², organized under 'Train' and 'Test' keys.
-    SPEI_dict : dictionary
-        Real SPEI data, organized under 'Train' and 'Test' keys.
-    dataTrueValues_dict : dictionary
-        SPEI data for output, for comparing the results of the predictions, organized under 'Train' and 'Test' keys.
-    predictValues_dict : dictionary
-        SPEI values that were predicted by the machine learning model, organized under 'Train' and 'Test' keys.
-    city_cluster_name : string
-        Name of the cluster of cities being considered.
-    city_for_training : string
-        Name of the city from which data was used to train the machine learning model.
-    city_for_predicting : string
-        Name of the city from which data was used to make predictions using the machine learning model.
-    showImages : bool
-        Show the graph? True or false.
-
-    Returns
-    -------
-    None.
-
-    '''
-    observed_std_dev, predictions_std_dev, correlation_coefficient = getTaylorMetrics(SPEI_dict, dataTrueValues_dict, predictValues_dict)
+def showTaylorDiagrams(metrics_df, city_cluster_name, city_for_training, city_for_predicting, showImages):
     
-    label =          [      'Obs'     ,                         'Train'         ,                         'Test'         ]
-    sdev  = np.array([observed_std_dev, predictions_std_dev    ['Train']        , predictions_std_dev    ['Test']        ])
-    ccoef = np.array([       1.       , correlation_coefficient['Train']        , correlation_coefficient['Test']        ])
-    rmse  = np.array([       0.       , errors_dict            ['Train']['RMSE'], errors_dict            ['Test']['RMSE']])
+    label =          ['Obs', 'Train', 'Test']
+    sdev  = np.array([metrics_df.iloc[-1]['Desvio Padrão Obs.'             ] ,
+                      metrics_df.iloc[-1]['Desvio Padrão Pred. Treinamento'] ,
+                      metrics_df.iloc[-1]['Desvio Padrão Pred. Validação'  ] ])
+    ccoef = np.array([1.                                                     ,
+                      metrics_df.iloc[-1]['Coef. de Correlação Treinamento'] ,
+                      metrics_df.iloc[-1]['Coef. de Correlação Validação'  ] ])
+    rmse  = np.array([0.                                                     ,
+                      metrics_df.iloc[-1]['RMSE Treinamento'               ] ,
+                      metrics_df.iloc[-1]['RMSE Validação'                 ] ])
     
     # Plotting:
     ## If both are positive, 90° (2 squares), if one of them is negative, 180° (2 rectangles)
-    figsize = (2*8, 2*5) if (correlation_coefficient['Train'] > 0 and correlation_coefficient['Test'] > 0) else (2*8, 2*3)
+    figsize = (2*8, 2*5) if (metrics_df.iloc[-1]['Coef. de Correlação Treinamento'] > 0 and metrics_df.iloc[-1]['Coef. de Correlação Validação'] > 0) else (2*8, 2*3)
     
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=figsize, sharey=True)
     AVAILABLE_AXES = {'a) Training': 0, 'b) Testing': 1}
