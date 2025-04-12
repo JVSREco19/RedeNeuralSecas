@@ -1,10 +1,7 @@
-#Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
-from NeuralNetwork.NeuralNetwork import useNeuralNetwork
-from NeuralNetwork.VisualRepresentation import drawMetricsBoxPlots, drawMetricsBarPlots, drawMetricsHistograms, drawMetricsRadarPlots
-
 import tensorflow as tf
 import os
 import shutil
+from NeuralNetwork.classes import Dataset, NeuralNetwork, Plotter, PerformanceEvaluator
 
 def define_cities_of_interest(rootdir):
     # Gets the names of the directories inside rootdir and defines them as the central cities:
@@ -54,26 +51,40 @@ def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, ne
             model, metrics_df = useNeuralNetwork(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, SHOW_IMAGES, neural_network_models[central_city], training=False)           
     return metrics_df
 
+rio_pardo_de_mg_dataset   = Dataset       ('Rio Pardo de Minas', 'Rio Pardo de Minas', './Data/', 'RIO PARDO DE MINAS.xlsx')
+rio_pardo_de_mg_plotter   = Plotter       (rio_pardo_de_mg_dataset)
+rio_pardo_de_mg_model     = NeuralNetwork ('./NeuralNetwork/config.json', rio_pardo_de_mg_dataset, rio_pardo_de_mg_plotter)
 
-SHOW_IMAGES = False
+metrics_df = rio_pardo_de_mg_model.use_neural_network ()
+rio_pardo_de_mg_plotter.plotMetricsPlots              (metrics_df)
 
-dict_cities_of_interest = define_cities_of_interest('./Data')
+montezuma_dataset         = Dataset ('Montezuma', 'Rio Pardo de Minas', './Data/', 'MONTEZUMA.xlsx')
+montezuma_plotter         = Plotter (montezuma_dataset)
 
-create_empty_image_directory_tree(dict_cities_of_interest, './Images')
+metrics_df = rio_pardo_de_mg_model.use_neural_network (dataset=montezuma_dataset, plotter=montezuma_plotter)
+montezuma_plotter.plotMetricsPlots                 (metrics_df)
 
-print('TRAINING: START')
-neural_network_models, metrics_df = create_neural_network_models_for_central_cities(dict_cities_of_interest, './Data')
-print('TRAINING: END')
+### OLD CODE: ###
+# SHOW_IMAGES = False
 
-print('APPLYING: START')
-metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
-print('APPLYING: END')
+# dict_cities_of_interest = define_cities_of_interest('./Data')
 
-metrics_df.to_excel('metricas_modelo.xlsx', index=False)
+# create_empty_image_directory_tree(dict_cities_of_interest, './Images')
 
-metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+# print('TRAINING: START')
+# neural_network_models, metrics_df = create_neural_network_models_for_central_cities(dict_cities_of_interest, './Data')
+# print('TRAINING: END')
 
-drawMetricsBoxPlots   (metrics_df, SHOW_IMAGES)
-drawMetricsBarPlots   (metrics_df, SHOW_IMAGES)
-drawMetricsHistograms (metrics_df, SHOW_IMAGES)
-drawMetricsRadarPlots (metrics_df, SHOW_IMAGES)
+# print('APPLYING: START')
+# metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
+# print('APPLYING: END')
+
+# metrics_df.to_excel('metricas_modelo.xlsx', index=False)
+
+# metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+
+# drawMetricsBoxPlots   (metrics_df, SHOW_IMAGES)
+# drawMetricsBarPlots   (metrics_df, SHOW_IMAGES)
+# drawMetricsHistograms (metrics_df, SHOW_IMAGES)
+# drawMetricsRadarPlots (metrics_df, SHOW_IMAGES)
+#######
