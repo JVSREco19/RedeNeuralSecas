@@ -35,45 +35,56 @@ def create_empty_image_directory_tree(dict_cities_of_interest, rootdir):
             os.makedirs(f'{rootdir}/cluster {central_city}/model {central_city}/city {bordering_city}')
     
 def create_neural_network_models_for_central_cities(dict_cities_of_interest, rootdir):
-    neural_network_models = {}
+    neural_network_datasets = {}
+    neural_network_plotters = {}
+    neural_network_models   = {}
     
     for central_city in dict_cities_of_interest.keys():
         city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
-        model, metrics_df = useNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', city_cluster_name, central_city, central_city, SHOW_IMAGES, training=True)       
-        neural_network_models[central_city] = model
+        
+        neural_network_datasets[central_city] = Dataset       (central_city, central_city, INPUT_DATA_DIR, f'{central_city}/{central_city}.xlsx')
+        neural_network_plotters[central_city] = Plotter       (neural_network_datasets[central_city])
+        neural_network_models  [central_city] = NeuralNetwork (NEURAL_NETWORK_CONFIG, neural_network_datasets[central_city], neural_network_plotters[central_city])
+        
         tf.keras.backend.clear_session()
-    return neural_network_models, metrics_df
+    return neural_network_models
 
-def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, rootdir):
-    for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
-        city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
-        for bordering_city in list_of_bordering_cities:
-            model, metrics_df = useNeuralNetwork(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, SHOW_IMAGES, neural_network_models[central_city], training=False)           
-    return metrics_df
+# def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, rootdir):
+#     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
+#         city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
+#         for bordering_city in list_of_bordering_cities:
+#             model, metrics_df = useNeuralNetwork(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, SHOW_IMAGES, neural_network_models[central_city], training=False)           
+#     return metrics_df
 
-rio_pardo_de_mg_dataset   = Dataset       ('Rio Pardo de Minas', 'Rio Pardo de Minas', './Data/', 'RIO PARDO DE MINAS.xlsx')
-rio_pardo_de_mg_plotter   = Plotter       (rio_pardo_de_mg_dataset)
-rio_pardo_de_mg_model     = NeuralNetwork ('./NeuralNetwork/config.json', rio_pardo_de_mg_dataset, rio_pardo_de_mg_plotter)
+INPUT_DATA_DIR        = './Data/'
+OUTPUT_IMAGE_DIR      = './Images/'
+NEURAL_NETWORK_CONFIG = './NeuralNetwork/config.json'
 
-metrics_df = rio_pardo_de_mg_model.use_neural_network ()
-rio_pardo_de_mg_plotter.plotMetricsPlots              (metrics_df)
+dict_cities_of_interest = define_cities_of_interest(INPUT_DATA_DIR)
 
-montezuma_dataset         = Dataset ('Montezuma', 'Rio Pardo de Minas', './Data/', 'MONTEZUMA.xlsx')
-montezuma_plotter         = Plotter (montezuma_dataset)
+create_empty_image_directory_tree(dict_cities_of_interest, OUTPUT_IMAGE_DIR)
 
-metrics_df = rio_pardo_de_mg_model.use_neural_network (dataset=montezuma_dataset, plotter=montezuma_plotter)
-montezuma_plotter.plotMetricsPlots                 (metrics_df)
+print('TRAINING: START')
+neural_network_models = create_neural_network_models_for_central_cities(dict_cities_of_interest, INPUT_DATA_DIR)
+print('TRAINING: END')
+
+### NEW CODE: ###
+
+# [...]
+
+# metrics_df = rio_pardo_de_mg_model.use_neural_network ()
+# rio_pardo_de_mg_plotter.plotMetricsPlots              (metrics_df)
+
+# montezuma_dataset         = Dataset ('Montezuma', 'Rio Pardo de Minas', './Data/', 'MONTEZUMA.xlsx')
+# montezuma_plotter         = Plotter (montezuma_dataset)
+
+# metrics_df = rio_pardo_de_mg_model.use_neural_network (dataset=montezuma_dataset, plotter=montezuma_plotter)
+# montezuma_plotter.plotMetricsPlots                 (metrics_df)
+#######
 
 ### OLD CODE: ###
-# SHOW_IMAGES = False
 
-# dict_cities_of_interest = define_cities_of_interest('./Data')
-
-# create_empty_image_directory_tree(dict_cities_of_interest, './Images')
-
-# print('TRAINING: START')
-# neural_network_models, metrics_df = create_neural_network_models_for_central_cities(dict_cities_of_interest, './Data')
-# print('TRAINING: END')
+# [...]
 
 # print('APPLYING: START')
 # metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
