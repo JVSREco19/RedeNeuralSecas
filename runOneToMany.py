@@ -40,14 +40,22 @@ def create_neural_network_models_for_central_cities(dict_cities_of_interest, roo
     neural_network_models   = {}
     
     for central_city in dict_cities_of_interest.keys():
-        city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
+        # city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
         
         neural_network_datasets[central_city] = Dataset       (central_city, central_city, INPUT_DATA_DIR, f'{central_city}/{central_city}.xlsx')
         neural_network_plotters[central_city] = Plotter       (neural_network_datasets[central_city])
         neural_network_models  [central_city] = NeuralNetwork (NEURAL_NETWORK_CONFIG, neural_network_datasets[central_city], neural_network_plotters[central_city])
         
         tf.keras.backend.clear_session()
-    return neural_network_models
+    return neural_network_models, neural_network_plotters, neural_network_datasets
+
+def train_neural_network_models_for_central_cities():
+    metrics_df_central_cities = {}
+    
+    for neural_network_model_name, neural_network_model in neural_network_models.items():
+        metrics_df = neural_network_model.use_neural_network()
+        metrics_df_central_cities[neural_network_model_name] = metrics_df
+    return metrics_df_central_cities
 
 # def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, rootdir):
 #     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
@@ -64,8 +72,14 @@ dict_cities_of_interest = define_cities_of_interest(INPUT_DATA_DIR)
 
 create_empty_image_directory_tree(dict_cities_of_interest, OUTPUT_IMAGE_DIR)
 
+print('CREATION: START')
+(neural_network_models  ,
+ neural_network_plotters,
+ neural_network_datasets) = create_neural_network_models_for_central_cities(dict_cities_of_interest, INPUT_DATA_DIR)
+print('CREATION: END')
+
 print('TRAINING: START')
-neural_network_models = create_neural_network_models_for_central_cities(dict_cities_of_interest, INPUT_DATA_DIR)
+metrics_df_central_cities = train_neural_network_models_for_central_cities()
 print('TRAINING: END')
 
 ### NEW CODE: ###
