@@ -39,25 +39,34 @@ def load_all_datasets(dict_cities_of_interest):
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         neural_network_datasets[central_city] = Dataset(central_city, central_city, INPUT_DATA_DIR, f'{central_city}/{central_city}.xlsx')
+        
         for bordering_city in list_of_bordering_cities:
             neural_network_datasets[bordering_city] = Dataset(bordering_city, central_city, INPUT_DATA_DIR, f'{central_city}/{bordering_city}.xlsx')
     
     return neural_network_datasets
 
-def instantiate_all_plotters():
-    # neural_network_plotters = {}
-    # neural_network_plotters[central_city] = Plotter       (neural_network_datasets[central_city])
-    pass
-
-def create_neural_network_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, rootdir):
+def instantiate_all_plotters(dict_cities_of_interest, neural_network_datasets):
     neural_network_plotters = {}
+
+    for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
+        neural_network_plotters[central_city] = Plotter (neural_network_datasets[central_city])
+        
+        for bordering_city in list_of_bordering_cities:
+            neural_network_plotters[bordering_city] = Plotter (neural_network_datasets[bordering_city])
+
+    return neural_network_plotters
+
+def create_neural_network_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, rootdir):
     neural_network_models   = {}
     
     for central_city in dict_cities_of_interest.keys():
-        neural_network_plotters[central_city] = Plotter       (neural_network_datasets[central_city])
-        neural_network_models  [central_city] = NeuralNetwork (NEURAL_NETWORK_CONFIG, neural_network_datasets[central_city], neural_network_plotters[central_city])
+        DATASET = neural_network_datasets[central_city]
+        PLOTTER = neural_network_plotters[central_city]
+        
+        neural_network_models [central_city] = NeuralNetwork (NEURAL_NETWORK_CONFIG, DATASET, PLOTTER)
         
         tf.keras.backend.clear_session()
+        
     return neural_network_models, neural_network_plotters, neural_network_datasets
 
 def train_neural_network_models_for_central_cities():
@@ -66,6 +75,7 @@ def train_neural_network_models_for_central_cities():
     for neural_network_model_name, neural_network_model in neural_network_models.items():
         metrics_df = neural_network_model.use_neural_network()
         metrics_df_central_cities[neural_network_model_name] = metrics_df
+        
     return metrics_df_central_cities
 
 def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
@@ -96,14 +106,14 @@ neural_network_datasets = load_all_datasets       (dict_cities_of_interest)
 print('\tLoaded all datasets')
 
 # TO-DO:
-# neural_network_plotters = instantiate_all_plotters(dict_cities_of_interest)
-# print('\tCreated all plotters')
+neural_network_plotters = instantiate_all_plotters(dict_cities_of_interest, neural_network_datasets)
+print('\tCreated all plotters')
 print('PREPARATION: END')
 
 print('CREATION: START')
 (neural_network_models  ,
  neural_network_plotters,
- neural_network_datasets) = create_neural_network_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, INPUT_DATA_DIR)
+ neural_network_datasets) = create_neural_network_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, INPUT_DATA_DIR)
 print('CREATION: END')
 
 print('TRAINING: START')
