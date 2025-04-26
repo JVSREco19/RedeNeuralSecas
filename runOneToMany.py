@@ -56,7 +56,7 @@ def instantiate_all_plotters(dict_cities_of_interest, neural_network_datasets):
 
     return neural_network_plotters
 
-def create_neural_network_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, rootdir):
+def create_ml_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, rootdir):
     neural_network_models   = {}
     
     for central_city in dict_cities_of_interest.keys():
@@ -69,7 +69,7 @@ def create_neural_network_models_for_central_cities(dict_cities_of_interest, neu
         
     return neural_network_models, neural_network_plotters, neural_network_datasets
 
-def train_neural_network_models_for_central_cities():
+def train_ml_models_for_central_cities():
     metrics_df_central_cities = {}
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
@@ -78,7 +78,7 @@ def train_neural_network_models_for_central_cities():
         
     return metrics_df_central_cities
 
-def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
+def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
     #(dict_cities_of_interest, neural_network_models, rootdir):
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
@@ -120,15 +120,15 @@ print('PREPARATION: END')
 print('CREATION: START')
 (neural_network_models  ,
  neural_network_plotters,
- neural_network_datasets) = create_neural_network_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, INPUT_DATA_DIR)
+ neural_network_datasets) = create_ml_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, INPUT_DATA_DIR)
 print('CREATION: END')
 
 print('TRAINING: START')
-metrics_df_central_cities = train_neural_network_models_for_central_cities()
+metrics_df_central_cities = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
+metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
 
 ### NEW CODE: ###
