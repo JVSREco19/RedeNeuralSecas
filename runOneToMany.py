@@ -83,31 +83,38 @@ def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, ne
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         print(f'Model {central_city}:')
+        MODEL = neural_network_models[central_city]
+        
         for bordering_city in list_of_bordering_cities:
+            # These will be input parameters for the neural network:
             print(f'\tCity {bordering_city}')
-            DATASET = neural_network_plotters[bordering_city]
-            PLOTTER = neural_network_datasets[bordering_city]
+            DATASET = neural_network_datasets[bordering_city]
+            PLOTTER = neural_network_plotters[bordering_city]
             
-            metrics_df = neural_network_models[central_city].use_neural_network(dataset=DATASET, plotter=PLOTTER)
-            # One metrics_df for each bordering city. This needs to be properly addressed.
-# apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
-
+            # TO DO:
+            # One metrics_df for each bordering city!
+            # This needs to be properly addressed.
+            metrics_df = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
+            
+            return metrics_df
+            
 
 INPUT_DATA_DIR        = './Data/'
 OUTPUT_IMAGE_DIR      = './Images/'
 NEURAL_NETWORK_CONFIG = './NeuralNetwork/config.json'
 
+print('PREPARATION: START')
 dict_cities_of_interest = define_cities_of_interest(INPUT_DATA_DIR)
+print('\tGot the names of the central cities and respective bordering ones')
 
 create_empty_image_directory_tree(dict_cities_of_interest, OUTPUT_IMAGE_DIR)
+print('\tMade output directories for all cities')
 
-print('PREPARATION: START')
 neural_network_datasets = load_all_datasets       (dict_cities_of_interest)
-print('\tLoaded all datasets')
+print('\tInstantiated all datasets')
 
-# TO-DO:
 neural_network_plotters = instantiate_all_plotters(dict_cities_of_interest, neural_network_datasets)
-print('\tCreated all plotters')
+print('\tInstantiated all plotters')
 print('PREPARATION: END')
 
 print('CREATION: START')
@@ -121,7 +128,7 @@ metrics_df_central_cities = train_neural_network_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-# metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
+metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
 
 ### NEW CODE: ###
@@ -131,8 +138,7 @@ print('APPLYING: END')
 # metrics_df = rio_pardo_de_mg_model.use_neural_network ()
 # rio_pardo_de_mg_plotter.plotMetricsPlots              (metrics_df)
 
-# montezuma_dataset         = Dataset ('Montezuma', 'Rio Pardo de Minas', './Data/', 'MONTEZUMA.xlsx')
-# montezuma_plotter         = Plotter (montezuma_dataset)
+# [...]
 
 # metrics_df = rio_pardo_de_mg_model.use_neural_network (dataset=montezuma_dataset, plotter=montezuma_plotter)
 # montezuma_plotter.plotMetricsPlots                 (metrics_df)
