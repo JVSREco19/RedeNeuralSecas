@@ -37,22 +37,22 @@ class NeuralNetwork:
         return configs_dict        
 
     def _create_ml_model(self):
-        print('Started: creation of ML model')
+        # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()
         model.add(tf.keras.Input       (shape=self.configs_dict['input_shape' ]))
         model.add(tf.keras.layers.LSTM (      self.configs_dict['hidden_units'], activation=self.configs_dict['activation'][0]))
         for _ in range(3):
             model.add(tf.keras.layers.Dense(units=self.configs_dict['dense_units'], activation=self.configs_dict['activation'][1]))
         model.compile(loss=self.configs_dict['loss'], metrics=self.configs_dict['metrics'], optimizer=self.configs_dict['optimizer'])
-        print('Ended  : creation of ML model')
+        # print(f'Ended: creation of ML model {self.dataset.city_name}')
         
         return model
     
     def _train_ml_model(self, dataForPrediction_dict, dataTrueValues_dict):
-        print('Started: training of ML model (may take a while)')
+        print(f'Started: training of ML model {self.dataset.city_name} (may take a while)')
         history=self.model.fit(dataForPrediction_dict['Train'], dataTrueValues_dict['Train'], epochs=self.configs_dict['numberOfEpochs'], batch_size=1, verbose=0)
         self.has_trained = True
-        print('Ended  : training of ML model')
+        print(f'Ended  : training of ML model {self.dataset.city_name}')
         
         return history
     
@@ -69,7 +69,7 @@ class NeuralNetwork:
             history        = self._train_ml_model(dataForPrediction_dict, dataTrueValues_dict)
             plotter.drawModelLineGraph           (history, self.dataset.city_cluster_name, self.dataset.city_name)
             
-        print('Started: applying ML model')        
+        print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         predictValues_dict = {
             'Train': self.model.predict(dataForPrediction_dict['Train'], verbose = 0),
             'Test' : self.model.predict(dataForPrediction_dict['Test' ], verbose = 0)
@@ -86,6 +86,6 @@ class NeuralNetwork:
                                     history if not self.has_trained else None             , metrics_df       ,
                                     self.dataset.city_cluster_name, self.dataset.city_name, dataset.city_name)
         
-        print('Ended: applying ML model')
+        print(f'Ended: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
         return metrics_df

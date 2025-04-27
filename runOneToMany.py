@@ -64,6 +64,7 @@ def create_ml_models_for_central_cities(dict_cities_of_interest, neural_network_
         PLOTTER = neural_network_plotters[central_city]
         
         neural_network_models [central_city] = NeuralNetwork (NEURAL_NETWORK_CONFIG, DATASET, PLOTTER)
+        print(f'\tCreated ML model {central_city}')
         
         tf.keras.backend.clear_session()
         
@@ -79,7 +80,7 @@ def train_ml_models_for_central_cities():
     return metrics_df_central_cities
 
 def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
-    #(dict_cities_of_interest, neural_network_models, rootdir):
+    metrics_df_bordering_cities = {city: {} for city in dict_cities_of_interest.keys()}
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         print(f'Model {central_city}:')
@@ -91,12 +92,10 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
             DATASET = neural_network_datasets[bordering_city]
             PLOTTER = neural_network_plotters[bordering_city]
             
-            # TO DO:
-            # One metrics_df for each bordering city!
-            # This needs to be properly addressed.
             metrics_df = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
+            metrics_df_bordering_cities[central_city][bordering_city] = metrics_df
             
-            return metrics_df
+    return metrics_df_bordering_cities
             
 
 INPUT_DATA_DIR        = './Data/'
@@ -128,7 +127,7 @@ metrics_df_central_cities = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
+metrics_df_bordering_cities = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
 
 ### NEW CODE: ###
