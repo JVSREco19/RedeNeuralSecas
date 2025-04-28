@@ -76,6 +76,8 @@ def train_ml_models_for_central_cities():
     for neural_network_model_name, neural_network_model in neural_network_models.items():
         metrics_df = neural_network_model.use_neural_network()
         metrics_df_central_cities[neural_network_model_name] = metrics_df
+
+        neural_network_model.plotter.plotMetricsPlots(metrics_df)
         
     return metrics_df_central_cities
 
@@ -94,6 +96,8 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
             
             metrics_df = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
             metrics_df_bordering_cities[central_city][bordering_city] = metrics_df
+            
+            PLOTTER.plotMetricsPlots(metrics_df)
             
     return metrics_df_bordering_cities
             
@@ -130,29 +134,10 @@ print('APPLYING: START')
 metrics_df_bordering_cities = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
 
-### NEW CODE: ###
-
-# [...]
-
-# metrics_df = rio_pardo_de_mg_model.use_neural_network ()
-# rio_pardo_de_mg_plotter.plotMetricsPlots              (metrics_df)
-
-# [...]
-
-# metrics_df = rio_pardo_de_mg_model.use_neural_network (dataset=montezuma_dataset, plotter=montezuma_plotter)
-# montezuma_plotter.plotMetricsPlots                 (metrics_df)
-#######
-
 ### OLD CODE: ###
-
-# [...]
 
 # metrics_df.to_excel('metricas_modelo.xlsx', index=False)
 
 # metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
 
-# drawMetricsBoxPlots   (metrics_df, SHOW_IMAGES)
-# drawMetricsBarPlots   (metrics_df, SHOW_IMAGES)
-# drawMetricsHistograms (metrics_df, SHOW_IMAGES)
-# drawMetricsRadarPlots (metrics_df, SHOW_IMAGES)
 #######

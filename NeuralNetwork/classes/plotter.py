@@ -198,10 +198,11 @@ class Plotter:
         # Plotting the graphs:
         for metric_name in list_of_metrics_names:
             training_values   = metrics_dict[metric_name]['Treinamento'].values()
-            training_plot     = plt.boxplot(training_values  , positions=np.array(np.arange(len(training_values  )))*2.0-0.35)
+            boxplot_values_positions = np.array(np.arange(len(training_values  )))*2.0-0.35
+            training_plot     = plt.boxplot(training_values  , positions=boxplot_values_positions)
             
             validation_values = metrics_dict[metric_name]['Validação'  ].values()
-            validation_plot   = plt.boxplot(validation_values, positions=np.array(np.arange(len(validation_values)))*2.0+0.35)
+            validation_plot   = plt.boxplot(validation_values, positions=boxplot_values_positions)
         
             # setting colors for each groups
             self.define_box_properties(training_plot  , '#D7191C', 'Training'  )
@@ -237,7 +238,8 @@ class Plotter:
         for metric_name in list_of_metrics_names:
             for metric_type in list_of_metrics_types:
                 for model_name in list_of_models_names:
-                    average = statistics.mean( metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list() )
+                    df_filter = metrics_df['Municipio Treinado'] == model_name
+                    average = statistics.mean( metrics_df[ df_filter ][f'{metric_name} {metric_type}'].to_list() )
                     metrics_averages_dict[metric_name][metric_type][model_name] = average
         
         # Plotting the graphs:
@@ -286,9 +288,10 @@ class Plotter:
         for metric_name in list_of_metrics_names:
             for metric_type in list_of_metrics_types:
                 for model_name in list_of_models_names:
-                    metrics_dict[metric_name][metric_type][model_name] = metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list()
+                    df_filter = metrics_df['Municipio Treinado'] == model_name
+                    metrics_dict[metric_name][metric_type][model_name] = metrics_df[ df_filter ][f'{metric_name} {metric_type}'].to_list()
     
-        # Plotting the graphs:        
+        # Plotting the graphs:
         for model_name in list_of_models_names:
             x_MAE  = [ metrics_dict['MAE' ]['Treinamento'][model_name] ,
                        metrics_dict['MAE' ]['Validação'  ][model_name] ]
@@ -368,7 +371,8 @@ class Plotter:
         for metric_name in list_of_metrics_names:
             for metric_type in list_of_metrics_types:
                 for model_name in list_of_models_names:
-                    average = statistics.mean( metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list() )
+                    df_filter = metrics_df['Municipio Treinado'] == model_name
+                    average = statistics.mean( metrics_df[ df_filter ][f'{metric_name} {metric_type}'].to_list() )
                     metrics_averages_dict[metric_name][metric_type][model_name] = average
         
         # Plotting the graphs:

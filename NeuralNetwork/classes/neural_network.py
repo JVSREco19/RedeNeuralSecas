@@ -50,7 +50,11 @@ class NeuralNetwork:
     
     def _train_ml_model(self, dataForPrediction_dict, dataTrueValues_dict):
         print(f'Started: training of ML model {self.dataset.city_name} (may take a while)')
-        history=self.model.fit(dataForPrediction_dict['Train'], dataTrueValues_dict['Train'], epochs=self.configs_dict['numberOfEpochs'], batch_size=1, verbose=0)
+        history = self.model.fit(
+            dataForPrediction_dict['Train'],
+            dataTrueValues_dict   ['Train'],
+            epochs=self.configs_dict['numberOfEpochs'], batch_size=1, verbose=0)
+        self.has_trained = True
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}')
         
@@ -75,7 +79,7 @@ class NeuralNetwork:
             'Test' : self.model.predict(dataForPrediction_dict['Test' ], verbose = 0)
                              }
         
-        metrics_df = self.evaluator.evaluate(self.has_trained              , spei_dict              ,
+        metrics_df = self.evaluator.evaluate(self.has_trained , spei_dict              ,
                                 dataTrueValues_dict           , predictValues_dict     ,
                                 self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name )
         

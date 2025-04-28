@@ -3,13 +3,18 @@ import numpy      as np
 import pandas     as pd
 
 class PerformanceEvaluator():
-
+    
+    def __init__(self):
+        self.metrics_df = pd.DataFrame(columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação', 'Desvio Padrão Obs.', 'Desvio Padrão Pred. Treinamento', 'Desvio Padrão Pred. Validação', 'Coef. de Correlação Treinamento', 'Coef. de Correlação Validação'])
+        
     def evaluate          (self, has_trained   , spei_dict          ,
                            dataTrueValues_dict , predictValues_dict ,
                            city_cluster_name   , city_for_training  , city_for_predicting):
         
-        errors_dict = self._print_errors(dataTrueValues_dict, predictValues_dict, city_for_training, city_for_predicting, has_trained)
-        self.writeErrors(errors_dict, spei_dict, dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting)
+        errors_dict = self._print_errors(dataTrueValues_dict, predictValues_dict  ,
+                                         city_for_training  , city_for_predicting , has_trained)
+        self.writeErrors(errors_dict      , spei_dict        , dataTrueValues_dict, predictValues_dict,
+                         city_cluster_name, city_for_training, city_for_predicting)
         
         return self.metrics_df
     
@@ -55,8 +60,6 @@ class PerformanceEvaluator():
                     dataTrueValues_dict, predictValues_dict ,
                     city_cluster_name  , city_for_training  , city_for_predicting):
         observed_std_dev, predictions_std_dev, correlation_coefficient = self.getTaylorMetrics(spei_dict, dataTrueValues_dict, predictValues_dict)
-
-        self.metrics_df = pd.DataFrame(columns=['Agrupamento', 'Municipio Treinado', 'Municipio Previsto', 'MAE Treinamento', 'MAE Validação', 'RMSE Treinamento', 'RMSE Validação', 'MSE Treinamento', 'MSE Validação', 'R^2 Treinamento', 'R^2 Validação', 'Desvio Padrão Obs.', 'Desvio Padrão Pred. Treinamento', 'Desvio Padrão Pred. Validação', 'Coef. de Correlação Treinamento', 'Coef. de Correlação Validação'])
         
         row = {
             'Agrupamento'                    : city_cluster_name                        ,
