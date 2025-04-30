@@ -1,4 +1,5 @@
 import tensorflow as tf
+import pandas     as pd
 import os
 import shutil
 from NeuralNetwork.classes import Dataset, NeuralNetwork, Plotter, PerformanceEvaluator
@@ -71,18 +72,27 @@ def create_ml_models_for_central_cities(dict_cities_of_interest, neural_network_
     return neural_network_models, neural_network_plotters, neural_network_datasets
 
 def train_ml_models_for_central_cities():
-    metrics_df_central_cities = {}
+    metrics_df_central_cities = None
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
-        metrics_df = neural_network_model.use_neural_network()
-        metrics_df_central_cities[neural_network_model_name] = metrics_df
+        metrics_df_current_central_city = neural_network_model.use_neural_network()
 
-        neural_network_model.plotter.plotMetricsPlots(metrics_df)
+        if metrics_df_central_cities is None or metrics_df_central_cities.empty:
+            print(f'Replacing the empty df by {neural_network_model_name} df')
+            metrics_df_central_cities = metrics_df_current_central_city
+            print(f'New shape: {metrics_df_central_cities.shape}')
+        else:
+            print(f'Concatenating {neural_network_model_name} df to the existing df')
+            metrics_df_central_cities = pd.concat([metrics_df_central_cities, metrics_df_current_central_city], ignore_index=True)
+            print(f'New shape: {metrics_df_central_cities.shape}')
+        
+    # TO DO: reenable this
+    # neural_network_model.plotter.plotMetricsPlots(metrics_df_central_cities)
         
     return metrics_df_central_cities
 
 def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
-    metrics_df_bordering_cities = {city: {} for city in dict_cities_of_interest.keys()}
+    metrics_df_bordering_cities = None
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
         print(f'Model {central_city}:')
@@ -94,10 +104,20 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
             DATASET = neural_network_datasets[bordering_city]
             PLOTTER = neural_network_plotters[bordering_city]
             
-            metrics_df = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
-            metrics_df_bordering_cities[central_city][bordering_city] = metrics_df
+            metrics_df_current_bordering_city = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
+            if metrics_df_bordering_cities is None or metrics_df_bordering_cities.empty:
+                print(f'Replacing the empty df by {bordering_city} df')
+                metrics_df_bordering_cities = metrics_df_current_bordering_city
+                print(f'New shape: {metrics_df_bordering_cities.shape}')
+            else:
+                print(f'Concatenating {bordering_city} df to the existing df')
+                metrics_df_bordering_cities = pd.concat([metrics_df_bordering_cities, metrics_df_current_bordering_city], ignore_index=True)
+                print(f'New shape: {metrics_df_bordering_cities.shape}')
             
-            PLOTTER.plotMetricsPlots(metrics_df)
+            # metrics_df_bordering_cities[central_city][bordering_city] = metrics_df
+            
+            # TO DO: reenable this
+            # PLOTTER.plotMetricsPlots(metrics_df_bordering_cities)
             
     return metrics_df_bordering_cities
             
