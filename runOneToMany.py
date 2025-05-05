@@ -82,9 +82,6 @@ def train_ml_models_for_central_cities():
         else:
             metrics_df_central_cities = pd.concat([metrics_df_central_cities, metrics_df_current_central_city], ignore_index=True)
         
-    # TO DO: reenable this
-    # neural_network_model.plotter.plotMetricsPlots(metrics_df_central_cities)
-        
     return metrics_df_central_cities
 
 def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
@@ -108,9 +105,6 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
         else:
             metrics_df_bordering_cities = pd.concat([metrics_df_bordering_cities, metrics_df_bordering_cities_current_model], ignore_index=True)
 
-        # TO DO: reenable this
-        # PLOTTER.plotMetricsPlots(metrics_df_bordering_cities)
-            
     return metrics_df_bordering_cities
             
 
@@ -146,10 +140,12 @@ print('APPLYING: START')
 metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
 
-### OLD CODE: ###
+print('TERMINATION: START')
+any_plotter = list(neural_network_plotters.values())[0]
+any_plotter.plotMetricsPlots(metrics_df)
 
-# metrics_df.to_excel('metricas_modelo.xlsx', index=False)
+metrics_df.to_excel('metricas_modelo.xlsx', index=False)
 
-# metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-
-#######
+# Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+metrics_df = metrics_df.drop('Agrupamento', axis='columns') 
+print('TERMINATION: END')
