@@ -37,7 +37,8 @@ class Plotter:
                        history                                   , metrics_df         ,
                        city_cluster_name     , city_for_training , city_for_predicting):
         
-        self.showTaylorDiagrams         (metrics_df                             , city_cluster_name, city_for_training, city_for_predicting)
+        # Issue #7: "Taylor Diagrams are an unfinished work"
+        # self.showTaylorDiagrams         (metrics_df                             , city_cluster_name, city_for_training, city_for_predicting)
         self.showResidualPlots          (dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting)
         self.showR2ScatterPlots         (dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting)
         self.showPredictionsDistribution(dataTrueValues_dict, predictValues_dict, city_cluster_name, city_for_training, city_for_predicting)
@@ -47,7 +48,9 @@ class Plotter:
         self.drawMetricsBoxPlots   (metrics_df)
         self.drawMetricsBarPlots   (metrics_df)
         self.drawMetricsHistograms (metrics_df)
-        self.drawMetricsRadarPlots (metrics_df)
+        
+        # Issue #3: "Radar Plots are an unfinished work"
+        # self.drawMetricsRadarPlots (metrics_df)
     
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
         monthValues          = dataset.get_months         ()
@@ -193,16 +196,17 @@ class Plotter:
         for metric_name in list_of_metrics_names:
             for metric_type in list_of_metrics_types:
                 for model_name in list_of_models_names:
-                    metrics_dict[metric_name][metric_type][model_name] = metrics_df[ metrics_df['Municipio Treinado'] == model_name ][f'{metric_name} {metric_type}'].to_list()
+                    df_filter = metrics_df['Municipio Treinado'] == model_name
+                    metrics_dict[metric_name][metric_type][model_name] = metrics_df[ df_filter ][f'{metric_name} {metric_type}'].to_list()
         
         # Plotting the graphs:
         for metric_name in list_of_metrics_names:
             training_values   = metrics_dict[metric_name]['Treinamento'].values()
-            boxplot_values_positions = np.array(np.arange(len(training_values  )))*2.0-0.35
-            training_plot     = plt.boxplot(training_values  , positions=boxplot_values_positions)
+            boxplot_values_positions_base = np.array(np.arange(len(training_values  )))
+            training_plot     = plt.boxplot(training_values  , positions=boxplot_values_positions_base*2.0-0.35)
             
             validation_values = metrics_dict[metric_name]['Validação'  ].values()
-            validation_plot   = plt.boxplot(validation_values, positions=boxplot_values_positions)
+            validation_plot   = plt.boxplot(validation_values, positions=boxplot_values_positions_base*2.0+0.35)
         
             # setting colors for each groups
             self.define_box_properties(training_plot  , '#D7191C', 'Training'  )
