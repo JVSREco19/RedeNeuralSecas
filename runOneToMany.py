@@ -139,14 +139,12 @@ print('CREATION: START')
 print('CREATION: END')
 
 print('TRAINING: START')
-metrics_df_central_cities = train_ml_models_for_central_cities()
+metrics_df_central_cities_only = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-metrics_df_bordering_cities = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
+metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
-
-metrics_df = pd.concat([metrics_df_central_cities, metrics_df_bordering_cities], ignore_index=True)
 
 ### OLD CODE: ###
 
