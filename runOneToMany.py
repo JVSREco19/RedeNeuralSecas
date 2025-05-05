@@ -78,13 +78,9 @@ def train_ml_models_for_central_cities():
         metrics_df_current_central_city = neural_network_model.use_neural_network()
 
         if metrics_df_central_cities is None or metrics_df_central_cities.empty:
-            print(f'Replacing the empty df by {neural_network_model_name} df')
             metrics_df_central_cities = metrics_df_current_central_city
-            print(f'New shape: {metrics_df_central_cities.shape}')
         else:
-            print(f'Concatenating {neural_network_model_name} df to the existing df')
             metrics_df_central_cities = pd.concat([metrics_df_central_cities, metrics_df_current_central_city], ignore_index=True)
-            print(f'New shape: {metrics_df_central_cities.shape}')
         
     # TO DO: reenable this
     # neural_network_model.plotter.plotMetricsPlots(metrics_df_central_cities)
@@ -104,20 +100,16 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
             DATASET = neural_network_datasets[bordering_city]
             PLOTTER = neural_network_plotters[bordering_city]
             
-            metrics_df_current_bordering_city = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
-            if metrics_df_bordering_cities is None or metrics_df_bordering_cities.empty:
-                print(f'Replacing the empty df by {bordering_city} df')
-                metrics_df_bordering_cities = metrics_df_current_bordering_city
-                print(f'New shape: {metrics_df_bordering_cities.shape}')
-            else:
-                print(f'Concatenating {bordering_city} df to the existing df')
-                metrics_df_bordering_cities = pd.concat([metrics_df_bordering_cities, metrics_df_current_bordering_city], ignore_index=True)
-                print(f'New shape: {metrics_df_bordering_cities.shape}')
-            
-            # metrics_df_bordering_cities[central_city][bordering_city] = metrics_df
-            
-            # TO DO: reenable this
-            # PLOTTER.plotMetricsPlots(metrics_df_bordering_cities)
+            metrics_df_bordering_cities_current_model = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
+
+        # Run once for every central city, not for every bordering city:
+        if metrics_df_bordering_cities is None:
+            metrics_df_bordering_cities = metrics_df_bordering_cities_current_model
+        else:
+            metrics_df_bordering_cities = pd.concat([metrics_df_bordering_cities, metrics_df_bordering_cities_current_model], ignore_index=True)
+
+        # TO DO: reenable this
+        # PLOTTER.plotMetricsPlots(metrics_df_bordering_cities)
             
     return metrics_df_bordering_cities
             
@@ -153,6 +145,8 @@ print('TRAINING: END')
 print('APPLYING: START')
 metrics_df_bordering_cities = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
+
+metrics_df = pd.concat([metrics_df_central_cities, metrics_df_bordering_cities], ignore_index=True)
 
 ### OLD CODE: ###
 
