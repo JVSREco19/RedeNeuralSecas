@@ -1,9 +1,10 @@
 import statistics
 import os
-import matplotlib.pyplot as     plt
-import numpy             as     np
-import skill_metrics     as     sm
-from   scipy.stats       import norm
+import matplotlib.pyplot   as      plt
+import numpy               as       np
+import skill_metrics       as       sm
+import matplotlib.gridspec as gridspec
+from   scipy.stats         import norm
 
 class Plotter:
     
@@ -276,6 +277,9 @@ class Plotter:
             return 0, 0
     
     def drawMetricsHistograms(self, metrics_df):
+        COLS_LABELS = ['Training (columns)', 'Validation (columns)']
+        COLS_COLORS = [        'red'       ,        'green'        ]
+        
         # Creation of the empty dictionary:
         list_of_metrics_names = [    'MAE'    ,   'RMSE'   ]
         list_of_metrics_types = ['Treinamento', 'Validação']
@@ -301,28 +305,49 @@ class Plotter:
                        metrics_dict['MAE' ]['Validação'  ][model_name] ]
             x_RMSE = [ metrics_dict['RMSE']['Treinamento'][model_name] ,
                        metrics_dict['RMSE']['Validação'  ][model_name] ]
-        
-            fig, axs = plt.subplots(nrows=1, ncols=2)
             
-            axs[0].hist(x_MAE , density=True, histtype='bar', color=['red', 'green'], label=['Treinamento', 'Validação'])
-            x, p = self.define_normal_distribution(axs[0], x_MAE[0])
-            axs[0].plot(x, p, 'red', linewidth=2)
-            x, p = self.define_normal_distribution(axs[0], x_MAE[1])
-            axs[0].plot(x, p, 'green', linewidth=2)
-            axs[0].set_title('MAE')
+            # fig = plt.figure(figsize=(12, 8))
+            fig = plt.figure()
+            gs  = gridspec.GridSpec(2, 2, height_ratios=[10, 1])
+
+            # LAYOUT:
+            # +------------------------+------------------------+
+            # |           MAE          |          RMSE          |
+            # +------------------------+------------------------+
+            # |                      LEGEND                     |
+            # +-------------------------------------------------+
+
+            ax_mae    = fig.add_subplot(gs[0, 0])
+            ax_rmse   = fig.add_subplot(gs[0, 1])
+            ax_legend = fig.add_subplot(gs[1, :])
             
-            axs[1].hist(x_RMSE, density=True, histtype='bar', color=['red', 'green'], label=['Treinamento', 'Validação'])
-            x, p = self.define_normal_distribution(axs[1], x_RMSE[0])
-            axs[1].plot(x, p, 'red', linewidth=2)
-            x, p = self.define_normal_distribution(axs[1], x_RMSE[1])
-            axs[1].plot(x, p, 'green', linewidth=2)
-            axs[1].set_title('RMSE')
+            # MAE Histogram
+            ax_mae.hist(x_MAE , density=True, histtype='bar', color=COLS_COLORS, label=COLS_LABELS)
+            x, p = self.define_normal_distribution(ax_mae, x_MAE[0])
+            ax_mae.plot(x, p, 'red', linewidth=2, label='Training Normal Distribution (curves)')
+            x, p = self.define_normal_distribution(ax_mae, x_MAE[1])
+            ax_mae.plot(x, p, 'green', linewidth=2, label='Validation Normal Distribution (curves)')
+            ax_mae.set_title('MAE')
+            ax_mae.set_ylabel('Frequency')
             
-            for ax in axs.flat:
-                ax.set(ylabel='Frequency')
-        
-            plt.suptitle(f'Histograms of model {model_name}')
-            fig.tight_layout()
+            # RMSE Histogram
+            ax_rmse.hist(x_RMSE, density=True, histtype='bar', color=COLS_COLORS, label=COLS_LABELS)
+            x, p = self.define_normal_distribution(ax_rmse, x_RMSE[0])
+            ax_rmse.plot(x, p, 'red', linewidth=2, label='Training Normal Distribution (curves)')
+            x, p = self.define_normal_distribution(ax_rmse, x_RMSE[1])
+            ax_rmse.plot(x, p, 'green', linewidth=2, label='Validation Normal Distribution (curves)')
+            ax_rmse.set_title('RMSE')
+            
+            # Plot legend in separate subplot
+            ax_legend.axis('off')
+            handles, labels = ax_mae .get_legend_handles_labels()
+            ax_legend.legend(
+                handles, labels,
+                loc='center', ncol=2, frameon=False
+            )
+            
+            fig.suptitle(f'Histograms of model {model_name}')
+            fig.tight_layout(rect=[0, 0, 1, 0.95])
             
             self._saveFig(plt, 'Histograms.', model_name, model_name)
             plt.close()
@@ -336,7 +361,7 @@ class Plotter:
             plt.axhline(y=0, color='r', linestyle='--')
             plt.xlabel('Predicted Values')
             plt.ylabel('Residuals')
-            plt.title (f'Residual Plot for {training_or_testing} data. Model {city_for_training} applied to {city_for_predicting}.')
+            plt.title (f'Residual Plot for {training_or_testing} data.\nModel {city_for_training} applied to {city_for_predicting}.')
             
             self._saveFig(plt, f'Residual Plots {training_or_testing}', city_cluster_name, city_for_training, city_for_predicting)
             plt.close()
