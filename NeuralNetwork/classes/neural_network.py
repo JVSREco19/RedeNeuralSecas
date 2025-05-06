@@ -37,15 +37,17 @@ class NeuralNetwork:
         return configs_dict        
 
     def _create_ml_model(self):
-        # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()
-        model.add(tf.keras.Input       (shape=self.configs_dict['input_shape' ]))
-        model.add(tf.keras.layers.LSTM (      self.configs_dict['hidden_units'], activation=self.configs_dict['activation'][0]))
+        model.add(tf.keras.Input       (shape =      self.configs_dict['input_shape' ]))
+        model.add(tf.keras.layers.LSTM (             self.configs_dict['hidden_units'],
+                                        activation = self.configs_dict[ 'activation' ][0]))
         for _ in range(3):
-            model.add(tf.keras.layers.Dense(units=self.configs_dict['dense_units'], activation=self.configs_dict['activation'][1]))
-        model.compile(loss=self.configs_dict['loss'], metrics=self.configs_dict['metrics'], optimizer=self.configs_dict['optimizer'])
-        # print(f'Ended: creation of ML model {self.dataset.city_name}')
-        
+            model.add(tf.keras.layers.Dense(units      = self.configs_dict['dense_units'],
+                                            activation = self.configs_dict['activation' ][1]))
+        model.compile(loss     = self.configs_dict[   'loss'  ],
+                      metrics  = self.configs_dict[ 'metrics' ],
+                      optimizer= self.configs_dict['optimizer'])
+
         return model
     
     def _train_ml_model(self, dataForPrediction_dict, dataTrueValues_dict):
