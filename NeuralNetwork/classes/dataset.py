@@ -9,7 +9,7 @@ class Dataset:
     def __init__(self, city_name, city_cluster_name, root_dir, xlsx):
         self.city_name         = city_name
         self.city_cluster_name = city_cluster_name
-        self.df                = pd.read_excel(root_dir + xlsx)
+        self.df                = pd.read_excel(root_dir + xlsx, index_col=0)
         self.df.rename(columns = {'Series 1': 'SPEI Real'}, inplace=True)
 
     def get_months(self):

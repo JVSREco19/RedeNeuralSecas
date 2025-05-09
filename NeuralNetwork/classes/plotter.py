@@ -117,7 +117,7 @@ class Plotter:
         plt.legend (['Verdadeiros', 'Previstos'])
         plt.xlabel ('Data')
         plt.ylabel ('SPEI')
-        plt.title  (f'{city_for_predicting}: valores verdadeiros e previstos para o final das séries')
+        plt.title  (f'{city_for_predicting}:\nvalores verdadeiros e previstos para o final das séries')
         #plt.show()
         
         self._saveFig(plt, 'Previsao', city_cluster_name, city_for_training, city_for_predicting)
