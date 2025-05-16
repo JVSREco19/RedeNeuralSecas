@@ -322,7 +322,8 @@ class Plotter:
             ax_legend = fig.add_subplot(gs[1, :])
             
             # MAE Histogram
-            ax_mae.hist(x_MAE , density=True, histtype='bar', color=COLS_COLORS, label=COLS_LABELS)
+            ax_mae.hist(x_MAE[0], bins='auto', histtype='bar', color=COLS_COLORS[0], label=COLS_LABELS[0], alpha=0.6, density=False)
+            ax_mae.hist(x_MAE[1], bins='auto', histtype='bar', color=COLS_COLORS[1], label=COLS_LABELS[1], alpha=0.6, density=False)
             x, p = self.define_normal_distribution(ax_mae, x_MAE[0])
             ax_mae.plot(x, p, 'red', linewidth=2, label='Training Normal Distribution (curves)')
             x, p = self.define_normal_distribution(ax_mae, x_MAE[1])
@@ -331,7 +332,8 @@ class Plotter:
             ax_mae.set_ylabel('Frequency')
             
             # RMSE Histogram
-            ax_rmse.hist(x_RMSE, density=True, histtype='bar', color=COLS_COLORS, label=COLS_LABELS)
+            ax_rmse.hist(x_RMSE[0], bins='auto', histtype='bar', color=COLS_COLORS[0], label=COLS_LABELS[0], alpha=0.6, density=False)
+            ax_rmse.hist(x_RMSE[1], bins='auto', histtype='bar', color=COLS_COLORS[1], label=COLS_LABELS[1], alpha=0.6, density=False)
             x, p = self.define_normal_distribution(ax_rmse, x_RMSE[0])
             ax_rmse.plot(x, p, 'red', linewidth=2, label='Training Normal Distribution (curves)')
             x, p = self.define_normal_distribution(ax_rmse, x_RMSE[1])
