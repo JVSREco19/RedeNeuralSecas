@@ -1,10 +1,8 @@
-#Deve-se passar o caminho para o xlsx da região para qual o modelo deve ser TREINADO
-from NeuralNetwork.NeuralNetwork import useNeuralNetwork
-from NeuralNetwork.VisualRepresentation import drawMetricsBoxPlots, drawMetricsBarPlots, drawMetricsHistograms, drawMetricsRadarPlots
-
 import tensorflow as tf
+import pandas     as pd
 import os
 import shutil
+from NeuralNetwork.classes import Dataset, NeuralNetwork, Plotter, PerformanceEvaluator
 
 def define_cities_of_interest(rootdir):
     # Gets the names of the directories inside rootdir and defines them as the central cities:
@@ -36,44 +34,118 @@ def create_empty_image_directory_tree(dict_cities_of_interest, rootdir):
         
         for bordering_city in list_of_bordering_cities:
             os.makedirs(f'{rootdir}/cluster {central_city}/model {central_city}/city {bordering_city}')
+
+def load_all_datasets(dict_cities_of_interest):
+    neural_network_datasets = {}
     
-def create_neural_network_models_for_central_cities(dict_cities_of_interest, rootdir):
-    neural_network_models = {}
+    for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
+        neural_network_datasets[central_city] = Dataset(central_city, central_city, INPUT_DATA_DIR, f'{central_city}/{central_city}.xlsx')
+        
+        for bordering_city in list_of_bordering_cities:
+            neural_network_datasets[bordering_city] = Dataset(bordering_city, central_city, INPUT_DATA_DIR, f'{central_city}/{bordering_city}.xlsx')
+    
+    return neural_network_datasets
+
+def instantiate_all_plotters(dict_cities_of_interest, neural_network_datasets):
+    neural_network_plotters = {}
+
+    for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
+        neural_network_plotters[central_city] = Plotter (neural_network_datasets[central_city])
+        
+        for bordering_city in list_of_bordering_cities:
+            neural_network_plotters[bordering_city] = Plotter (neural_network_datasets[bordering_city])
+
+    return neural_network_plotters
+
+def create_ml_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, rootdir):
+    neural_network_models   = {}
     
     for central_city in dict_cities_of_interest.keys():
-        city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
-        model, metrics_df = useNeuralNetwork(f'{rootdir}/{central_city}/{central_city}.xlsx', city_cluster_name, central_city, central_city, SHOW_IMAGES, training=True)       
-        neural_network_models[central_city] = model
+        DATASET = neural_network_datasets[central_city]
+        PLOTTER = neural_network_plotters[central_city]
+        
+        neural_network_models [central_city] = NeuralNetwork (NEURAL_NETWORK_CONFIG, DATASET, PLOTTER)
+        print(f'\tCreated ML model {central_city}')
+        
         tf.keras.backend.clear_session()
-    return neural_network_models, metrics_df
+        
+    return neural_network_models, neural_network_plotters, neural_network_datasets
 
-def apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, rootdir):
+def train_ml_models_for_central_cities():
+    metrics_df_central_cities = None
+    
+    for neural_network_model_name, neural_network_model in neural_network_models.items():
+        metrics_df_current_central_city = neural_network_model.use_neural_network()
+
+        if metrics_df_central_cities is None or metrics_df_central_cities.empty:
+            metrics_df_central_cities = metrics_df_current_central_city
+        else:
+            metrics_df_central_cities = pd.concat([metrics_df_central_cities, metrics_df_current_central_city], ignore_index=True)
+        
+    return metrics_df_central_cities
+
+def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models):
+    metrics_df_bordering_cities = None
+    
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
-        city_cluster_name = central_city # All cities are clustered to the central city of each cluster.
+        print(f'Model {central_city}:')
+        MODEL = neural_network_models[central_city]
+        
         for bordering_city in list_of_bordering_cities:
-            model, metrics_df = useNeuralNetwork(f'{rootdir}/{central_city}/{bordering_city}.xlsx', city_cluster_name, central_city, bordering_city, SHOW_IMAGES, neural_network_models[central_city], training=False)           
-    return metrics_df
+            # These will be input parameters for the neural network:
+            print(f'\tCity {bordering_city}')
+            DATASET = neural_network_datasets[bordering_city]
+            PLOTTER = neural_network_plotters[bordering_city]
+            
+            metrics_df_bordering_cities_current_model = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
 
+        # Run once for every central city, not for every bordering city:
+        if metrics_df_bordering_cities is None:
+            metrics_df_bordering_cities = metrics_df_bordering_cities_current_model
+        else:
+            metrics_df_bordering_cities = pd.concat([metrics_df_bordering_cities, metrics_df_bordering_cities_current_model], ignore_index=True)
 
-SHOW_IMAGES = False
+    return metrics_df_bordering_cities
+            
 
-dict_cities_of_interest = define_cities_of_interest('./Data')
+INPUT_DATA_DIR        = './Data/'
+OUTPUT_IMAGE_DIR      = './Images/'
+NEURAL_NETWORK_CONFIG = './NeuralNetwork/config.json'
 
-create_empty_image_directory_tree(dict_cities_of_interest, './Images')
+print('PREPARATION: START')
+dict_cities_of_interest = define_cities_of_interest(INPUT_DATA_DIR)
+print('\tGot the names of the central cities and respective bordering ones')
+
+create_empty_image_directory_tree(dict_cities_of_interest, OUTPUT_IMAGE_DIR)
+print('\tMade output directories for all cities')
+
+neural_network_datasets = load_all_datasets       (dict_cities_of_interest)
+print('\tInstantiated all datasets')
+
+neural_network_plotters = instantiate_all_plotters(dict_cities_of_interest, neural_network_datasets)
+print('\tInstantiated all plotters')
+print('PREPARATION: END')
+
+print('CREATION: START')
+(neural_network_models  ,
+ neural_network_plotters,
+ neural_network_datasets) = create_ml_models_for_central_cities(dict_cities_of_interest, neural_network_datasets, neural_network_plotters, INPUT_DATA_DIR)
+print('CREATION: END')
 
 print('TRAINING: START')
-neural_network_models, metrics_df = create_neural_network_models_for_central_cities(dict_cities_of_interest, './Data')
+metrics_df_central_cities_only = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-metrics_df = apply_neural_network_models_for_bordering_cities(dict_cities_of_interest, neural_network_models, './Data')
+metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
+
+print('TERMINATION: START')
+any_plotter = list(neural_network_plotters.values())[0]
+any_plotter.plotMetricsPlots(metrics_df)
 
 metrics_df.to_excel('metricas_modelo.xlsx', index=False)
 
-metrics_df = metrics_df.drop('Agrupamento', axis='columns') # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-
-drawMetricsBoxPlots   (metrics_df, SHOW_IMAGES)
-drawMetricsBarPlots   (metrics_df, SHOW_IMAGES)
-drawMetricsHistograms (metrics_df, SHOW_IMAGES)
-drawMetricsRadarPlots (metrics_df, SHOW_IMAGES)
+# Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
+metrics_df = metrics_df.drop('Agrupamento', axis='columns') 
+print('TERMINATION: END')
