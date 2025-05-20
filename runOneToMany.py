@@ -107,6 +107,15 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
 
     return metrics_df_bordering_cities
             
+def save_ml_models_for_later_reuse(neural_network_models):
+    if os.path.isdir('Models'):
+        shutil.rmtree('Models')
+    os.makedirs('Models')
+    
+    for name, model_object in neural_network_models.items():
+        model_object.model.save        (f'Models/{name}.keras'     )
+        model_object.model.save_weights(f'Models/{name}.weights.h5')
+
 
 INPUT_DATA_DIR        = './Data/'
 OUTPUT_IMAGE_DIR      = './Images/'
@@ -148,4 +157,6 @@ metrics_df.to_excel('metricas_modelo.xlsx', index=False)
 
 # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
 metrics_df = metrics_df.drop('Agrupamento', axis='columns') 
+
+save_ml_models_for_later_reuse(neural_network_models)
 print('TERMINATION: END')
