@@ -75,7 +75,7 @@ def train_ml_models_for_central_cities():
     metrics_df_central_cities = None
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
-        metrics_df_current_central_city = neural_network_model.use_neural_network()
+        metrics_df_current_central_city, _ = neural_network_model.use_neural_network()
 
         if metrics_df_central_cities is None or metrics_df_central_cities.empty:
             metrics_df_central_cities = metrics_df_current_central_city
@@ -97,7 +97,7 @@ def apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network
             DATASET = neural_network_datasets[bordering_city]
             PLOTTER = neural_network_plotters[bordering_city]
             
-            metrics_df_bordering_cities_current_model = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
+            _ , metrics_df_bordering_cities_current_model = MODEL.use_neural_network(dataset=DATASET, plotter=PLOTTER)
 
         # Run once for every central city, not for every bordering city:
         if metrics_df_bordering_cities is None:
