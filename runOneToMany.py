@@ -146,7 +146,7 @@ metrics_df_central_cities_only = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
+metrics_df_all_bordering_cities = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neural_network_models)
 print('APPLYING: END')
 
 print('TERMINATION: START')
@@ -154,10 +154,12 @@ print('TERMINATION: START')
 # any_plotter = list(neural_network_plotters.values())[0]
 # any_plotter.plotMetricsPlots(metrics_df)
 
-metrics_df.to_excel('metricas_modelo.xlsx', index=False)
-
 # Clustering isn't much important for OneToMany, as it is redundant with 'Municipio Treinado'. It is, however, very important for ManyToMany.
-metrics_df = metrics_df.drop('Agrupamento', axis='columns') 
+metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.drop('Agrupamento', axis='columns')
+metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
+
+metrics_df_all_bordering_cities.to_excel('metrics_bordering_cities.xlsx', index=False)
+metrics_df_central_cities_only .to_excel('metrics_central_cities.xlsx'  , index=False)
 
 save_ml_models_for_later_reuse(neural_network_models)
 print('TERMINATION: END')
