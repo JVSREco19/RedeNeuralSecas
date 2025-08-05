@@ -150,8 +150,9 @@ metrics_df = apply_ml_models_for_bordering_cities(dict_cities_of_interest, neura
 print('APPLYING: END')
 
 print('TERMINATION: START')
-any_plotter = list(neural_network_plotters.values())[0]
-any_plotter.plotMetricsPlots(metrics_df)
+# Disabled, as these are not going to be used on Anderson's masters dissertation:
+# any_plotter = list(neural_network_plotters.values())[0]
+# any_plotter.plotMetricsPlots(metrics_df)
 
 metrics_df.to_excel('metricas_modelo.xlsx', index=False)
 
