@@ -39,10 +39,14 @@ def load_all_datasets(dict_cities_of_interest):
     neural_network_datasets = {}
     
     for central_city, list_of_bordering_cities in dict_cities_of_interest.items():
+        dir_path = f'{OUTPUT_IMAGE_DIR}/cluster {central_city}/model {central_city}/city {central_city}'
         neural_network_datasets[central_city] = Dataset(central_city, central_city, INPUT_DATA_DIR, f'{central_city}/{central_city}.xlsx')
+        pd.DataFrame(neural_network_datasets[central_city].spei_normalized).to_excel(f'{dir_path}/{central_city}.xlsx', index=False)
         
         for bordering_city in list_of_bordering_cities:
+            dir_path = f'{OUTPUT_IMAGE_DIR}/cluster {central_city}/model {central_city}'
             neural_network_datasets[bordering_city] = Dataset(bordering_city, central_city, INPUT_DATA_DIR, f'{central_city}/{bordering_city}.xlsx')
+            pd.DataFrame(neural_network_datasets[bordering_city].spei_normalized).to_excel(f'{dir_path}/city {bordering_city}/{bordering_city}.xlsx', index=False)
     
     return neural_network_datasets
 
