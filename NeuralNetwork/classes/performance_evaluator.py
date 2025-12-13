@@ -90,8 +90,8 @@ class PerformanceEvaluator():
                 '20%' : self.getError(spei_expected_outputs['20%' ], spei_predicted_values['20%' ])
                           }
             print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data---------------')
-            print(f"\t\t\tTEST (100%): {errors_dict['20%' ] }")
-            print(f"\t\t\tTEST ( 20%): {errors_dict['100%'] }")
+            print(f"\t\t\tTEST (100%): {errors_dict['100%'] }")
+            print(f"\t\t\tTEST ( 20%): {errors_dict['20%' ] }")
 
         return errors_dict
 
