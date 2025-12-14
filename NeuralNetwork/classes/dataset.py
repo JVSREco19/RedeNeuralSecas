@@ -6,15 +6,14 @@ class Dataset:
     
     DATA_PORTION_TYPES = ['80%', '20%'] # '100%' is made out of 80% + 20% through 'concatenate'
     
-    def __init__(self, city_name, city_cluster_name, root_dir, xlsx):
-        self.city_name         = city_name
-        self.city_cluster_name = city_cluster_name
-        self.df                = pd.read_excel(root_dir + xlsx, index_col=0)
+    def __init__(self, city_name, city_cluster_name):
+        self.city_name         = str(city_name        ).upper()
+        self.city_cluster_name = str(city_cluster_name).upper()
+        self.df                = pd.read_excel(f'./Data/{self.city_cluster_name}/{self.city_name}.xlsx', index_col=0)
         self.df.rename(columns = {'Series 1': 'SPEI Real'}, inplace=True)
         self.months            = self.df.index.to_numpy()
         self.spei              = self.df['SPEI Real'].to_numpy()
-        self.spei_normalized   = ( (self.spei       - self.spei.min()) /
-                                   (self.spei.max() - self.spei.min()) )
+        self.spei_normalized   = None
 
     def get_months(self):
         return self.months
