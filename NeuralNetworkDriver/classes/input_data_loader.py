@@ -11,11 +11,13 @@ class InputDataLoader:
         
     def _fill_cluster_memberships(self, rootdir):
         for cluster_name, cluster_members in self._clusters.items():
-            self._clusters[cluster_name] = [city_name.removesuffix('.xlsx') for city_name in os.listdir(f'{rootdir}/{cluster_name}/')]
+             cluster_members_names = [city_name.removesuffix('.xlsx') for city_name in os.listdir(f'{rootdir}/{cluster_name}/')]
+             self._clusters[cluster_name] = dict.fromkeys(cluster_members_names, {})
     
     def _load_all_datasets(self):
         for cluster_name, cluster_members in self._clusters.items():
-            self._clusters[cluster_name] = [Dataset(city_name, cluster_name) for city_name in cluster_members]
+            for city_name, city_data in cluster_members.items():
+                self._clusters[cluster_name][city_name] = Dataset(city_name, cluster_name)    
     
     def _instantiate_clusters(self):
         for cluster_name, cluster_members in self._clusters.items():
