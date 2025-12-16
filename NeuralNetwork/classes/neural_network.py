@@ -96,7 +96,7 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
         
-        self.plotter.plotModelPlots(spei_dict, is_model             ,
+        self.plotter.plotModelPlots(self.dataset, spei_dict, is_model             ,
             spei_expected_outputs            , spei_predicted_values,
             months_for_expected_outputs      , self.has_trained     ,
             history if not self.has_trained else None               ,

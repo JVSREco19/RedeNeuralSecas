@@ -5,26 +5,22 @@ import numpy               as       np
 
 class Plotter:
     
+    OUTPUT_DIR_ADDR   = './Output/'
+    
     METRICS_PORTIONS_CENTRAL   = [ '80%', '20%']
     METRICS_PORTIONS_BORDERING = ['100%', '20%']
     
-    def __init__(self, dataset):
-        self.dataset              = dataset
-        self.monthValues          = self.dataset.get_months          ()
-        self.speiValues           = self.dataset.get_spei            ()
-        self.speiNormalizedValues = self.dataset.get_spei_normalized ()
-
     def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
         if city_for_predicting:
-            FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
+            FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
             os.makedirs(FILEPATH, exist_ok=True)
             plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}.png')
         elif city_for_training:
-            FILEPATH = f'./Images/cluster {city_cluster_name}/model {city_for_training}/'
+            FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/'
             os.makedirs(FILEPATH, exist_ok=True)
             plt.savefig(FILEPATH + filename + f' - Model {city_for_training}.png')
         else:
-            FILEPATH = './Images/'
+            FILEPATH = './{Plotter.OUTPUT_DIR_ADDR}/'
             os.makedirs(FILEPATH, exist_ok=True)
             plt.savefig(FILEPATH + filename, bbox_inches="tight")
 
@@ -32,7 +28,7 @@ class Plotter:
         self.showSpeiData(dataset     , spei_test, split, city_cluster_name, city_for_training, city_for_predicting)
         self.showSpeiTest(dataset     , spei_test, split, city_cluster_name, city_for_training, city_for_predicting)
 
-    def plotModelPlots(self                  , spei_dict            , is_model           ,
+    def plotModelPlots(self                  , dataset, spei_dict            , is_model           ,
                        spei_expected_outputs , spei_predicted_values,
                        monthForPredicted_dict, has_trained          ,
                        history               , metrics_df           ,
@@ -42,9 +38,9 @@ class Plotter:
                                           city_cluster_name, city_for_training    , city_for_predicting  )
         self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
                                           city_cluster_name, city_for_training    , city_for_predicting  )
-        self.showPredictionsDistribution (is_model         , spei_expected_outputs, spei_predicted_values,
+        self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
                                           city_cluster_name, city_for_training    , city_for_predicting  )
-        self.showPredictionResults       (is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
+        self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
                                           city_cluster_name, city_for_training   , city_for_predicting)
     
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
@@ -75,8 +71,8 @@ class Plotter:
         monthValues          = dataset.get_months()
         speiValues           = dataset.get_spei  ()
         
-        y1positive = np.array(self.speiValues)>=0
-        y1negative = np.array(self.speiValues)<=0
+        y1positive = np.array(speiValues)>=0
+        y1negative = np.array(speiValues)<=0
     
         plt.figure()
         plt.fill_between(monthValues, speiValues, y2=0, where=y1positive,
@@ -92,7 +88,8 @@ class Plotter:
         self._saveFig(plt, 'SPEI Data (test)', city_cluster_name, city_for_training, city_for_predicting)
         plt.close()
     
-    def _calculateDenormalizedValues(self, is_model, spei_expected_outputs, spei_predicted_values):
+    def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values):
+        speiValues           = dataset.get_spei           ()
         
         ###ADJUSTMENTS OF INPUTS###############################################
         spei_expected_outputs['100%']  = spei_expected_outputs['100%'].flatten()
@@ -109,8 +106,8 @@ class Plotter:
         predictions_denormalized_dict = dict.fromkeys(RELEVANT_PORTIONS)
         
         ###MIN & MAX FOR CALCULATION###########################################
-        spei_max_value = np.max(self.speiValues)
-        spei_min_value = np.min(self.speiValues)
+        spei_max_value = np.max(speiValues)
+        spei_min_value = np.min(speiValues)
         
         spei_delta     = spei_max_value - spei_min_value
         ###CALCULATIONS########################################################
@@ -122,11 +119,11 @@ class Plotter:
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
-    def showPredictionResults(self      ,    is_model   , spei_expected_outputs, spei_predicted_values,
+    def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
                               months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting):
         
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(is_model, spei_expected_outputs, spei_predicted_values)
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
         ###100%################################################################
         reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
     
@@ -159,11 +156,11 @@ class Plotter:
         plt.close()
         #######################################################################
     
-    def showPredictionsDistribution(self, is_model   , spei_expected_outputs, spei_predicted_values,
+    def showPredictionsDistribution(self, dataset, is_model   , spei_expected_outputs, spei_predicted_values,
                                     city_cluster_name, city_for_training   , city_for_predicting  ):
         
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(is_model, spei_expected_outputs, spei_predicted_values)
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
         ###100%################################################################
         plt.figure ()
         plt.scatter(x =  trueValues_denormalized['100%'],
