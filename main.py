@@ -45,6 +45,49 @@ def train_ml_models_for_central_cities():
         
     return metrics_df_central_cities
 
+def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
+    
+    metrics_df_bordering_cities = None
+    
+    for cluster_name, cluster in clusters.items():
+        print(f'Model {cluster_name}:')
+        MODEL = neural_network_models[cluster_name]
+        
+        bordering_cities = list(cluster.cities_dict.keys())
+        bordering_cities.remove(cluster_name)
+        
+        for city in bordering_cities:
+            print(f'\tCity {city}')
+            DATASET = clusters[cluster_name].cities_dict[city]
+            
+            _ , metrics_df_bordering_cities_current_model = MODEL.use_neural_network(dataset=DATASET)
+    
+        # Run once for every central city, not for every bordering city:
+        if metrics_df_bordering_cities is None:
+            metrics_df_bordering_cities = metrics_df_bordering_cities_current_model
+        else:
+            metrics_df_bordering_cities = pd.concat([metrics_df_bordering_cities, metrics_df_bordering_cities_current_model], ignore_index=True)
+    
+    return metrics_df_bordering_cities
+
+def save_ml_models_for_later_reuse(neural_network_models):
+    if os.path.isdir(f'{OUTPUT_DIR_ADDR}/Models'):
+        shutil.rmtree(f'{OUTPUT_DIR_ADDR}/Models')
+    os.makedirs(f'{OUTPUT_DIR_ADDR}/Models')
+    
+    for name, model_object in neural_network_models.items():
+        model_object.model.save        (f'{OUTPUT_DIR_ADDR}/Models/{name}.keras'     )
+        model_object.model.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}.weights.h5')
+
+def save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models):
+    metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.drop('Agrupamento', axis='columns')
+    metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
+
+    metrics_df_all_bordering_cities.to_excel(f'{OUTPUT_DIR_ADDR}/metrics_bordering_cities.xlsx', index=False)
+    metrics_df_central_cities_only .to_excel(f'{OUTPUT_DIR_ADDR}/metrics_central_cities.xlsx'  , index=False)
+
+    save_ml_models_for_later_reuse(neural_network_models)
+
 print('PREPARATION: START')
 THE_PLOTTER = Plotter()
 
@@ -60,5 +103,13 @@ neural_network_models = instantiate_ml_models_for_central_cities()
 print('CREATION: END')
 
 print('TRAINING: START')
-train_ml_models_for_central_cities()
+metrics_df_central_cities_only = train_ml_models_for_central_cities()
 print('TRAINING: END')
+
+print('APPLYING: START')
+metrics_df_all_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
+print('APPLYING: END')
+
+print('TERMINATION: START')
+save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models)
+print('TERMINATION: END')
