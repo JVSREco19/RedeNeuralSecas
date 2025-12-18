@@ -89,8 +89,6 @@ class Plotter:
         plt.close()
     
     def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values):
-        speiValues           = dataset.get_spei           ()
-        
         ###ADJUSTMENTS OF INPUTS###############################################
         spei_expected_outputs['100%']  = spei_expected_outputs['100%'].flatten()
         spei_expected_outputs[ '20%']  = spei_expected_outputs[ '20%'].flatten()
@@ -106,8 +104,9 @@ class Plotter:
         predictions_denormalized_dict = dict.fromkeys(RELEVANT_PORTIONS)
         
         ###MIN & MAX FOR CALCULATION###########################################
-        spei_max_value = np.max(speiValues)
-        spei_min_value = np.min(speiValues)
+        # Use normalization parameters from training set only
+        spei_max_value = dataset.spei_max
+        spei_min_value = dataset.spei_min
         
         spei_delta     = spei_max_value - spei_min_value
         ###CALCULATIONS########################################################
