@@ -8,7 +8,7 @@ class Plotter:
     OUTPUT_DIR_ADDR   = './Output/'
     
     METRICS_PORTIONS_CENTRAL   = [ '80%', '20%']
-    METRICS_PORTIONS_BORDERING = ['100%', '20%']
+    METRICS_PORTIONS_BORDERING = ['20%']
     
     def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
         if city_for_predicting:
@@ -92,15 +92,18 @@ class Plotter:
         speiValues           = dataset.get_spei           ()
         
         ###ADJUSTMENTS OF INPUTS###############################################
-        spei_expected_outputs['100%']  = spei_expected_outputs['100%'].flatten()
         spei_expected_outputs[ '20%']  = spei_expected_outputs[ '20%'].flatten()
         
-        if is_model: spei_predicted_values['100%'] = np.append(spei_predicted_values[ '80%'],
-                                                               spei_predicted_values[ '20%'])
-        else       : spei_predicted_values['100%'] =           spei_predicted_values['100%'].flatten()
+        if is_model:
+            spei_expected_outputs['100%']  = spei_expected_outputs['100%'].flatten()
+            spei_predicted_values['100%'] = np.append(spei_predicted_values[ '80%'],
+                                                                   spei_predicted_values[ '20%'])
         
         ###PREPARATIVES FOR OUTPUT#############################################
-        RELEVANT_PORTIONS             = ['100%', '20%']
+        if is_model:
+            RELEVANT_PORTIONS = ['100%', '20%']
+        else:
+            RELEVANT_PORTIONS = ['20%']
         
         true_values_denormalized_dict = dict.fromkeys(RELEVANT_PORTIONS)
         predictions_denormalized_dict = dict.fromkeys(RELEVANT_PORTIONS)
@@ -111,10 +114,11 @@ class Plotter:
         
         spei_delta     = spei_max_value - spei_min_value
         ###CALCULATIONS########################################################
-        true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
-        true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
+        if is_model:
+            true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
+            predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
         
-        predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
+        true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
         predictions_denormalized_dict[ '20%'] = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
         
         return true_values_denormalized_dict, predictions_denormalized_dict
@@ -125,20 +129,21 @@ class Plotter:
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
         ###100%################################################################
-        reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
-    
-        plt.figure ()
-        plt.plot   (reshapedMonth,  trueValues_denormalized['100%'])
-        plt.plot   (reshapedMonth, predictions_denormalized['100%'])
-        plt.axvline(months_for_expected_outputs['80%'][-1][-1], color='r')
-        plt.legend (['Real', 'Predicted'])
-        plt.xlabel ('Year')
-        plt.ylabel ('SPEI')
-        plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s)')
-        #plt.show()
+        if is_model:
+            reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
         
-        self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting)
-        plt.close()
+            plt.figure ()
+            plt.plot   (reshapedMonth,  trueValues_denormalized['100%'])
+            plt.plot   (reshapedMonth, predictions_denormalized['100%'])
+            plt.axvline(months_for_expected_outputs['80%'][-1][-1], color='r')
+            plt.legend (['Real', 'Predicted'])
+            plt.xlabel ('Year')
+            plt.ylabel ('SPEI')
+            plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s)')
+            #plt.show()
+            
+            self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting)
+            plt.close()
         ###20%#################################################################
         reshapedMonth = months_for_expected_outputs['20%'].flatten()
     
@@ -162,18 +167,19 @@ class Plotter:
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
         ###100%################################################################
-        plt.figure ()
-        plt.scatter(x =  trueValues_denormalized['100%'],
-                    y = predictions_denormalized['100%'],
-                    color=['white'],  marker='^', edgecolors='black')
-        plt.xlabel ('Real SPEI')
-        plt.ylabel ('Predicted SPEI'  )
-        plt.axline ( (0, 0) , slope=1 )
-        plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (100%\'s distribution)')
-        #plt.show()
-        
-        self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting)
-        plt.close()
+        if is_model:
+            plt.figure ()
+            plt.scatter(x =  trueValues_denormalized['100%'],
+                        y = predictions_denormalized['100%'],
+                        color=['white'],  marker='^', edgecolors='black')
+            plt.xlabel ('Real SPEI')
+            plt.ylabel ('Predicted SPEI'  )
+            plt.axline ( (0, 0) , slope=1 )
+            plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (100%\'s distribution)')
+            #plt.show()
+            
+            self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting)
+            plt.close()
         ###20%#################################################################
         plt.figure ()
         plt.scatter(x =  trueValues_denormalized[ '20%'],
@@ -232,8 +238,7 @@ class Plotter:
             residuals        = { '80%': true_values_dict[ '80%'] - predicted_values_dict[ '80%'],
                                  '20%': true_values_dict[ '20%'] - predicted_values_dict[ '20%']}
         else:
-            residuals        = {'100%': true_values_dict['100%'] - predicted_values_dict['100%'],
-                                 '20%': true_values_dict[ '20%'] - predicted_values_dict[ '20%']}
+            residuals        = { '20%': true_values_dict[ '20%'] - predicted_values_dict[ '20%']}
         
         for data_portion_type in Plotter.METRICS_PORTIONS_CENTRAL if is_model else Plotter.METRICS_PORTIONS_BORDERING:
             plt.scatter(predicted_values_dict[data_portion_type], residuals[data_portion_type], alpha=0.5)
