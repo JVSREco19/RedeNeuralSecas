@@ -110,11 +110,18 @@ class Plotter:
         
         spei_delta     = spei_max_value - spei_min_value
         ###CALCULATIONS########################################################
-        true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
-        true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
-        
-        predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
-        predictions_denormalized_dict[ '20%'] = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
+        # Handle zero variance case
+        if spei_delta == 0:
+            # If delta is 0, denormalized values should be constant at spei_min_value
+            true_values_denormalized_dict['100%'] = np.full_like(spei_expected_outputs['100%'], spei_min_value)
+            true_values_denormalized_dict[ '20%'] = np.full_like(spei_expected_outputs[ '20%'], spei_min_value)
+            predictions_denormalized_dict['100%'] = np.full_like(spei_predicted_values['100%'], spei_min_value)
+            predictions_denormalized_dict[ '20%'] = np.full_like(spei_predicted_values[ '20%'].flatten(), spei_min_value)
+        else:
+            true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
+            true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
+            predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
+            predictions_denormalized_dict[ '20%'] = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     

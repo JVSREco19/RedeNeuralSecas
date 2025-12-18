@@ -75,9 +75,17 @@ class Dataset:
             self.spei_max = spei_dict['80%'].max()
         
         # Apply normalization to all portions
-        spei_dict['80%']  = (spei_dict['80%']  - self.spei_min) / (self.spei_max - self.spei_min)
-        spei_dict['20%']  = (spei_dict['20%']  - self.spei_min) / (self.spei_max - self.spei_min)
-        spei_dict['100%'] = (spei_dict['100%'] - self.spei_min) / (self.spei_max - self.spei_min)
+        # Check for zero variance to avoid division by zero
+        spei_delta = self.spei_max - self.spei_min
+        if spei_delta == 0:
+            # If all values are the same, normalized values should be 0
+            spei_dict['80%']  = np.zeros_like(spei_dict['80%'])
+            spei_dict['20%']  = np.zeros_like(spei_dict['20%'])
+            spei_dict['100%'] = np.zeros_like(spei_dict['100%'])
+        else:
+            spei_dict['80%']  = (spei_dict['80%']  - self.spei_min) / spei_delta
+            spei_dict['20%']  = (spei_dict['20%']  - self.spei_min) / spei_delta
+            spei_dict['100%'] = (spei_dict['100%'] - self.spei_min) / spei_delta
         
         # Store normalized full dataset for backward compatibility
         self.spei_normalized = spei_dict['100%']
