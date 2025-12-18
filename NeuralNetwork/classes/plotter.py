@@ -111,7 +111,7 @@ class Plotter:
         spei_delta     = spei_max_value - spei_min_value
         ###CALCULATIONS########################################################
         # Handle zero variance case
-        if spei_delta == 0:
+        if np.isclose(spei_delta, 0):
             # If delta is 0, denormalized values should be constant at spei_min_value
             true_values_denormalized_dict['100%'] = np.full_like(spei_expected_outputs['100%'], spei_min_value)
             true_values_denormalized_dict[ '20%'] = np.full_like(spei_expected_outputs[ '20%'], spei_min_value)

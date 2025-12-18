@@ -68,14 +68,14 @@ class NeuralNetwork:
         
         # For bordering cities, use the training dataset's normalization parameters
         if is_model:
-            (                  spei_dict,                 months_dict,
-                    spei_provided_inputs,       spei_expected_outputs,
-              months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(self.configs_dict)
+            (spei_dict, months_dict,
+             spei_provided_inputs, spei_expected_outputs,
+             months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(self.configs_dict)
         else:
-            (                  spei_dict,                 months_dict,
-                    spei_provided_inputs,       spei_expected_outputs,
-              months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(
-                self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
+            (spei_dict, months_dict,
+             spei_provided_inputs, spei_expected_outputs,
+             months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(
+                 self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
        
         split_position = len(spei_dict['80%'])
         if not self.has_trained:

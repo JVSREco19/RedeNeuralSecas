@@ -77,7 +77,7 @@ class Dataset:
         # Apply normalization to all portions
         # Check for zero variance to avoid division by zero
         spei_delta = self.spei_max - self.spei_min
-        if spei_delta == 0:
+        if np.isclose(spei_delta, 0):
             # If all values are the same, normalized values should be 0
             spei_dict['80%']  = np.zeros_like(spei_dict['80%'])
             spei_dict['20%']  = np.zeros_like(spei_dict['20%'])
