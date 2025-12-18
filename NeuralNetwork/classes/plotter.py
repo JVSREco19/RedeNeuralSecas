@@ -116,7 +116,8 @@ class Plotter:
             true_values_denormalized_dict['100%'] = np.full_like(spei_expected_outputs['100%'], spei_min_value)
             true_values_denormalized_dict[ '20%'] = np.full_like(spei_expected_outputs[ '20%'], spei_min_value)
             predictions_denormalized_dict['100%'] = np.full_like(spei_predicted_values['100%'], spei_min_value)
-            predictions_denormalized_dict[ '20%'] = np.full_like(spei_predicted_values[ '20%'].flatten(), spei_min_value)
+            flattened_20 = spei_predicted_values['20%'].flatten()
+            predictions_denormalized_dict[ '20%'] = np.full_like(flattened_20, spei_min_value)
         else:
             true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
             true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
