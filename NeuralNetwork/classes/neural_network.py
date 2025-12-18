@@ -66,9 +66,16 @@ class NeuralNetwork:
               is_model = True
         else: is_model = False
         
-        (                  spei_dict,                 months_dict,
-                spei_provided_inputs,       spei_expected_outputs,
-          months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(self.configs_dict)
+        # For bordering cities, use the training dataset's normalization parameters
+        if is_model:
+            (spei_dict, months_dict,
+             spei_provided_inputs, spei_expected_outputs,
+             months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(self.configs_dict)
+        else:
+            (spei_dict, months_dict,
+             spei_provided_inputs, spei_expected_outputs,
+             months_for_provided_inputs, months_for_expected_outputs) = dataset.format_data_for_model(
+                 self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
        
         split_position = len(spei_dict['80%'])
         if not self.has_trained:
@@ -96,7 +103,7 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
         
-        self.plotter.plotModelPlots(self.dataset, spei_dict, is_model             ,
+        self.plotter.plotModelPlots(dataset, spei_dict, is_model             ,
             spei_expected_outputs            , spei_predicted_values,
             months_for_expected_outputs      , self.has_trained     ,
             history if not self.has_trained else None               ,
