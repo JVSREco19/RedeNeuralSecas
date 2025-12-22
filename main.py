@@ -80,6 +80,12 @@ def save_ml_models_for_later_reuse(neural_network_models):
         model_object.model.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}.weights.h5')
 
 def save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models):
+    # Sort by cluster name first, then by city name
+    metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.sort_values(
+        by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+    metrics_df_central_cities_only = metrics_df_central_cities_only.sort_values(
+        by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+    
     metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.drop('Agrupamento', axis='columns')
     metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
 
