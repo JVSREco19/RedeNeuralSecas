@@ -70,6 +70,7 @@ class PerformanceEvaluator():
         for metric_name, metric_function in metrics.items():
             metric_function.update_state(actual, prediction)
             metrics_values[metric_name] = metric_function.result().numpy()
+            metric_function.reset_state()
         
         return metrics_values
 
