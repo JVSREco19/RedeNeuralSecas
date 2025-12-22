@@ -16,15 +16,15 @@ def make_output_dirs(rootdir, clusters):
     if os.path.isdir (rootdir):
         shutil.rmtree(rootdir)
     
-    for cluster_name, cluster in clusters.items():
-        for city in cluster.cities_dict.keys():
+    for cluster_name, cities_dict in clusters.items():
+        for city in cities_dict.keys():
             os.makedirs(f'{rootdir}/cluster {cluster_name}/model {cluster_name}/city {city}')
 
 def instantiate_ml_models_for_central_cities():
     neural_network_models = dict.fromkeys(clusters)
     
     for central_city in neural_network_models.keys():
-        DATASET = clusters   [central_city].cities_dict[central_city]
+        DATASET = clusters[central_city][central_city]
         neural_network_models[central_city] = NeuralNetwork(NEURAL_NET_CONFIG, DATASET, THE_PLOTTER)
         print(f'\tCreated ML model {central_city}')
         
@@ -49,16 +49,16 @@ def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
     
     metrics_df_bordering_cities = None
     
-    for cluster_name, cluster in clusters.items():
+    for cluster_name, cities_dict in clusters.items():
         print(f'Model {cluster_name}:')
         MODEL = neural_network_models[cluster_name]
         
-        bordering_cities = list(cluster.cities_dict.keys())
+        bordering_cities = list(cities_dict.keys())
         bordering_cities.remove(cluster_name)
         
         for city in bordering_cities:
             print(f'\tCity {city}')
-            DATASET = clusters[cluster_name].cities_dict[city]
+            DATASET = clusters[cluster_name][city]
             
             _ , metrics_df_bordering_cities_current_model = MODEL.use_neural_network(dataset=DATASET)
     
@@ -80,6 +80,12 @@ def save_ml_models_for_later_reuse(neural_network_models):
         model_object.model.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}.weights.h5')
 
 def save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models):
+    # Sort by cluster name first, then by city name
+    metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.sort_values(
+        by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+    metrics_df_central_cities_only = metrics_df_central_cities_only.sort_values(
+        by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+    
     metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.drop('Agrupamento', axis='columns')
     metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
 

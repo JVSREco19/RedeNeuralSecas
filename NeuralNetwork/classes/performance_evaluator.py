@@ -127,11 +127,9 @@ class PerformanceEvaluator():
             }
         
         if is_model:
-            df_row = pd.DataFrame([row]).astype(self.metrics_central.dtypes.to_dict())
-            self.metrics_central   = pd.concat([self.metrics_central  , df_row], ignore_index=True)
+            self.metrics_central.loc[len(self.metrics_central)] = row
         else:
-            df_row = pd.DataFrame([row]).astype(self.metrics_bordering.dtypes.to_dict())
-            self.metrics_bordering = pd.concat([self.metrics_bordering, df_row], ignore_index=True)
+            self.metrics_bordering.loc[len(self.metrics_bordering)] = row
 
     # def getTaylorMetrics(self, spei_dict, spei_expected_outputs, spei_predicted_values, is_model):    
     #  # Standard Deviation:
