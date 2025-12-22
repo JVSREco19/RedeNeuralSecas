@@ -92,7 +92,6 @@ class NeuralNetwork:
                                     }
         else:
             spei_predicted_values = {
-                '100%': self.model.predict(spei_provided_inputs['100%'], verbose = 0),
                 '20%' : self.model.predict(spei_provided_inputs[ '20%'], verbose = 0)
                                     }
         

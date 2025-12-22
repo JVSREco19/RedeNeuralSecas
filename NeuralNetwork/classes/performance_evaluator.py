@@ -28,18 +28,12 @@ class PerformanceEvaluator():
             'Agrupamento'               : str  ,
             'Municipio Treinado'        : str  ,
             'Municipio Previsto'        : str  ,
-            'MAE 100%'                  : float,
             'MAE 20%'                   : float,
-            'RMSE 100%'                 : float,
             'RMSE 20%'                  : float,
-            'MSE 100%'                  : float,
             'MSE 20%'                   : float,
-            'R^2 100%'                  : float,
             'R^2 20%'                   : float
             # 'Desvio Padrão Obs.'      : float,
-            # 'Desvio Padrão Pred. 100%': float,
             # 'Desvio Padrão Pred. 20%' : float,
-            # 'Coef. de Correlação 100%': float,
             # 'Coef. de Correlação 20%' : float
         }
         
@@ -86,11 +80,9 @@ class PerformanceEvaluator():
             print(f"\t\t\tTEST  ( 20%): {errors_dict['20%' ] }")
         else:
             errors_dict = {
-                '100%': self.getError(spei_expected_outputs['100%'], spei_predicted_values['100%']),
                 '20%' : self.getError(spei_expected_outputs['20%' ], spei_predicted_values['20%' ])
                           }
             print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data---------------')
-            print(f"\t\t\tTEST (100%): {errors_dict['100%'] }")
             print(f"\t\t\tTEST ( 20%): {errors_dict['20%' ] }")
 
         return errors_dict
@@ -125,18 +117,12 @@ class PerformanceEvaluator():
                 'Agrupamento'             : city_cluster_name                       ,
                 'Municipio Treinado'      : city_for_training                       ,
                 'Municipio Previsto'      : city_for_predicting                     ,
-                'MAE 100%'                : errors_dict             ['100%']['MAE' ] ,
                 'MAE 20%'                 : errors_dict             [ '20%']['MAE' ] ,
-                'RMSE 100%'               : errors_dict             ['100%']['RMSE'] ,
                 'RMSE 20%'                : errors_dict             [ '20%']['RMSE'] ,
-                'MSE 100%'                : errors_dict             ['100%']['MSE' ] ,
                 'MSE 20%'                 : errors_dict             [ '20%']['MSE' ] ,
-                'R^2 100%'                : errors_dict             ['100%']['R^2' ] ,
                 'R^2 20%'                 : errors_dict             [ '20%']['R^2' ]
                 # 'Desvio Padrão Obs.'      : observed_std_dev                        ,
-                # 'Desvio Padrão Pred. 80%' : predictions_std_dev     ['80%']         ,
                 # 'Desvio Padrão Pred. 20%' : predictions_std_dev     ['20%']         ,
-                # 'Coef. de Correlação 80%' : correlation_coefficient ['80%']         ,
                 # 'Coef. de Correlação 20%' : correlation_coefficient ['20%']
             }
         
