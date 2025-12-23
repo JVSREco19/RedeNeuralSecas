@@ -5,6 +5,11 @@ from decimal import Decimal, InvalidOperation, ROUND_DOWN
 
 class PerformanceEvaluator():
     
+    # Constants for decimal comparison precision
+    DECIMAL_PRECISION = 4  # Number of decimal digits to compare
+    DECIMAL_QUANTIZE = Decimal('0.0001')  # Quantization for 4 decimal places
+    DECIMAL_PADDING = '0000'  # Padding string for decimal digits
+    
     def __init__(self):
         COLS_CENTRAL = {
             'Agrupamento'               : str  ,
@@ -173,6 +178,9 @@ class PerformanceEvaluator():
                 'MAE'  : tf.keras.metrics.MeanAbsoluteError(),
                 'MSE'  : tf.keras.metrics.MeanSquaredError(),
                 'RMSE' : tf.keras.metrics.RootMeanSquaredError(),
+                # Note: R2Score with variance_weighted_average may differ slightly from NumPy's 
+                # global pooled R² computation, especially for multidimensional outputs.
+                # This is expected and the comparison columns help identify differences.
                 'R^2'  : tf.keras.metrics.R2Score(class_aggregation='variance_weighted_average')
             }
             
@@ -220,8 +228,8 @@ class PerformanceEvaluator():
         int_part = int(dec_abs)
         
         # Decimal part: get first 4 digits after decimal point
-        # Truncate (round down) to 4 decimal places
-        dec_truncated = dec_abs.quantize(Decimal('0.0001'), rounding=ROUND_DOWN)
+        # Truncate (round down) to precision defined by DECIMAL_QUANTIZE
+        dec_truncated = dec_abs.quantize(self.DECIMAL_QUANTIZE, rounding=ROUND_DOWN)
         dec_frac = dec_truncated - int(dec_truncated)
         
         # Convert fractional part to string and extract digits
@@ -231,8 +239,8 @@ class PerformanceEvaluator():
         else:
             frac_digits = ''
         
-        # Pad or truncate to exactly 4 digits
-        first4_str = (frac_digits + '0000')[:4]
+        # Pad or truncate to exactly DECIMAL_PRECISION digits
+        first4_str = (frac_digits + self.DECIMAL_PADDING)[:self.DECIMAL_PRECISION]
         
         return (sign_str, int_part, first4_str)
     
