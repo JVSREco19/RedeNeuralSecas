@@ -80,12 +80,12 @@ class Dataset:
         spei_delta = self.spei_max - self.spei_min
         if np.isclose(spei_delta, 0):
             # If all values are the same, normalized values should be 0
-            spei_dict['80%']  = np.zeros_like(spei_dict['80%'])
-            spei_dict['20%']  = np.zeros_like(spei_dict['20%'])
+            spei_dict[ '80%'] = np.zeros_like(spei_dict[ '80%'])
+            spei_dict[ '20%'] = np.zeros_like(spei_dict[ '20%'])
             spei_dict['100%'] = np.zeros_like(spei_dict['100%'])
         else:
-            spei_dict['80%']  = (spei_dict['80%']  - self.spei_min) / spei_delta
-            spei_dict['20%']  = (spei_dict['20%']  - self.spei_min) / spei_delta
+            spei_dict[ '80%'] = (spei_dict[ '80%'] - self.spei_min) / spei_delta
+            spei_dict[ '20%'] = (spei_dict[ '20%'] - self.spei_min) / spei_delta
             spei_dict['100%'] = (spei_dict['100%'] - self.spei_min) / spei_delta
         
         # Store normalized full dataset for backward compatibility
@@ -94,26 +94,36 @@ class Dataset:
         return spei_dict, months_dict
     
     def _create_input_output_pairs(self, data_dict, configs_dict):
-        window_gap  = configs_dict['total_points']
-        dense_units = configs_dict['dense_units' ]
+        # input_sliding , output_sliding  = self._sliding_window_maker (data_dict, configs_dict)
+        input_tumbling, output_tumbling = self._tumbling_window_maker(data_dict, configs_dict)
+        
+        return input_tumbling, output_tumbling
+    
+    def _sliding_window_maker(self, data_dict, configs_dict):
+        pass
+    
+    def _tumbling_window_maker(self, data_dict, configs_dict):
+        tumbling_window_len   = configs_dict['tumbling_window_len'  ]
+        tumbling_lookback_len = configs_dict['tumbling_lookback_len']
+        tumbling_horizon_len  = configs_dict['tumbling_horizon_len' ]
         
         input_tumbling  = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
         output_tumbling = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
         
-        for train_or_test in Dataset.DATA_PORTION_TYPES:
+        for data_portion_type in Dataset.DATA_PORTION_TYPES:
             # Data → sliding windows (with overlaps):
-            windows_sliding = sliding_windower(x    = data_dict[train_or_test],
-                                       window_shape = window_gap              )
+            windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
+                                       window_shape = tumbling_window_len     )
             
-            # -overlaps by selecting only every 'window_gap'-th window:
-            windows_tumbling = windows_sliding[::window_gap]
+            # -overlaps by selecting only every 'tumbling_window_len'-th window:
+            windows_tumbling = windows_sliding[::tumbling_window_len]
             
             # Last 'dense_units' elements from each window → output;
             # Remaining elements in each window            → input :
-            output_tumbling[train_or_test] = windows_tumbling[ : , -dense_units :              ]
-            input_tumbling [train_or_test] = windows_tumbling[ : ,              : -dense_units ]
+            input_tumbling [data_portion_type] = windows_tumbling[ : ,                       : tumbling_lookback_len]
+            output_tumbling[data_portion_type] = windows_tumbling[ : , -tumbling_horizon_len :                      ]
             
             # +new dimension at the end of the array:
-            input_tumbling[train_or_test] = input_tumbling[train_or_test][..., np.newaxis]
-        
+            input_tumbling[data_portion_type] = input_tumbling[data_portion_type][..., np.newaxis]
+            
         return input_tumbling, output_tumbling
