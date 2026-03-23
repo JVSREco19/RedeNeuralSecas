@@ -94,13 +94,31 @@ class Dataset:
         return spei_dict, months_dict
     
     def _create_input_output_pairs(self, data_dict, configs_dict):
-        # input_sliding , output_sliding  = self._sliding_window_maker (data_dict, configs_dict)
+        input_sliding , output_sliding  = self._sliding_window_maker (data_dict, configs_dict)
         input_tumbling, output_tumbling = self._tumbling_window_maker(data_dict, configs_dict)
         
         return input_tumbling, output_tumbling
     
     def _sliding_window_maker(self, data_dict, configs_dict):
-        pass
+        sliding_window_len   = configs_dict['sliding_window_len'  ]
+        sliding_lookback_len = configs_dict['sliding_lookback_len']
+        sliding_horizon_len  = configs_dict['sliding_horizon_len' ]
+        
+        input_sliding  = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
+        output_sliding = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
+        
+        for data_portion_type in Dataset.DATA_PORTION_TYPES:
+            # Data → sliding windows (with overlaps):
+            windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
+                                       window_shape = sliding_window_len          )
+            
+            input_sliding [data_portion_type] = windows_sliding[ : ,                       : sliding_lookback_len]
+            output_sliding[data_portion_type] = windows_sliding[ : , -sliding_horizon_len :                      ]
+            
+            # +new dimension at the end of the array:
+            input_sliding[data_portion_type] = input_sliding[data_portion_type][..., np.newaxis]
+        
+        return input_sliding, output_sliding
     
     def _tumbling_window_maker(self, data_dict, configs_dict):
         tumbling_window_len   = configs_dict['tumbling_window_len'  ]
@@ -113,13 +131,11 @@ class Dataset:
         for data_portion_type in Dataset.DATA_PORTION_TYPES:
             # Data → sliding windows (with overlaps):
             windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
-                                       window_shape = tumbling_window_len     )
+                                       window_shape = tumbling_window_len         )
             
             # -overlaps by selecting only every 'tumbling_window_len'-th window:
             windows_tumbling = windows_sliding[::tumbling_window_len]
             
-            # Last 'dense_units' elements from each window → output;
-            # Remaining elements in each window            → input :
             input_tumbling [data_portion_type] = windows_tumbling[ : ,                       : tumbling_lookback_len]
             output_tumbling[data_portion_type] = windows_tumbling[ : , -tumbling_horizon_len :                      ]
             
