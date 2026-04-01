@@ -10,15 +10,15 @@ class Plotter:
     METRICS_PORTIONS_CENTRAL   = [ '80%', '20%']
     METRICS_PORTIONS_BORDERING = ['20%']
     
-    def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
+    def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None, technique=None):
         if city_for_predicting:
             FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
             os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}.png')
+            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting} ({technique}).png')
         elif city_for_training:
             FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/'
             os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename + f' - Model {city_for_training}.png')
+            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} ({technique}).png')
         else:
             FILEPATH = './{Plotter.OUTPUT_DIR_ADDR}/'
             os.makedirs(FILEPATH, exist_ok=True)
@@ -32,7 +32,7 @@ class Plotter:
                        spei_expected_outputs , spei_predicted_values,
                        monthForPredicted_dict, has_trained          ,
                        history               , metrics_df           ,
-                       city_cluster_name     , city_for_training    , city_for_predicting):
+                       city_cluster_name     , city_for_training    , city_for_predicting, technique):
         
         self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
                                           city_cluster_name, city_for_training    , city_for_predicting  )

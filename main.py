@@ -33,17 +33,32 @@ def instantiate_ml_models_for_central_cities():
     return neural_network_models
 
 def train_ml_models_for_central_cities():
-    metrics_df_central_cities = None
+    metrics_central_cities_sliding  = None
+    metrics_central_cities_tumbling = None
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
-        metrics_df_current_central_city, _ = neural_network_model.use_neural_network()
+        metrics_current_central_city_sliding, _ = neural_network_model.use_neural_network()
 
-        if metrics_df_central_cities is None or metrics_df_central_cities.empty:
-            metrics_df_central_cities = metrics_df_current_central_city
+        if metrics_central_cities_sliding is None or metrics_central_cities_sliding.empty:
+            metrics_central_cities_sliding = metrics_current_central_city_sliding
         else:
-            metrics_df_central_cities = pd.concat([metrics_df_central_cities, metrics_df_current_central_city], ignore_index=True)
+            metrics_df_central_cities = pd.concat(
+                [metrics_central_cities_sliding        ,
+                 metrics_current_central_city_sliding ],
+                 ignore_index=True                     )
+
+    for neural_network_model_name, neural_network_model in neural_network_models.items():
+        metrics_current_central_city_tumbling, _ = neural_network_model.use_neural_network()
+
+        if metrics_central_cities_tumbling is None or metrics_central_cities_tumbling.empty:
+            metrics_central_cities_tumbling = metrics_current_central_city_tumbling
+        else:
+            metrics_df_central_cities = pd.concat(
+                [metrics_central_cities_tumbling       ,
+                 metrics_current_central_city_tumbling],
+                 ignore_index=True                     )
         
-    return metrics_df_central_cities
+    return metrics_central_cities_sliding, metrics_central_cities_tumbling
 
 def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
     
@@ -109,13 +124,15 @@ neural_network_models = instantiate_ml_models_for_central_cities()
 print('CREATION: END')
 
 print('TRAINING: START')
-metrics_df_central_cities_only = train_ml_models_for_central_cities()
+(metrics_central_cities_only_sliding ,
+ metrics_central_cities_only_tumbling) = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
-print('APPLYING: START')
-metrics_df_all_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
-print('APPLYING: END')
+# Disabled only for now, during implementation of sliding AND tumbling simultaneously:
+# print('APPLYING: START')
+# metrics_df_all_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
+# print('APPLYING: END')
 
-print('TERMINATION: START')
-save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models)
-print('TERMINATION: END')
+# print('TERMINATION: START')
+# save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models)
+# print('TERMINATION: END')
