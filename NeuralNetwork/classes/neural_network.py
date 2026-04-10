@@ -57,14 +57,13 @@ class NeuralNetwork:
                                spei_provided_inputs_tumbling  ,
                                spei_expected_outputs_tumbling):
       
-        # Disabled, because it was already tested and it works, but takes a long time:
-        # print(f'\nStarted: training of ML model {self.dataset.city_name}, sliding windows (may take a while)')
-        # history_sliding = self.model_sliding.fit(
-        #     spei_provided_inputs_sliding  ['80%'],
-        #     spei_expected_outputs_sliding ['80%'],
-        #     epochs=self.configs_dict['numberOfEpochs'], batch_size=1, verbose=0)
-        # self.has_trained = True
-        # print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
+        print(f'\nStarted: training of ML model {self.dataset.city_name}, sliding windows (may take a BIG while)')
+        history_sliding = self.model_sliding.fit(
+            spei_provided_inputs_sliding  ['80%'],
+            spei_expected_outputs_sliding ['80%'],
+            epochs=self.configs_dict['numberOfEpochs'], batch_size=1, verbose=0)
+        self.has_trained = True
+        print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
         print(f'\nStarted: training of ML model {self.dataset.city_name}, tumbling windows (may take a while)')
         history_tumbling = self.model_tumbling.fit(
@@ -74,7 +73,7 @@ class NeuralNetwork:
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, tumbling windows')
         
-        return history_tumbling, history_tumbling #Correct: history_sliding, history_tumbling
+        return history_sliding, history_tumbling #history_tumbling, history_tumbling
     
     def use_neural_network(self, dataset=None, plotter=None):
         if plotter == None: plotter = self.plotter
@@ -143,12 +142,14 @@ class NeuralNetwork:
                 '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
                                     }
             print('ENDED making predictions for Tumbling Windows')
-        
-        metrics_central_sliding, metrics_bordering_sliding = self.evaluator.evaluate(is_model, spei_dict,
+       
+        # BUG: metrics_central_sliding and metrics_central_tumbling are being written with the same mixed content.
+        metrics_central_sliding, metrics_bordering_sliding = self.evaluator.evaluate('Sliding', is_model, spei_dict,
             spei_expected_outputs_sliding , spei_predicted_values_sliding               ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name  )
         
-        metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate(is_model, spei_dict,
+        # BUG: metrics_central_sliding and metrics_central_tumbling are being written with the same mixed content.
+        metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate('Tumbling', is_model, spei_dict,
             spei_expected_outputs_tumbling, spei_predicted_values_tumbling              ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name  )
         
@@ -172,4 +173,4 @@ class NeuralNetwork:
         
         print(f'Ended  : applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
-        return metrics_central_tumbling, metrics_bordering_tumbling
+        return metrics_central_sliding, metrics_bordering_sliding, metrics_central_tumbling, metrics_bordering_tumbling

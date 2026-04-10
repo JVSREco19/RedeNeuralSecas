@@ -264,13 +264,13 @@ class PerformanceEvaluator():
         
         return {'sign_equal': sign_equal, 'integer_equal': integer_equal, 'first4_equal': first4_equal}
         
-    def evaluate          (self       , is_model, spei_dict            ,
-                           spei_expected_outputs, spei_predicted_values,
-                           city_cluster_name    , city_for_training    , city_for_predicting):
+    def evaluate          (self       , technique, is_model, spei_dict  ,
+                           spei_expected_outputs , spei_predicted_values,
+                           city_cluster_name     , city_for_training    , city_for_predicting):
         
-        errors_dict = self._print_errors(spei_expected_outputs, spei_predicted_values         ,
+        errors_dict = self._print_errors(technique, spei_expected_outputs, spei_predicted_values         ,
                                          city_for_training   , city_for_predicting           , is_model)
-        self.writeErrors(errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
+        self.writeErrors(technique, errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
                          city_cluster_name, city_for_training, city_for_predicting)
         
         return self.metrics_central, self.metrics_bordering
@@ -285,7 +285,7 @@ class PerformanceEvaluator():
         
         return {'numpy': numpy_metrics, 'keras': keras_metrics}
 
-    def _print_errors(self, spei_expected_outputs, spei_predicted_values, city_for_training, city_for_predicting, is_model):
+    def _print_errors(self, technique, spei_expected_outputs, spei_predicted_values, city_for_training, city_for_predicting, is_model):
     
         # RMSE, MSE, MAE, R²:
         if is_model:
@@ -293,7 +293,7 @@ class PerformanceEvaluator():
                 '80%' : self.getError(spei_expected_outputs['80%'], spei_predicted_values['80%']),
                 '20%' : self.getError(spei_expected_outputs['20%'], spei_predicted_values['20%'])
                           }
-            print(f'\t\t--------------Result for model {city_for_training} applied to its own data---------------')
+            print(f'\t\t--------------Result for model {city_for_training} applied to its own data ({technique})---------------')
             print(f"\t\t\tTRAIN ( 80%) NumPy: {errors_dict['80%']['numpy']}")
             print(f"\t\t\tTRAIN ( 80%) Keras: {errors_dict['80%']['keras']}")
             print(f"\t\t\tTEST  ( 20%) NumPy: {errors_dict['20%']['numpy']}")
@@ -302,54 +302,54 @@ class PerformanceEvaluator():
             errors_dict = {
                 '20%' : self.getError(spei_expected_outputs['20%' ], spei_predicted_values['20%' ])
                           }
-            print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data---------------')
+            print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data ({technique})---------------')
             print(f"\t\t\tTEST ( 20%) NumPy: {errors_dict['20%']['numpy']}")
             print(f"\t\t\tTEST ( 20%) Keras: {errors_dict['20%']['keras']}")
 
         return errors_dict
 
-    def writeErrors(self, errors_dict   , spei_dict            , is_model,
+    def writeErrors(self, technique      , errors_dict          , spei_dict, is_model,
                     spei_expected_outputs, spei_predicted_values,
-                    city_cluster_name   , city_for_training    , city_for_predicting):
+                    city_cluster_name    , city_for_training    , city_for_predicting):
         
         # observed_std_dev, predictions_std_dev, correlation_coefficient = self.getTaylorMetrics(spei_dict, spei_expected_outputs, spei_predicted_values, is_model)
         
         if is_model:
             # Extract metrics for 80% portion
-            mae_80_numpy = errors_dict['80%']['numpy']['MAE']
-            mae_80_keras = errors_dict['80%']['keras']['MAE']
+            mae_80_numpy  = errors_dict['80%']['numpy']['MAE' ]
+            mae_80_keras  = errors_dict['80%']['keras']['MAE' ]
             rmse_80_numpy = errors_dict['80%']['numpy']['RMSE']
             rmse_80_keras = errors_dict['80%']['keras']['RMSE']
-            mse_80_numpy = errors_dict['80%']['numpy']['MSE']
-            mse_80_keras = errors_dict['80%']['keras']['MSE']
-            r2_80_numpy = errors_dict['80%']['numpy']['R^2']
-            r2_80_keras = errors_dict['80%']['keras']['R^2']
+            mse_80_numpy  = errors_dict['80%']['numpy']['MSE' ]
+            mse_80_keras  = errors_dict['80%']['keras']['MSE' ]
+            r2_80_numpy   = errors_dict['80%']['numpy']['R^2' ]
+            r2_80_keras   = errors_dict['80%']['keras']['R^2' ]
             
             # Compare 80% metrics
-            mae_80_cmp = self._compare_three_parts(mae_80_numpy, mae_80_keras)
+            mae_80_cmp  = self._compare_three_parts(mae_80_numpy , mae_80_keras )
             rmse_80_cmp = self._compare_three_parts(rmse_80_numpy, rmse_80_keras)
-            mse_80_cmp = self._compare_three_parts(mse_80_numpy, mse_80_keras)
-            r2_80_cmp = self._compare_three_parts(r2_80_numpy, r2_80_keras)
+            mse_80_cmp  = self._compare_three_parts(mse_80_numpy , mse_80_keras )
+            r2_80_cmp   = self._compare_three_parts(r2_80_numpy  , r2_80_keras  )
             
             # Extract metrics for 20% portion
-            mae_20_numpy = errors_dict['20%']['numpy']['MAE']
-            mae_20_keras = errors_dict['20%']['keras']['MAE']
+            mae_20_numpy  = errors_dict['20%']['numpy']['MAE' ]
+            mae_20_keras  = errors_dict['20%']['keras']['MAE' ]
             rmse_20_numpy = errors_dict['20%']['numpy']['RMSE']
             rmse_20_keras = errors_dict['20%']['keras']['RMSE']
-            mse_20_numpy = errors_dict['20%']['numpy']['MSE']
-            mse_20_keras = errors_dict['20%']['keras']['MSE']
-            r2_20_numpy = errors_dict['20%']['numpy']['R^2']
-            r2_20_keras = errors_dict['20%']['keras']['R^2']
+            mse_20_numpy  = errors_dict['20%']['numpy']['MSE' ]
+            mse_20_keras  = errors_dict['20%']['keras']['MSE' ]
+            r2_20_numpy   = errors_dict['20%']['numpy']['R^2' ]
+            r2_20_keras   = errors_dict['20%']['keras']['R^2' ]
             
             # Compare 20% metrics
-            mae_20_cmp = self._compare_three_parts(mae_20_numpy, mae_20_keras)
+            mae_20_cmp  = self._compare_three_parts(mae_20_numpy , mae_20_keras )
             rmse_20_cmp = self._compare_three_parts(rmse_20_numpy, rmse_20_keras)
-            mse_20_cmp = self._compare_three_parts(mse_20_numpy, mse_20_keras)
-            r2_20_cmp = self._compare_three_parts(r2_20_numpy, r2_20_keras)
+            mse_20_cmp  = self._compare_three_parts(mse_20_numpy , mse_20_keras )
+            r2_20_cmp   = self._compare_three_parts(r2_20_numpy  , r2_20_keras  )
             
             row = {
                 'Agrupamento'             : city_cluster_name,
-                'Municipio Treinado'      : city_for_training,
+                'Municipio Treinado'      : f'{city_for_training} ({technique})',
                 'Municipio Previsto'      : city_for_predicting,
                 # 80% portion - Numpy
                 'MAE 80% Numpy'           : mae_80_numpy,
@@ -400,24 +400,24 @@ class PerformanceEvaluator():
             }
         else:
             # Extract metrics for 20% portion
-            mae_20_numpy = errors_dict['20%']['numpy']['MAE']
-            mae_20_keras = errors_dict['20%']['keras']['MAE']
+            mae_20_numpy  = errors_dict['20%']['numpy']['MAE']
+            mae_20_keras  = errors_dict['20%']['keras']['MAE']
             rmse_20_numpy = errors_dict['20%']['numpy']['RMSE']
             rmse_20_keras = errors_dict['20%']['keras']['RMSE']
-            mse_20_numpy = errors_dict['20%']['numpy']['MSE']
-            mse_20_keras = errors_dict['20%']['keras']['MSE']
-            r2_20_numpy = errors_dict['20%']['numpy']['R^2']
-            r2_20_keras = errors_dict['20%']['keras']['R^2']
+            mse_20_numpy  = errors_dict['20%']['numpy']['MSE']
+            mse_20_keras  = errors_dict['20%']['keras']['MSE']
+            r2_20_numpy   = errors_dict['20%']['numpy']['R^2']
+            r2_20_keras   = errors_dict['20%']['keras']['R^2']
             
             # Compare 20% metrics
-            mae_20_cmp = self._compare_three_parts(mae_20_numpy, mae_20_keras)
+            mae_20_cmp  = self._compare_three_parts(mae_20_numpy, mae_20_keras)
             rmse_20_cmp = self._compare_three_parts(rmse_20_numpy, rmse_20_keras)
-            mse_20_cmp = self._compare_three_parts(mse_20_numpy, mse_20_keras)
-            r2_20_cmp = self._compare_three_parts(r2_20_numpy, r2_20_keras)
+            mse_20_cmp  = self._compare_three_parts(mse_20_numpy, mse_20_keras)
+            r2_20_cmp   = self._compare_three_parts(r2_20_numpy, r2_20_keras)
             
             row = {
                 'Agrupamento'             : city_cluster_name,
-                'Municipio Treinado'      : city_for_training,
+                'Municipio Treinado'      : f'{city_for_training} ({technique})',
                 'Municipio Previsto'      : city_for_predicting,
                 # 20% portion - Numpy
                 'MAE 20% Numpy'           : mae_20_numpy,

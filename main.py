@@ -37,26 +37,27 @@ def train_ml_models_for_central_cities():
     metrics_central_cities_tumbling = None
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
-        metrics_current_central_city_sliding, _ = neural_network_model.use_neural_network()
+        # Central                             | Bordering:
+        (metrics_current_central_city_sliding , _ ,
+         metrics_current_central_city_tumbling, _ ) = neural_network_model.use_neural_network()
 
+        # Sliding:
         if metrics_central_cities_sliding is None or metrics_central_cities_sliding.empty:
-            metrics_central_cities_sliding = metrics_current_central_city_sliding
+           metrics_central_cities_sliding = metrics_current_central_city_sliding
         else:
-            metrics_df_central_cities = pd.concat(
+            metrics_central_cities_sliding = pd.concat(
                 [metrics_central_cities_sliding        ,
                  metrics_current_central_city_sliding ],
                  ignore_index=True                     )
 
-    for neural_network_model_name, neural_network_model in neural_network_models.items():
-        metrics_current_central_city_tumbling, _ = neural_network_model.use_neural_network()
-
+        # Tumbling:
         if metrics_central_cities_tumbling is None or metrics_central_cities_tumbling.empty:
-            metrics_central_cities_tumbling = metrics_current_central_city_tumbling
+           metrics_central_cities_tumbling = metrics_current_central_city_tumbling
         else:
-            metrics_df_central_cities = pd.concat(
+            metrics_central_cities_tumbling = pd.concat(
                 [metrics_central_cities_tumbling       ,
                  metrics_current_central_city_tumbling],
-                 ignore_index=True                     )
+                 ignore_index=True                     )      
         
     return metrics_central_cities_sliding, metrics_central_cities_tumbling
 
@@ -91,23 +92,37 @@ def save_ml_models_for_later_reuse(neural_network_models):
     os.makedirs(f'{OUTPUT_DIR_ADDR}/Models')
     
     for name, model_object in neural_network_models.items():
-        model_object.model.save        (f'{OUTPUT_DIR_ADDR}/Models/{name}.keras'     )
-        model_object.model.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}.weights.h5')
+        model_object.model_sliding.save         (f'{OUTPUT_DIR_ADDR}/Models/{name}_sliding.keras'      )
+        model_object.model_tumbling.save        (f'{OUTPUT_DIR_ADDR}/Models/{name}_tumbling.keras'     )
+        
+        model_object.model_sliding.save_weights (f'{OUTPUT_DIR_ADDR}/Models/{name}_sliding.weights.h5' )
+        model_object.model_tumbling.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}_tumbling.weights.h5')
 
-def save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models):
-    # Sort by cluster name first, then by city name
-    metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.sort_values(
-        by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
-    metrics_df_central_cities_only = metrics_df_central_cities_only.sort_values(
-        by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+def save_results(technique, metrics_df_all_bordering_cities, metrics_df_central_cities_only):
     
-    metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.drop('Agrupamento', axis='columns')
-    metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
-
-    metrics_df_all_bordering_cities.to_excel(f'{OUTPUT_DIR_ADDR}/metrics_bordering_cities.xlsx', index=False)
-    metrics_df_central_cities_only .to_excel(f'{OUTPUT_DIR_ADDR}/metrics_central_cities.xlsx'  , index=False)
-
-    save_ml_models_for_later_reuse(neural_network_models)
+    # Sometimes, the program can be changed to run only on central cities, for debugging purposes:
+        
+    if metrics_df_all_bordering_cities is not None:
+        
+        # Sort by cluster name first, then by city name
+        metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.sort_values(
+            by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+        metrics_df_central_cities_only = metrics_df_central_cities_only.sort_values(
+            by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+        
+        metrics_df_all_bordering_cities = metrics_df_all_bordering_cities.drop('Agrupamento', axis='columns')
+        metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
+    
+        metrics_df_all_bordering_cities.to_excel(f'{OUTPUT_DIR_ADDR}/metrics_bordering_cities_{technique}.xlsx', index=False)
+        metrics_df_central_cities_only .to_excel(f'{OUTPUT_DIR_ADDR}/metrics_central_cities_{technique}.xlsx'  , index=False)
+    
+    else:
+        metrics_df_central_cities_only = metrics_df_central_cities_only.sort_values(
+            by=['Agrupamento', 'Municipio Previsto'], ignore_index=True)
+        
+        metrics_df_central_cities_only  = metrics_df_central_cities_only .drop('Agrupamento', axis='columns')
+        
+        metrics_df_central_cities_only .to_excel(f'{OUTPUT_DIR_ADDR}/metrics_central_cities_{technique}.xlsx'  , index=False)
 
 print('PREPARATION: START')
 THE_PLOTTER = Plotter()
@@ -133,6 +148,11 @@ print('TRAINING: END')
 # metrics_df_all_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
 # print('APPLYING: END')
 
-# print('TERMINATION: START')
+print('TERMINATION: START')
 # save_results(metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models)
-# print('TERMINATION: END')
+
+save_results('Sliding' , None, metrics_central_cities_only_sliding )
+save_results('Tumbling', None, metrics_central_cities_only_tumbling)
+
+save_ml_models_for_later_reuse(neural_network_models)
+print('TERMINATION: END')
