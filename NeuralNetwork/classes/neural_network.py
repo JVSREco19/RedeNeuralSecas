@@ -12,8 +12,8 @@ class NeuralNetwork:
         self.evaluator      = PerformanceEvaluator()
         
         self.configs_dict   = self._set_configs(file_name)
-        self.model_sliding  = self._create_ml_model()
-        self.model_tumbling = self._create_ml_model()
+        self.model_sliding  = self._create_ml_model((self.configs_dict['sliding_lookback_len' ], 1))
+        self.model_tumbling = self._create_ml_model((self.configs_dict['tumbling_lookback_len'], 1))
         self.has_trained    = False
         
         # print('Input shape:', self.model.input_shape)
@@ -24,8 +24,7 @@ class NeuralNetwork:
             configs_dict = json.load(file)
         
         configs_dict.update(
-            {'input_shape' : (configs_dict['total_points'] - configs_dict['dense_units'], 1),
-             'activation'  : ['relu', 'sigmoid'],
+            {'activation'  : ['relu', 'sigmoid'],
              'loss'        : 'mse',
              'metrics'     : ['mae',
                              tf.keras.metrics.RootMeanSquaredError(name='rmse'),
@@ -37,10 +36,10 @@ class NeuralNetwork:
         
         return configs_dict        
 
-    def _create_ml_model(self):
+    def _create_ml_model(self, input_shape):
         # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()
-        model.add(tf.keras.Input       (    shape=self.configs_dict['input_shape' ])      )
+        model.add(tf.keras.Input       (    shape=input_shape                             )      )
         model.add(tf.keras.layers.LSTM (          self.configs_dict['hidden_units']       ,
                                        activation=self.configs_dict['activation'  ][0])   )
         for _ in range(3):
