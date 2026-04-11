@@ -24,7 +24,7 @@ class NeuralNetwork:
             configs_dict = json.load(file)
         
         configs_dict.update(
-            {'activation'  : ['relu', 'sigmoid'],
+            {'activation'  : ['tanh', 'relu'],
              'loss'        : 'mse',
              'metrics'     : ['mae',
                              tf.keras.metrics.RootMeanSquaredError(name='rmse'),
@@ -45,6 +45,7 @@ class NeuralNetwork:
         for _ in range(3):
             model.add(tf.keras.layers.Dense(units=self.configs_dict['dense_units' ]       ,
                                        activation=self.configs_dict['activation'][1])     )
+        model.add(tf.keras.layers.Dense(units=1)                                          )
         model.compile(loss=self.configs_dict['loss'], metrics=self.configs_dict['metrics'],
                       optimizer=self.configs_dict['optimizer']                            )
         # print(f'Ended: creation of ML model {self.dataset.city_name}')
