@@ -12,8 +12,8 @@ class NeuralNetwork:
         self.evaluator      = PerformanceEvaluator()
         
         self.configs_dict   = self._set_configs(file_name)
-        self.model_sliding  = self._create_ml_model((self.configs_dict['sliding_lookback_len' ], 1))
-        self.model_tumbling = self._create_ml_model((self.configs_dict['tumbling_lookback_len'], 1))
+        self.model_sliding  = self._create_ml_model((self.configs_dict['sliding_lookback_len' ], 1), self.configs_dict['sliding_horizon_len' ])
+        self.model_tumbling = self._create_ml_model((self.configs_dict['tumbling_lookback_len'], 1), self.configs_dict['tumbling_horizon_len'])
         self.has_trained    = False
         
         # print('Input shape:', self.model.input_shape)
@@ -36,7 +36,7 @@ class NeuralNetwork:
         
         return configs_dict        
 
-    def _create_ml_model(self, input_shape):
+    def _create_ml_model(self, input_shape, horizon_len):
         # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()
         model.add(tf.keras.Input       (    shape=input_shape                             )      )
@@ -45,7 +45,7 @@ class NeuralNetwork:
         for _ in range(3):
             model.add(tf.keras.layers.Dense(units=self.configs_dict['dense_units' ]       ,
                                        activation=self.configs_dict['activation'][1])     )
-        model.add(tf.keras.layers.Dense(units=1)                                          )
+        model.add(tf.keras.layers.Dense(units=horizon_len)                                )
         model.compile(loss=self.configs_dict['loss'], metrics=self.configs_dict['metrics'],
                       optimizer=self.configs_dict['optimizer']                            )
         # print(f'Ended: creation of ML model {self.dataset.city_name}')
