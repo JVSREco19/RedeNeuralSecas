@@ -117,14 +117,16 @@ class Dataset:
         sliding_window_len   = configs_dict['sliding_window_len'  ]
         sliding_lookback_len = configs_dict['sliding_lookback_len']
         sliding_horizon_len  = configs_dict['sliding_horizon_len' ]
+        sliding_step         = configs_dict['sliding_step'        ]
         
         input_sliding  = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
         output_sliding = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
         
         for data_portion_type in Dataset.DATA_PORTION_TYPES:
-            # Data → sliding windows (with overlaps):
+            # Data → sliding windows, then sub-sample by sliding_step to reduce overlap:
             windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
                                        window_shape = sliding_window_len          )
+            windows_sliding = windows_sliding[::sliding_step]
             
             input_sliding [data_portion_type] = windows_sliding[ : ,                      : sliding_lookback_len]
             output_sliding[data_portion_type] = windows_sliding[ : , -sliding_horizon_len :                     ]

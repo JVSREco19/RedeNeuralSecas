@@ -6,6 +6,7 @@
 	"sliding_window_len"   :  18,
 	"sliding_lookback_len" :  12,
 	"sliding_horizon_len"  :   6,
+	"sliding_step"         :  12,
 	"tumbling_window_len"  :  12,
 	"tumbling_lookback_len":   6,
 	"tumbling_horizon_len" :   6
