@@ -1,5 +1,4 @@
 {
-	"total_points"         :  12,
 	"dense_units"          :   6,
 	"hidden_units"         :   9,
 	"numberOfEpochs"       : 800,
