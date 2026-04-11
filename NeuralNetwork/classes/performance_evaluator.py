@@ -10,90 +10,86 @@ class PerformanceEvaluator():
     DECIMAL_QUANTIZE = Decimal('0.0001')  # Quantization for 4 decimal places
     DECIMAL_PADDING = '0000'  # Padding string for decimal digits
     
-    def __init__(self):
-        COLS_CENTRAL = {
-            'Agrupamento'               : str  ,
-            'Municipio Treinado'        : str  ,
-            'Municipio Previsto'        : str  ,
-            # 80% portion - Numpy
-            'MAE 80% Numpy'             : float,
-            'RMSE 80% Numpy'            : float,
-            'MSE 80% Numpy'             : float,
-            'R^2 80% Numpy'             : float,
-            # 80% portion - Keras
-            'MAE 80% Keras'             : float,
-            'RMSE 80% Keras'            : float,
-            'MSE 80% Keras'             : float,
-            'R^2 80% Keras'             : float,
-            # 80% portion - Comparisons
-            'MAE 80% sign_equal'        : bool ,
-            'MAE 80% integer_equal'     : bool ,
-            'MAE 80% first4_equal'      : bool ,
-            'RMSE 80% sign_equal'       : bool ,
-            'RMSE 80% integer_equal'    : bool ,
-            'RMSE 80% first4_equal'     : bool ,
-            'MSE 80% sign_equal'        : bool ,
-            'MSE 80% integer_equal'     : bool ,
-            'MSE 80% first4_equal'      : bool ,
-            'R^2 80% sign_equal'        : bool ,
-            'R^2 80% integer_equal'     : bool ,
-            'R^2 80% first4_equal'      : bool ,
-            # 20% portion - Numpy
-            'MAE 20% Numpy'             : float,
-            'RMSE 20% Numpy'            : float,
-            'MSE 20% Numpy'             : float,
-            'R^2 20% Numpy'             : float,
-            # 20% portion - Keras
-            'MAE 20% Keras'             : float,
-            'RMSE 20% Keras'            : float,
-            'MSE 20% Keras'             : float,
-            'R^2 20% Keras'             : float,
-            # 20% portion - Comparisons
-            'MAE 20% sign_equal'        : bool ,
-            'MAE 20% integer_equal'     : bool ,
-            'MAE 20% first4_equal'      : bool ,
-            'RMSE 20% sign_equal'       : bool ,
-            'RMSE 20% integer_equal'    : bool ,
-            'RMSE 20% first4_equal'     : bool ,
-            'MSE 20% sign_equal'        : bool ,
-            'MSE 20% integer_equal'     : bool ,
-            'MSE 20% first4_equal'      : bool ,
-            'R^2 20% sign_equal'        : bool ,
-            'R^2 20% integer_equal'     : bool ,
-            'R^2 20% first4_equal'      : bool
-        }
-        
-        COLS_BORDERING = {
-            'Agrupamento'               : str  ,
-            'Municipio Treinado'        : str  ,
-            'Municipio Previsto'        : str  ,
-            # 20% portion - Numpy
-            'MAE 20% Numpy'             : float,
-            'RMSE 20% Numpy'            : float,
-            'MSE 20% Numpy'             : float,
-            'R^2 20% Numpy'             : float,
-            # 20% portion - Keras
-            'MAE 20% Keras'             : float,
-            'RMSE 20% Keras'            : float,
-            'MSE 20% Keras'             : float,
-            'R^2 20% Keras'             : float,
-            # 20% portion - Comparisons
-            'MAE 20% sign_equal'        : bool ,
-            'MAE 20% integer_equal'     : bool ,
-            'MAE 20% first4_equal'      : bool ,
-            'RMSE 20% sign_equal'       : bool ,
-            'RMSE 20% integer_equal'    : bool ,
-            'RMSE 20% first4_equal'     : bool ,
-            'MSE 20% sign_equal'        : bool ,
-            'MSE 20% integer_equal'     : bool ,
-            'MSE 20% first4_equal'      : bool ,
-            'R^2 20% sign_equal'        : bool ,
-            'R^2 20% integer_equal'     : bool ,
-            'R^2 20% first4_equal'      : bool
-        }
-        
-        self.metrics_central   = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
-        self.metrics_bordering = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
+    COLS_CENTRAL = {
+        'Agrupamento'               : str  ,
+        'Municipio Treinado'        : str  ,
+        'Municipio Previsto'        : str  ,
+        # 80% portion - Numpy
+        'MAE 80% Numpy'             : float,
+        'RMSE 80% Numpy'            : float,
+        'MSE 80% Numpy'             : float,
+        'R^2 80% Numpy'             : float,
+        # 80% portion - Keras
+        'MAE 80% Keras'             : float,
+        'RMSE 80% Keras'            : float,
+        'MSE 80% Keras'             : float,
+        'R^2 80% Keras'             : float,
+        # 80% portion - Comparisons
+        'MAE 80% sign_equal'        : bool ,
+        'MAE 80% integer_equal'     : bool ,
+        'MAE 80% first4_equal'      : bool ,
+        'RMSE 80% sign_equal'       : bool ,
+        'RMSE 80% integer_equal'    : bool ,
+        'RMSE 80% first4_equal'     : bool ,
+        'MSE 80% sign_equal'        : bool ,
+        'MSE 80% integer_equal'     : bool ,
+        'MSE 80% first4_equal'      : bool ,
+        'R^2 80% sign_equal'        : bool ,
+        'R^2 80% integer_equal'     : bool ,
+        'R^2 80% first4_equal'      : bool ,
+        # 20% portion - Numpy
+        'MAE 20% Numpy'             : float,
+        'RMSE 20% Numpy'            : float,
+        'MSE 20% Numpy'             : float,
+        'R^2 20% Numpy'             : float,
+        # 20% portion - Keras
+        'MAE 20% Keras'             : float,
+        'RMSE 20% Keras'            : float,
+        'MSE 20% Keras'             : float,
+        'R^2 20% Keras'             : float,
+        # 20% portion - Comparisons
+        'MAE 20% sign_equal'        : bool ,
+        'MAE 20% integer_equal'     : bool ,
+        'MAE 20% first4_equal'      : bool ,
+        'RMSE 20% sign_equal'       : bool ,
+        'RMSE 20% integer_equal'    : bool ,
+        'RMSE 20% first4_equal'     : bool ,
+        'MSE 20% sign_equal'        : bool ,
+        'MSE 20% integer_equal'     : bool ,
+        'MSE 20% first4_equal'      : bool ,
+        'R^2 20% sign_equal'        : bool ,
+        'R^2 20% integer_equal'     : bool ,
+        'R^2 20% first4_equal'      : bool
+    }
+    
+    COLS_BORDERING = {
+        'Agrupamento'               : str  ,
+        'Municipio Treinado'        : str  ,
+        'Municipio Previsto'        : str  ,
+        # 20% portion - Numpy
+        'MAE 20% Numpy'             : float,
+        'RMSE 20% Numpy'            : float,
+        'MSE 20% Numpy'             : float,
+        'R^2 20% Numpy'             : float,
+        # 20% portion - Keras
+        'MAE 20% Keras'             : float,
+        'RMSE 20% Keras'            : float,
+        'MSE 20% Keras'             : float,
+        'R^2 20% Keras'             : float,
+        # 20% portion - Comparisons
+        'MAE 20% sign_equal'        : bool ,
+        'MAE 20% integer_equal'     : bool ,
+        'MAE 20% first4_equal'      : bool ,
+        'RMSE 20% sign_equal'       : bool ,
+        'RMSE 20% integer_equal'    : bool ,
+        'RMSE 20% first4_equal'     : bool ,
+        'MSE 20% sign_equal'        : bool ,
+        'MSE 20% integer_equal'     : bool ,
+        'MSE 20% first4_equal'      : bool ,
+        'R^2 20% sign_equal'        : bool ,
+        'R^2 20% integer_equal'     : bool ,
+        'R^2 20% first4_equal'      : bool
+    }
     
     def _get_error_numpy(self, actual, prediction):
         """
@@ -270,10 +266,8 @@ class PerformanceEvaluator():
         
         errors_dict = self._print_errors(technique, spei_expected_outputs, spei_predicted_values         ,
                                          city_for_training   , city_for_predicting           , is_model)
-        self.writeErrors(technique, errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
-                         city_cluster_name, city_for_training, city_for_predicting)
-        
-        return self.metrics_central, self.metrics_bordering
+        return self.writeErrors(technique, errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
+                                city_cluster_name, city_for_training, city_for_predicting)
     
     def getError(self, actual, prediction):
         """
@@ -445,9 +439,13 @@ class PerformanceEvaluator():
             }
         
         if is_model:
-            self.metrics_central.loc[len(self.metrics_central)] = row
+            self.metrics_central   = pd.DataFrame([row], columns=list(PerformanceEvaluator.COLS_CENTRAL  .keys()))
+            self.metrics_bordering = pd.DataFrame(       columns=list(PerformanceEvaluator.COLS_BORDERING.keys()))
         else:
-            self.metrics_bordering.loc[len(self.metrics_bordering)] = row
+            self.metrics_central   = pd.DataFrame(       columns=list(PerformanceEvaluator.COLS_CENTRAL  .keys()))
+            self.metrics_bordering = pd.DataFrame([row], columns=list(PerformanceEvaluator.COLS_BORDERING.keys()))
+        
+        return self.metrics_central, self.metrics_bordering
 
     # def getTaylorMetrics(self, spei_dict, spei_expected_outputs, spei_predicted_values, is_model):    
     #  # Standard Deviation:

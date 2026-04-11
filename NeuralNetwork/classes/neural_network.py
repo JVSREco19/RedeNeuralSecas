@@ -99,6 +99,8 @@ class NeuralNetwork:
                  self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
 
         split_position = len(spei_dict['80%'])
+        history_sliding  = None
+        history_tumbling = None
         if not self.has_trained:
             # flags has_trained as True:
             history_sliding, history_tumbling = self._train_ml_models(spei_provided_inputs_sliding  ,
@@ -143,12 +145,10 @@ class NeuralNetwork:
                                     }
             print('ENDED making predictions for Tumbling Windows')
        
-        # BUG: metrics_central_sliding and metrics_central_tumbling are being written with the same mixed content.
         metrics_central_sliding, metrics_bordering_sliding = self.evaluator.evaluate('Sliding', is_model, spei_dict,
             spei_expected_outputs_sliding , spei_predicted_values_sliding               ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name  )
         
-        # BUG: metrics_central_sliding and metrics_central_tumbling are being written with the same mixed content.
         metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate('Tumbling', is_model, spei_dict,
             spei_expected_outputs_tumbling, spei_predicted_values_tumbling              ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name  )
@@ -160,14 +160,14 @@ class NeuralNetwork:
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
             spei_expected_outputs_sliding            , spei_predicted_values_sliding   ,
             months_for_expected_outputs_sliding      , self.has_trained                ,
-            history_sliding if not self.has_trained else None                          ,
+            history_sliding                                                             ,
             metrics_central_sliding if is_model     else metrics_bordering_sliding     ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'Sliding Windows')
         
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
             spei_expected_outputs_tumbling            , spei_predicted_values_tumbling ,
             months_for_expected_outputs_tumbling      , self.has_trained               ,
-            history_tumbling if not self.has_trained else None                         ,
+            history_tumbling                                                            ,
             metrics_central_tumbling if is_model     else metrics_bordering_tumbling   ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'Tumbling Windows')
         

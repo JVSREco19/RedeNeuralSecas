@@ -35,13 +35,13 @@ class Plotter:
                        city_cluster_name     , city_for_training    , city_for_predicting, technique):
         
         self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
-                                          city_cluster_name, city_for_training    , city_for_predicting  )
+                                          city_cluster_name, city_for_training    , city_for_predicting  , technique)
         self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
-                                          city_cluster_name, city_for_training    , city_for_predicting  )
+                                          city_cluster_name, city_for_training    , city_for_predicting  , technique)
         self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
-                                          city_cluster_name, city_for_training    , city_for_predicting  )
+                                          city_cluster_name, city_for_training    , city_for_predicting  , technique)
         self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
-                                          city_cluster_name, city_for_training   , city_for_predicting)
+                                          city_cluster_name, city_for_training   , city_for_predicting  , technique)
     
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
         monthValues          = dataset.get_months         ()
@@ -88,14 +88,26 @@ class Plotter:
         self._saveFig(plt, 'SPEI Data (test)', city_cluster_name, city_for_training, city_for_predicting)
         plt.close()
     
-    def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values):
-        ###ADJUSTMENTS OF INPUTS###############################################
-        spei_expected_outputs[ '20%']  = spei_expected_outputs[ '20%'].flatten()
+    def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values, technique):
+        ###ADJUSTMENTS OF INPUTS (local copies, no mutation of caller's dicts)##
+        is_sliding = (technique == 'Sliding Windows')
+        
+        if is_sliding:
+            true_20 = spei_expected_outputs['20%'][:, -1]
+            pred_20 = spei_predicted_values ['20%'][:, -1]
+        else:
+            true_20 = spei_expected_outputs['20%'].flatten()
+            pred_20 = spei_predicted_values ['20%'].flatten()
         
         if is_model:
-            spei_expected_outputs['100%']  = spei_expected_outputs['100%'].flatten()
-            spei_predicted_values['100%'] = np.append(spei_predicted_values[ '80%'],
-                                                                   spei_predicted_values[ '20%'])
+            if is_sliding:
+                true_100 = spei_expected_outputs['100%'][:, -1]
+                pred_100 = np.concatenate([spei_predicted_values['80%'][:, -1],
+                                           spei_predicted_values['20%'][:, -1]])
+            else:
+                true_100 = spei_expected_outputs['100%'].flatten()
+                pred_100 = np.concatenate([spei_predicted_values['80%'].flatten(),
+                                           spei_predicted_values['20%'].flatten()])
         
         ###PREPARATIVES FOR OUTPUT#############################################
         if is_model:
@@ -117,30 +129,37 @@ class Plotter:
         if np.isclose(spei_delta, 0):
             # If delta is 0, denormalized values should be constant at spei_min_value
             if is_model:
-                true_values_denormalized_dict['100%'] = np.full_like(spei_expected_outputs['100%'], spei_min_value)
-                predictions_denormalized_dict['100%'] = np.full_like(spei_predicted_values['100%'], spei_min_value)
+                true_values_denormalized_dict['100%'] = np.full_like(true_100, spei_min_value)
+                predictions_denormalized_dict['100%'] = np.full_like(pred_100, spei_min_value)
             
-            true_values_denormalized_dict[ '20%'] = np.full_like(spei_expected_outputs[ '20%'], spei_min_value)
-            flattened_20 = spei_predicted_values['20%'].flatten()
-            predictions_denormalized_dict[ '20%'] = np.full_like(flattened_20, spei_min_value)
+            true_values_denormalized_dict[ '20%'] = np.full_like(true_20, spei_min_value)
+            predictions_denormalized_dict[ '20%'] = np.full_like(pred_20, spei_min_value)
         else:
             if is_model:
-                true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
-                predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
+                true_values_denormalized_dict['100%'] = (true_100 * spei_delta + spei_min_value)
+                predictions_denormalized_dict['100%'] = (pred_100 * spei_delta + spei_min_value)
             
-            true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
-            predictions_denormalized_dict[ '20%'] = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
+            true_values_denormalized_dict[ '20%'] = (true_20 * spei_delta + spei_min_value)
+            predictions_denormalized_dict[ '20%'] = (pred_20 * spei_delta + spei_min_value)
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
     def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
-                              months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting):
+                              months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting, technique):
         
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
+        
+        is_sliding = (technique == 'Sliding Windows')
+        
         ###100%################################################################
         if is_model:
-            reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
+            if is_sliding:
+                reshapedMonth = np.concatenate([months_for_expected_outputs['80%'][:, -1],
+                                                months_for_expected_outputs['20%'][:, -1]])
+            else:
+                reshapedMonth = np.concatenate([months_for_expected_outputs['80%'].flatten(),
+                                                months_for_expected_outputs['20%'].flatten()])
         
             plt.figure ()
             plt.plot   (reshapedMonth,  trueValues_denormalized['100%'])
@@ -152,13 +171,15 @@ class Plotter:
             plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s)')
             #plt.show()
             
-            self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
         ###20%#################################################################
-        reshapedMonth = months_for_expected_outputs['20%'].flatten()
+        if is_sliding:
+            reshapedMonth = months_for_expected_outputs['20%'][:, -1]
+        else:
+            reshapedMonth = months_for_expected_outputs['20%'].flatten()
     
         plt.figure ()
-        # ValueError: x and y can be no greater than 2D, but have shapes (11, 6, 1) and (11, 6):
         plt.plot   (reshapedMonth,  trueValues_denormalized[ '20%'])
         plt.plot   (reshapedMonth, predictions_denormalized[ '20%'])
         plt.legend (['Real', 'Predicted'])
@@ -167,15 +188,15 @@ class Plotter:
         plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (20%\'s)')
         #plt.show()
         
-        self._saveFig(plt, 'Previsao 20%', city_cluster_name, city_for_training, city_for_predicting)
+        self._saveFig(plt, 'Previsao 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
         #######################################################################
     
     def showPredictionsDistribution(self, dataset, is_model   , spei_expected_outputs, spei_predicted_values,
-                                    city_cluster_name, city_for_training   , city_for_predicting  ):
+                                    city_cluster_name, city_for_training   , city_for_predicting  , technique):
         
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
         ###100%################################################################
         if is_model:
             plt.figure ()
@@ -188,7 +209,7 @@ class Plotter:
             plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (100%\'s distribution)')
             #plt.show()
             
-            self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
         ###20%#################################################################
         plt.figure ()
@@ -201,7 +222,7 @@ class Plotter:
         plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (20%\'s distribution)')
         #plt.show()
         
-        self._saveFig(plt, 'distribuiçãoDoSPEI 20%', city_cluster_name, city_for_training, city_for_predicting)
+        self._saveFig(plt, 'distribuiçãoDoSPEI 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
         #######################################################################
 
@@ -242,7 +263,7 @@ class Plotter:
         	plt.legend()
     
     def showResidualPlots(self  ,  is_model, true_values_dict , predicted_values_dict,
-                          city_cluster_name, city_for_training, city_for_predicting  ):
+                          city_cluster_name, city_for_training, city_for_predicting  , technique):
         
         if is_model:
             residuals        = { '80%': true_values_dict[ '80%'] - predicted_values_dict[ '80%'],
@@ -257,10 +278,10 @@ class Plotter:
             plt.ylabel('Residuals')
             plt.title (f'Residual Plot for {data_portion_type} data.\nModel {city_for_training} applied to {city_for_predicting}.')
             
-            self._saveFig(plt, f'Residual Plots {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, f'Residual Plots {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
     
-    def showR2ScatterPlots(self, is_model, true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting):
+    def showR2ScatterPlots(self, is_model, true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting, technique):
         for data_portion_type in Plotter.METRICS_PORTIONS_CENTRAL if is_model else Plotter.METRICS_PORTIONS_BORDERING:
             plt.scatter(true_values_dict[data_portion_type], predicted_values_dict[data_portion_type], label = 'R²')
             
@@ -274,5 +295,5 @@ class Plotter:
             plt.ylabel('Predicted values')
             plt.legend()
                 
-            self._saveFig(plt, f'R² Scatter Plot {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, f'R² Scatter Plot {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
