@@ -60,7 +60,7 @@ class NeuralNetwork:
         history_sliding = self.model_sliding.fit(
             spei_provided_inputs_sliding  ['80%'],
             spei_expected_outputs_sliding ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size=32, verbose=0)
+            epochs=self.configs_dict['numberOfEpochs'], batch_size=256, verbose=0)
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
