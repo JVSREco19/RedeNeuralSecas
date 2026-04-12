@@ -264,13 +264,13 @@ class PerformanceEvaluator():
         
         return {'sign_equal': sign_equal, 'integer_equal': integer_equal, 'first4_equal': first4_equal}
         
-    def evaluate          (self       , is_model, spei_dict            ,
+    def evaluate          (self       , technique, is_model, spei_dict            ,
                            spei_expected_outputs, spei_predicted_values,
                            city_cluster_name    , city_for_training    , city_for_predicting):
         
-        errors_dict = self._print_errors(spei_expected_outputs, spei_predicted_values         ,
+        errors_dict = self._print_errors(technique, spei_expected_outputs, spei_predicted_values         ,
                                          city_for_training   , city_for_predicting           , is_model)
-        self.writeErrors(errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
+        self.writeErrors(technique, errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
                          city_cluster_name, city_for_training, city_for_predicting)
         
         return self.metrics_central, self.metrics_bordering
@@ -285,7 +285,7 @@ class PerformanceEvaluator():
         
         return {'numpy': numpy_metrics, 'keras': keras_metrics}
 
-    def _print_errors(self, spei_expected_outputs, spei_predicted_values, city_for_training, city_for_predicting, is_model):
+    def _print_errors(self, technique, spei_expected_outputs, spei_predicted_values, city_for_training, city_for_predicting, is_model):
     
         # RMSE, MSE, MAE, R²:
         if is_model:
@@ -293,7 +293,7 @@ class PerformanceEvaluator():
                 '80%' : self.getError(spei_expected_outputs['80%'], spei_predicted_values['80%']),
                 '20%' : self.getError(spei_expected_outputs['20%'], spei_predicted_values['20%'])
                           }
-            print(f'\t\t--------------Result for model {city_for_training} applied to its own data---------------')
+            print(f'\t\t--------------Result for model {city_for_training} applied to its own data ({technique})---------------')
             print(f"\t\t\tTRAIN ( 80%) NumPy: {errors_dict['80%']['numpy']}")
             print(f"\t\t\tTRAIN ( 80%) Keras: {errors_dict['80%']['keras']}")
             print(f"\t\t\tTEST  ( 20%) NumPy: {errors_dict['20%']['numpy']}")
@@ -302,13 +302,13 @@ class PerformanceEvaluator():
             errors_dict = {
                 '20%' : self.getError(spei_expected_outputs['20%' ], spei_predicted_values['20%' ])
                           }
-            print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data---------------')
+            print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data ({technique})---------------')
             print(f"\t\t\tTEST ( 20%) NumPy: {errors_dict['20%']['numpy']}")
             print(f"\t\t\tTEST ( 20%) Keras: {errors_dict['20%']['keras']}")
 
         return errors_dict
 
-    def writeErrors(self, errors_dict   , spei_dict            , is_model,
+    def writeErrors(self, technique, errors_dict   , spei_dict            , is_model,
                     spei_expected_outputs, spei_predicted_values,
                     city_cluster_name   , city_for_training    , city_for_predicting):
         
