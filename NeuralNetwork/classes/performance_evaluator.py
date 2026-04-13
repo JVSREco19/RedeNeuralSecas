@@ -11,6 +11,8 @@ class PerformanceEvaluator():
     DECIMAL_PADDING = '0000'  # Padding string for decimal digits
     
     def __init__(self):
+        TECHNIQUES = 'tumbling', 'sliding'
+        
         COLS_CENTRAL = {
             'Agrupamento'               : str  ,
             'Municipio Treinado'        : str  ,
@@ -92,8 +94,14 @@ class PerformanceEvaluator():
             'R^2 20% first4_equal'      : bool
         }
         
-        self.metrics_central   = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
-        self.metrics_bordering = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
+        self.metrics_central   = dict.fromkeys(TECHNIQUES)
+        self.metrics_bordering = dict.fromkeys(TECHNIQUES)
+        
+        self.metrics_central  ['tumbling'] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
+        self.metrics_central  ['sliding' ] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
+        
+        self.metrics_bordering['tumbling'] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
+        self.metrics_bordering['sliding '] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
     
     def _get_error_numpy(self, actual, prediction):
         """
@@ -273,7 +281,7 @@ class PerformanceEvaluator():
         self.writeErrors(technique, errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
                          city_cluster_name, city_for_training, city_for_predicting)
         
-        return self.metrics_central, self.metrics_bordering
+        return self.metrics_central[technique], self.metrics_bordering[technique]
     
     def getError(self, actual, prediction):
         """
@@ -445,9 +453,9 @@ class PerformanceEvaluator():
             }
         
         if is_model:
-            self.metrics_central.loc[len(self.metrics_central)] = row
+            self.metrics_central  [technique].loc[len(self.metrics_central)  ] = row
         else:
-            self.metrics_bordering.loc[len(self.metrics_bordering)] = row
+            self.metrics_bordering[technique].loc[len(self.metrics_bordering)] = row
 
     # def getTaylorMetrics(self, spei_dict, spei_expected_outputs, spei_predicted_values, is_model):    
     #  # Standard Deviation:
