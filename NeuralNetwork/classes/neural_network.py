@@ -46,13 +46,16 @@ class NeuralNetwork:
     def _create_ml_model(self, technique):
         # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()       
-        model.add(tf.keras.Input           (    shape  = self.configs_dict[f'input_shape_{technique}' ]) )
-        model.add(tf.keras.layers.LSTM     (             self.configs_dict[ 'hidden_units']              ,
-                                            activation = self.configs_dict[ 'activation'  ][0])          )
-                                            
+        model.add(tf.keras.Input           (    shape  = self.configs_dict[f'input_shape_{technique}']) )
+        model.add(tf.keras.layers.LSTM     (             self.configs_dict[ 'hidden_units'           ]              ,
+                                            activation = self.configs_dict[ 'activation'             ][0])          )
+
         for _ in range(3):
-            model.add(tf.keras.layers.Dense(     units = self.configs_dict[ 'dense_units' ]              ,
-                                            activation = self.configs_dict[ 'activation'  ][1])          )
+            model.add(tf.keras.layers.Dense(     units = self.configs_dict["dense_units"             ],
+                                            activation = self.configs_dict["activation"              ][1]))
+        
+        model.add    (tf.keras.layers.Dense(     units = self.configs_dict[f"{technique}_horizon_len"],
+                                            activation = "linear"))
             
         model.compile(loss      = self.configs_dict['loss'     ],
                       metrics   = self.configs_dict['metrics'  ],

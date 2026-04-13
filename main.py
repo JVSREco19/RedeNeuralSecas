@@ -67,16 +67,16 @@ def train_ml_models_for_central_cities():
         if metrics_central_cities_tumbling is None or metrics_central_cities_tumbling.empty:
             metrics_central_cities_tumbling = metrics_current_central_city_tumbling
         else:
-            metrics_central_cities_tumbling = pd.concat(
-                [metrics_central_cities_sliding        ,
-                 metrics_current_central_city_sliding ],
-                 ignore_index=True                     )
+            metrics_central_cities_tumbling = pd.concat (
+                [metrics_central_cities_tumbling        ,
+                 metrics_current_central_city_tumbling ],
+                 ignore_index=True                      )
 
         # Sliding:
         if metrics_central_cities_sliding is None or metrics_central_cities_sliding.empty:
             metrics_central_cities_sliding = metrics_current_central_city_sliding
         else:
-            metrics_central_cities_sliding = pd.concat(
+            metrics_central_cities_sliding = pd.concat (
                 [metrics_central_cities_sliding        ,
                  metrics_current_central_city_sliding ],
                  ignore_index=True                     )
