@@ -349,7 +349,7 @@ class PerformanceEvaluator():
             
             row = {
                 'Agrupamento'             : city_cluster_name,
-                'Municipio Treinado'      : city_for_training,
+                'Municipio Treinado'      : f'{city_for_training} ({technique})',
                 'Municipio Previsto'      : city_for_predicting,
                 # 80% portion - Numpy
                 'MAE 80% Numpy'           : mae_80_numpy,
@@ -417,7 +417,7 @@ class PerformanceEvaluator():
             
             row = {
                 'Agrupamento'             : city_cluster_name,
-                'Municipio Treinado'      : city_for_training,
+                'Municipio Treinado'      : f'{city_for_training} ({technique})',
                 'Municipio Previsto'      : city_for_predicting,
                 # 20% portion - Numpy
                 'MAE 20% Numpy'           : mae_20_numpy,

@@ -63,6 +63,7 @@ def train_ml_models_for_central_cities():
         (metrics_current_central_city_tumbling, metrics_bordering_tumbling,
          metrics_current_central_city_sliding , metrics_bordering_sliding ) = neural_network_model.use_neural_network()
 
+        # Tumbling:
         if metrics_central_cities_tumbling is None or metrics_central_cities_tumbling.empty:
             metrics_central_cities_tumbling = metrics_current_central_city_tumbling
         else:
@@ -71,7 +72,7 @@ def train_ml_models_for_central_cities():
                  metrics_current_central_city_sliding ],
                  ignore_index=True                     )
 
-
+        # Sliding:
         if metrics_central_cities_sliding is None or metrics_central_cities_sliding.empty:
             metrics_central_cities_sliding = metrics_current_central_city_sliding
         else:
@@ -112,9 +113,12 @@ def save_ml_models_for_later_reuse(neural_network_models):
         shutil.rmtree(f'{OUTPUT_DIR_ADDR}/Models')
     os.makedirs(f'{OUTPUT_DIR_ADDR}/Models')
     
-    for name, model_object in neural_network_models.items():
-        model_object.model.save        (f'{OUTPUT_DIR_ADDR}/Models/{name}.keras'     )
-        model_object.model.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}.weights.h5')
+    for name, model_object in neural_network_models.items():       
+        model_object.model_sliding.save         (f'{OUTPUT_DIR_ADDR}/Models/{name}_sliding.keras'      )
+        model_object.model_tumbling.save        (f'{OUTPUT_DIR_ADDR}/Models/{name}_tumbling.keras'     )
+        
+        model_object.model_sliding.save_weights (f'{OUTPUT_DIR_ADDR}/Models/{name}_sliding.weights.h5' )
+        model_object.model_tumbling.save_weights(f'{OUTPUT_DIR_ADDR}/Models/{name}_tumbling.weights.h5')
 
 def save_results(technique, metrics_df_all_bordering_cities, metrics_df_central_cities_only, neural_network_models):
     
