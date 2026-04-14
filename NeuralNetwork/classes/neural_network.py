@@ -74,23 +74,28 @@ class NeuralNetwork:
         # print(spei_expected_outputs_tumbling ['80%'].shape)
         
         history_tumbling = self.model_tumbling.fit(
-            spei_provided_inputs_tumbling  ['80%'],
-            spei_expected_outputs_tumbling ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'],
+            spei_provided_inputs_tumbling       ['80%'],
+            spei_expected_outputs_tumbling      ['80%'],
+            epochs=self.configs_dict['tumbling_epochs'], 
             batch_size= 1, verbose=0, shuffle=False)
+        # Epochs. Overfitted : 800, 400, 200.
+        # Epochs. Underfitted: 100.
+        
+        
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, tumbling windows')
         
         print(f'\nStarted: training of ML model {self.dataset.city_name}, sliding windows (may take a BIG while)')
         # print(spei_provided_inputs_sliding  ['80%'].shape)
         # print(spei_expected_outputs_sliding ['80%'].shape)
-        
+               
         # Attempted, failed, batch sizes: 64.
         history_sliding = self.model_sliding.fit(
-            spei_provided_inputs_sliding  ['80%'],
-            spei_expected_outputs_sliding ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'],
+            spei_provided_inputs_sliding       ['80%'],
+            spei_expected_outputs_sliding      ['80%'],
+            epochs=self.configs_dict['sliding_epochs'],
             batch_size= 8, verbose=0, shuffle=False)
+        
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
