@@ -73,10 +73,13 @@ class NeuralNetwork:
         # print(spei_provided_inputs_tumbling  ['80%'].shape)
         # print(spei_expected_outputs_tumbling ['80%'].shape)
         
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
+        
         history_tumbling = self.model_tumbling.fit(
             spei_provided_inputs_tumbling  ['80%'],
             spei_expected_outputs_tumbling ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size= 1, verbose=0)
+            epochs=self.configs_dict['numberOfEpochs'], batch_size= 1, verbose=0,
+            callbacks=[early_stop])
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, tumbling windows')
         
@@ -84,10 +87,13 @@ class NeuralNetwork:
         # print(spei_provided_inputs_sliding  ['80%'].shape)
         # print(spei_expected_outputs_sliding ['80%'].shape)
         
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
+        
         history_sliding = self.model_sliding.fit(
             spei_provided_inputs_sliding  ['80%'],
             spei_expected_outputs_sliding ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size= 8, verbose=0)
+            epochs=self.configs_dict['numberOfEpochs'], batch_size= 8, verbose=0,
+            callbacks=[early_stop])
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
