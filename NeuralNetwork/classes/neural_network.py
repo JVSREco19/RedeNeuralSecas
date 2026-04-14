@@ -47,11 +47,11 @@ class NeuralNetwork:
         # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()       
         model.add(tf.keras.Input           (    shape  = self.configs_dict[f'input_shape_{technique}']) )
-        model.add(tf.keras.layers.LSTM     (             self.configs_dict[ 'hidden_units'           ]              ,
+        model.add(tf.keras.layers.LSTM     (             self.configs_dict[f'{technique}_hidden_units']              ,
                                             activation = self.configs_dict[ 'activation'             ][0])          )
 
         for _ in range(3):
-            model.add(tf.keras.layers.Dense(     units = self.configs_dict["dense_units"             ],
+            model.add(tf.keras.layers.Dense(     units = self.configs_dict[f'{technique}_dense_units'],
                                             activation = self.configs_dict["activation"              ][1]))
         
         model.add    (tf.keras.layers.Dense(     units = self.configs_dict[f"{technique}_horizon_len"],

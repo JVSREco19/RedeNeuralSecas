@@ -1,6 +1,8 @@
 {
-	"dense_units"          :   6,
-	"hidden_units"         :   9,
+	"tumbling_dense_units" :   6,
+	"tumbling_hidden_units":   9,
+	"sliding_dense_units"  :  12,
+	"sliding_hidden_units" :  18,	
 	"numberOfEpochs"       : 800,
 	"parcelDataTrain"      :   0.8,
 	"sliding_window_len"   :  18,
