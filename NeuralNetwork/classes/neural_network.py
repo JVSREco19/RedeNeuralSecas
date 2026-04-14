@@ -50,7 +50,7 @@ class NeuralNetwork:
         model.add(tf.keras.layers.LSTM     (             self.configs_dict[f'{technique}_hidden_units']              ,
                                             activation = self.configs_dict[ 'activation'             ][0])          )
 
-        for _ in range(3):
+        for _ in range(self.configs_dict[f'{technique}_num_dense_layers']):
             model.add(tf.keras.layers.Dense(     units = self.configs_dict[f'{technique}_dense_units'],
                                             activation = self.configs_dict["activation"              ][1]))
         
@@ -87,7 +87,7 @@ class NeuralNetwork:
         history_sliding = self.model_sliding.fit(
             spei_provided_inputs_sliding  ['80%'],
             spei_expected_outputs_sliding ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size=64, verbose=0)
+            epochs=self.configs_dict['numberOfEpochs'], batch_size= 8, verbose=0)
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
