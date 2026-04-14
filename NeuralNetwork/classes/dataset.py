@@ -114,7 +114,9 @@ class Dataset:
         return input_tumbling, output_tumbling, input_sliding, output_sliding
     
     def _sliding_window_maker(self, data_dict, configs_dict):
+        
         sliding_window_len   = configs_dict['sliding_window_len'  ]
+        sliding_window_step  = configs_dict['sliding_window_step' ]
         sliding_lookback_len = configs_dict['sliding_lookback_len']
         sliding_horizon_len  = configs_dict['sliding_horizon_len' ]
         
@@ -126,16 +128,27 @@ class Dataset:
             windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
                                        window_shape = sliding_window_len          )
             
+            # reduces overlaps
+            # Bad steps: 6, 3, 1.
+            windows_sliding = windows_sliding[::sliding_window_step]
+            
             input_sliding [data_portion_type] = windows_sliding[ : ,                      : sliding_lookback_len]
             output_sliding[data_portion_type] = windows_sliding[ : , -sliding_horizon_len :                     ]
             
             # +new dimension at the end of the array:
             input_sliding[data_portion_type] = input_sliding[data_portion_type][..., np.newaxis]
-        
+            
+            # Debug:        
+            # print("sliding_window_step =", sliding_window_step)
+            # print("kept_window_indices =", list(range(0, min(len(windows_sliding), 5)*sliding_window_step, sliding_window_step)))
+            
+            # print(f'Sliding windows: {len(windows_sliding)}.')
+            
         return input_sliding, output_sliding
     
     def _tumbling_window_maker(self, data_dict, configs_dict):
         tumbling_window_len   = configs_dict['tumbling_window_len'  ]
+        tumbling_window_step  = configs_dict['tumbling_window_step'  ]
         tumbling_lookback_len = configs_dict['tumbling_lookback_len']
         tumbling_horizon_len  = configs_dict['tumbling_horizon_len' ]
         
@@ -148,12 +161,14 @@ class Dataset:
                                        window_shape = tumbling_window_len         )
             
             # -overlaps by selecting only every 'tumbling_window_len'-th window:
-            windows_tumbling = windows_sliding[::tumbling_window_len]
+            windows_tumbling = windows_sliding[::tumbling_window_step]
             
             input_tumbling [data_portion_type] = windows_tumbling[ : ,                       : tumbling_lookback_len]
             output_tumbling[data_portion_type] = windows_tumbling[ : , -tumbling_horizon_len :                      ]
             
             # +new dimension at the end of the array:
             input_tumbling[data_portion_type] = input_tumbling[data_portion_type][..., np.newaxis]
+            
+            # print(f'Tumbling windows: {len(windows_tumbling)}.')
             
         return input_tumbling, output_tumbling

@@ -18,8 +18,8 @@ class NeuralNetwork:
         
         self.has_trained    = False
         
-        print(f"input_shape_sliding : {self.configs_dict['input_shape_sliding' ]};")
-        print(f"input_shape_tumbling: {self.configs_dict['input_shape_tumbling']}.")
+        # print(f"input_shape_sliding : {self.configs_dict['input_shape_sliding' ]};")
+        # print(f"input_shape_tumbling: {self.configs_dict['input_shape_tumbling']}.")
         
         # print('Input shape:', self.model.input_shape)
         # print(self.model.summary())
@@ -70,6 +70,9 @@ class NeuralNetwork:
                                spei_expected_outputs_tumbling):
         
         print(f'\nStarted: training of ML model {self.dataset.city_name}, tumbling windows (may take a while)')
+        # print(spei_provided_inputs_tumbling  ['80%'].shape)
+        # print(spei_expected_outputs_tumbling ['80%'].shape)
+        
         history_tumbling = self.model_tumbling.fit(
             spei_provided_inputs_tumbling  ['80%'],
             spei_expected_outputs_tumbling ['80%'],
@@ -78,6 +81,9 @@ class NeuralNetwork:
         print(f'Ended  : training of ML model {self.dataset.city_name}, tumbling windows')
         
         print(f'\nStarted: training of ML model {self.dataset.city_name}, sliding windows (may take a BIG while)')
+        # print(spei_provided_inputs_sliding  ['80%'].shape)
+        # print(spei_expected_outputs_sliding ['80%'].shape)
+        
         history_sliding = self.model_sliding.fit(
             spei_provided_inputs_sliding  ['80%'],
             spei_expected_outputs_sliding ['80%'],
@@ -123,21 +129,21 @@ class NeuralNetwork:
         print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
         if is_model:
-             print(f'Is model? {is_model}.')
-
-             print('STARTED making predictions for Tumbling Windows')
-             spei_predicted_values_tumbling = {
-                 '80%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['80%'], verbose = 0),
-                 '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
-                                     }
-             print('ENDED making predictions for Tumbling Windows')
-             
-             print('STARTED making predictions for Sliding Windows')
-             spei_predicted_values_sliding = {
-                 '80%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['80%'], verbose = 0),
-                 '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
-                                     }
-             print('ENDED making predictions for Sliding Windows')
+            print(f'Is model? {is_model}.')
+            
+            print('STARTED making predictions for Tumbling Windows')
+            spei_predicted_values_tumbling = {
+                '80%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['80%'], verbose = 0),
+                '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
+                                    }
+            print('ENDED making predictions for Tumbling Windows')
+            
+            print('STARTED making predictions for Sliding Windows')
+            spei_predicted_values_sliding = {
+                '80%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['80%'], verbose = 0),
+                '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
+                                    }
+            print('ENDED making predictions for Sliding Windows')
             
         else:
             print(f'Is model? {is_model}.')

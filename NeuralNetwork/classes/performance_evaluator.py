@@ -101,7 +101,7 @@ class PerformanceEvaluator():
         self.metrics_central  ['sliding' ] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
         
         self.metrics_bordering['tumbling'] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
-        self.metrics_bordering['sliding '] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
+        self.metrics_bordering['sliding' ] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
     
     def _get_error_numpy(self, actual, prediction):
         """
@@ -453,9 +453,9 @@ class PerformanceEvaluator():
             }
         
         if is_model:
-            self.metrics_central  [technique].loc[len(self.metrics_central)  ] = row
+            self.metrics_central  [technique].loc[len(self.metrics_central  [technique])] = row
         else:
-            self.metrics_bordering[technique].loc[len(self.metrics_bordering)] = row
+            self.metrics_bordering[technique].loc[len(self.metrics_bordering[technique])] = row
 
     # def getTaylorMetrics(self, spei_dict, spei_expected_outputs, spei_predicted_values, is_model):    
     #  # Standard Deviation:
