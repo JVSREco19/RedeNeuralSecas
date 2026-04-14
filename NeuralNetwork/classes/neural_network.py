@@ -46,15 +46,15 @@ class NeuralNetwork:
     def _create_ml_model(self, technique):
         # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()       
-        model.add(tf.keras.Input           (    shape  = self.configs_dict[f'input_shape_{technique}']) )
-        model.add(tf.keras.layers.LSTM     (             self.configs_dict[ 'hidden_units'           ]              ,
-                                            activation = self.configs_dict[ 'activation'             ][0])          )
+        model.add(tf.keras.Input           (    shape  = self.configs_dict[f'input_shape_{technique}' ]) )
+        model.add(tf.keras.layers.LSTM     (             self.configs_dict[f'{technique}_hidden_units']              ,
+                                            activation = self.configs_dict[ 'activation'              ][0])          )
 
-        for _ in range(3):
-            model.add(tf.keras.layers.Dense(     units = self.configs_dict["dense_units"             ],
-                                            activation = self.configs_dict["activation"              ][1]))
+        for _ in range(self.configs_dict[f'{technique}_dense_layers']):
+            model.add(tf.keras.layers.Dense(     units = self.configs_dict[f'{technique}_dense_units' ],
+                                            activation = self.configs_dict["activation"               ][1]))
         
-        model.add    (tf.keras.layers.Dense(     units = self.configs_dict[f"{technique}_horizon_len"],
+        model.add    (tf.keras.layers.Dense(     units = self.configs_dict[f"{technique}_horizon_len" ],
                                             activation = "linear"))
             
         model.compile(loss      = self.configs_dict['loss'     ],
@@ -76,7 +76,8 @@ class NeuralNetwork:
         history_tumbling = self.model_tumbling.fit(
             spei_provided_inputs_tumbling  ['80%'],
             spei_expected_outputs_tumbling ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size= 1, verbose=0)
+            epochs=self.configs_dict['numberOfEpochs'],
+            batch_size= 1, verbose=0, shuffle=False)
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, tumbling windows')
         
@@ -84,10 +85,12 @@ class NeuralNetwork:
         # print(spei_provided_inputs_sliding  ['80%'].shape)
         # print(spei_expected_outputs_sliding ['80%'].shape)
         
+        # Attempted, failed, batch sizes: 64.
         history_sliding = self.model_sliding.fit(
             spei_provided_inputs_sliding  ['80%'],
             spei_expected_outputs_sliding ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size=64, verbose=0)
+            epochs=self.configs_dict['numberOfEpochs'],
+            batch_size= 8, verbose=0, shuffle=False)
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
