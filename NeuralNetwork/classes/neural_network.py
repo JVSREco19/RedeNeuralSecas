@@ -31,13 +31,18 @@ class NeuralNetwork:
         configs_dict.update(
             {'input_shape_sliding' : (configs_dict['sliding_lookback_len' ], 1),
              'input_shape_tumbling': (configs_dict['tumbling_lookback_len'], 1),
-             'activation'  : ['relu', 'sigmoid'],
-             'loss'        : 'mse',
-             'metrics'     : ['mae',
-                             tf.keras.metrics.RootMeanSquaredError(name='rmse'),
-                             'mse',
-                             tf.keras.metrics.R2Score(name="r2")],
-             'optimizer'   : 'adam'
+             'activation'          : ['relu', 'sigmoid'],
+             'loss'                : 'mse',
+             'metrics'             : ['mae',
+                                     tf.keras.metrics.RootMeanSquaredError(name='rmse'),
+                                     'mse',
+                                     tf.keras.metrics.R2Score(name="r2")],
+             'optimizer_tumbling'  : tf.keras.optimizers.Adam(learning_rate=0.001 ), # default value
+             'optimizer_sliding'   : tf.keras.optimizers.Adam(learning_rate=0.0015),
+             # Sliding, Adam, did not work well:
+             #    0.0001, 0.0002, 0.0003, 0.0005, 0.0010, 0.0020.
+             'tumbling_dropout': 0.0,
+             'sliding_dropout' : 0.2
             }
        )
         
@@ -45,21 +50,36 @@ class NeuralNetwork:
 
     def _create_ml_model(self, technique):
         # print(f'Started: creation of ML model {self.dataset.city_name}')
-        model = tf.keras.Sequential()       
-        model.add(tf.keras.Input           (    shape  = self.configs_dict[f'input_shape_{technique}' ]) )
-        model.add(tf.keras.layers.LSTM     (             self.configs_dict[f'{technique}_hidden_units']              ,
-                                            activation = self.configs_dict[ 'activation'              ][0])          )
-
-        for _ in range(self.configs_dict[f'{technique}_dense_layers']):
-            model.add(tf.keras.layers.Dense(     units = self.configs_dict[f'{technique}_dense_units' ],
-                                            activation = self.configs_dict["activation"               ][1]))
+        model = tf.keras.Sequential()
         
-        model.add    (tf.keras.layers.Dense(     units = self.configs_dict[f"{technique}_horizon_len" ],
-                                            activation = "linear"))
+        model.add(tf.keras.Input           (
+            shape             = self.configs_dict[f'input_shape_{technique}' ]   )
+                  )
+        
+        model.add(tf.keras.layers.LSTM     (
+                                self.configs_dict[f'{technique}_hidden_units']   ,
+            activation        = self.configs_dict[ 'activation'              ][0],
+            recurrent_dropout = self.configs_dict[f'{technique}_dropout'     ]   )
+                 )
+
+        # sliding_dense_layers failed with values: 5, 4, 3, 1.
+        for _ in range(self.configs_dict[f'{technique}_dense_layers']):
+            model.add(tf.keras.layers.Dense(
+                units         = self.configs_dict[f'{technique}_dense_units' ]   ,
+                activation    = self.configs_dict["activation"               ][1])
+                      )
+            # relu activation on these 3 layers seems to improve overfitting!
             
-        model.compile(loss      = self.configs_dict['loss'     ],
-                      metrics   = self.configs_dict['metrics'  ],
-                      optimizer = self.configs_dict['optimizer'])
+        model.add(tf.keras.layers.Dropout(self.configs_dict[f'{technique}_dropout']))
+        
+        model.add    (tf.keras.layers.Dense(
+            units             = self.configs_dict[f"{technique}_horizon_len" ],
+            activation        = "linear"                                      )
+                     )
+            
+        model.compile(loss      = self.configs_dict[ 'loss'     ],
+                      metrics   = self.configs_dict[ 'metrics'  ],
+                      optimizer = self.configs_dict[f'optimizer_{technique}'])
         # print(f'Ended: creation of ML model {self.dataset.city_name}')
         
         return model
@@ -77,9 +97,7 @@ class NeuralNetwork:
             spei_provided_inputs_tumbling       ['80%'],
             spei_expected_outputs_tumbling      ['80%'],
             epochs=self.configs_dict['tumbling_epochs'], 
-            batch_size= 1, verbose=0, shuffle=False)
-        # Epochs. Overfitted : 800, 400, 200.
-        # Epochs. Underfitted: 100.
+            batch_size= 1, verbose=0, shuffle=True) # shuffle=False leads to poorer R²
         
         
         self.has_trained = True
@@ -89,12 +107,14 @@ class NeuralNetwork:
         # print(spei_provided_inputs_sliding  ['80%'].shape)
         # print(spei_expected_outputs_sliding ['80%'].shape)
                
-        # Attempted, failed, batch sizes: 64.
+        # Attempted, failed, batch sizes: 64, 16, 6, 4, 2.
         history_sliding = self.model_sliding.fit(
             spei_provided_inputs_sliding       ['80%'],
             spei_expected_outputs_sliding      ['80%'],
             epochs=self.configs_dict['sliding_epochs'],
-            batch_size= 8, verbose=0, shuffle=False)
+            batch_size= 8, verbose=0, shuffle=False) # shuffle=True leads to poorer R² results
+        # Epochs. Overfitted : 800, 400, 200.
+        # Epochs. Underfitted: 100.
         
         self.has_trained = True
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )

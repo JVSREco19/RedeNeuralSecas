@@ -9,7 +9,7 @@
 	"tumbling_lookback_len":   6,
 	"tumbling_horizon_len" :   6,
 	"sliding_epochs"       : 150,
-	"sliding_dense_layers" :   3,
+	"sliding_dense_layers" :   2,
 	"sliding_dense_units"  :  12,
 	"sliding_hidden_units" :  18,
     "sliding_window_len"   :  18,
