@@ -228,10 +228,15 @@ class Dataset:
         if len(months_for_expected_outputs["80%"]) == 0 or len(months_for_provided_inputs["20%"]) == 0:
             return
         
-        last_train_target_time = months_for_expected_outputs["80%"][-1][-1]
-        first_test_input_time = months_for_provided_inputs["20%"][0][0][0]
+        # expected outputs shape: (num_windows, horizon_len)
+        last_train_window_targets = months_for_expected_outputs["80%"][-1]
+        last_train_target_time = last_train_window_targets[-1]
         
-        if not (last_train_target_time < first_test_input_time):
+        # provided inputs shape: (num_windows, lookback_len, 1)
+        first_test_window_inputs = months_for_provided_inputs["20%"][0]
+        first_test_input_time = first_test_window_inputs[0][0]
+        
+        if last_train_target_time >= first_test_input_time:
             raise ValueError(
                 f"Potential train/test temporal overlap in {technique}: "
                 f"last_train_target_time={last_train_target_time}, first_test_input_time={first_test_input_time}."
