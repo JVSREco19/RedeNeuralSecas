@@ -239,7 +239,7 @@ class Dataset:
         first_test_window_inputs = months_for_provided_inputs["20%"][0]
         if first_test_window_inputs.ndim < 2 or first_test_window_inputs.shape[0] == 0 or first_test_window_inputs.shape[1] == 0:
             raise ValueError(
-                f"Invalid input window shape in {technique}: expected at least (1, 1), got {first_test_window_inputs.shape}."
+                f"Invalid input window shape in {technique}: expected non-zero size in both axes, got {first_test_window_inputs.shape}."
             )
         first_test_input_time = first_test_window_inputs[0][0]
         
