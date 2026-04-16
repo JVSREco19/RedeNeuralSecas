@@ -15,7 +15,9 @@
     "sliding_window_len"   :  18,
     "sliding_window_step"  :   2,
     "sliding_lookback_len" :  12,
-    "sliding_horizon_len"  :   6
+    "sliding_horizon_len"  :   6,
+    "print_window_alignment_preview": false,
+    "window_alignment_preview_count": 5
 	
 
   }

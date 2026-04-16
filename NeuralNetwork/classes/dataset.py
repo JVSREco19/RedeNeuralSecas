@@ -28,14 +28,15 @@ class Dataset:
         return self.spei_normalized
     
     def format_data_for_model(self, configs_dict, norm_min=None, norm_max=None):
+        self._validate_window_configs(configs_dict)
         #(SPEI/months)_dict.keys() = ['80%', '20%']
         spei_dict                  , months_dict                = self._train_test_split(configs_dict['parcelDataTrain'], norm_min, norm_max)
         
         #              IN                   ,                OUT                  :
         (spei_provided_inputs_tumbling      , spei_expected_outputs_tumbling      ,
-         spei_provided_inputs_sliding       , spei_expected_outputs_sliding       ) =  self._create_input_output_pairs(  spei_dict, configs_dict)
+         spei_provided_inputs_sliding       , spei_expected_outputs_sliding       ) =  self._create_input_output_pairs(  spei_dict, configs_dict, "spei")
         (months_for_provided_inputs_tumbling, months_for_expected_outputs_tumbling,
-         months_for_provided_inputs_sliding , months_for_expected_outputs_sliding ) =  self._create_input_output_pairs(months_dict, configs_dict)
+         months_for_provided_inputs_sliding , months_for_expected_outputs_sliding ) =  self._create_input_output_pairs(months_dict, configs_dict, "months")
         
         ###100% DATA PORTIONS TUMBLING#########################################
         spei_provided_inputs_tumbling        ['100%'] = np.concatenate( (spei_provided_inputs_tumbling        ['80%'] ,
@@ -58,6 +59,9 @@ class Dataset:
         months_for_expected_outputs_sliding ['100%'] = np.concatenate( (months_for_expected_outputs_sliding   ['80%'] ,
                                                                         months_for_expected_outputs_sliding   ['20%']), axis=0)        
         #######################################################################
+        self._assert_no_overlap_between_train_and_test(months_for_expected_outputs_tumbling, months_for_provided_inputs_tumbling, "tumbling")
+        self._assert_no_overlap_between_train_and_test(months_for_expected_outputs_sliding , months_for_provided_inputs_sliding , "sliding")
+        
         return (                  spei_dict         ,                months_dict           ,
                       spei_provided_inputs_sliding  , spei_expected_outputs_sliding        ,
                 months_for_provided_inputs_sliding  , months_for_expected_outputs_sliding  ,
@@ -107,13 +111,13 @@ class Dataset:
                                                                     
         return spei_dict, months_dict
     
-    def _create_input_output_pairs(self, data_dict, configs_dict):
-        input_tumbling, output_tumbling = self._tumbling_window_maker(data_dict, configs_dict)
-        input_sliding , output_sliding  = self._sliding_window_maker (data_dict, configs_dict)
+    def _create_input_output_pairs(self, data_dict, configs_dict, data_label="data"):
+        input_tumbling, output_tumbling = self._tumbling_window_maker(data_dict, configs_dict, data_label)
+        input_sliding , output_sliding  = self._sliding_window_maker (data_dict, configs_dict, data_label)
         
         return input_tumbling, output_tumbling, input_sliding, output_sliding
     
-    def _sliding_window_maker(self, data_dict, configs_dict):
+    def _sliding_window_maker(self, data_dict, configs_dict, data_label="data"):
         
         sliding_window_len   = configs_dict['sliding_window_len'  ]
         sliding_window_step  = configs_dict['sliding_window_step' ]
@@ -143,10 +147,20 @@ class Dataset:
             # print("kept_window_indices =", list(range(0, min(len(windows_sliding), 5)*sliding_window_step, sliding_window_step)))
             
             # print(f'Sliding windows: {len(windows_sliding)}.')
+            if data_label == "months":
+                self._print_window_alignment_preview(
+                    technique      = "sliding",
+                    data_portion   = data_portion_type,
+                    windows        = windows_sliding,
+                    horizon_len    = sliding_horizon_len,
+                    step           = sliding_window_step,
+                    preview_count  = configs_dict.get("window_alignment_preview_count", 5),
+                    enabled        = configs_dict.get("print_window_alignment_preview", False)
+                )
             
         return input_sliding, output_sliding
     
-    def _tumbling_window_maker(self, data_dict, configs_dict):
+    def _tumbling_window_maker(self, data_dict, configs_dict, data_label="data"):
         tumbling_window_len   = configs_dict['tumbling_window_len'  ]
         tumbling_window_step  = configs_dict['tumbling_window_step'  ]
         tumbling_lookback_len = configs_dict['tumbling_lookback_len']
@@ -170,5 +184,55 @@ class Dataset:
             input_tumbling[data_portion_type] = input_tumbling[data_portion_type][..., np.newaxis]
             
             # print(f'Tumbling windows: {len(windows_tumbling)}.')
+            if data_label == "months":
+                self._print_window_alignment_preview(
+                    technique      = "tumbling",
+                    data_portion   = data_portion_type,
+                    windows        = windows_tumbling,
+                    horizon_len    = tumbling_horizon_len,
+                    step           = tumbling_window_step,
+                    preview_count  = configs_dict.get("window_alignment_preview_count", 5),
+                    enabled        = configs_dict.get("print_window_alignment_preview", False)
+                )
             
         return input_tumbling, output_tumbling
+    
+    def _print_window_alignment_preview(self, technique, data_portion, windows, horizon_len, step, preview_count=5, enabled=False):
+        if not enabled or len(windows) == 0:
+            return
+        
+        print(f"[WINDOW-AUDIT] {self.city_name} | {technique} | {data_portion} | step={step}")
+        limit = min(preview_count, len(windows))
+        
+        for idx in range(limit):
+            window = windows[idx]
+            window_start = window[0]
+            window_end = window[-1]
+            target_time = window[-horizon_len]
+            print(f"  #{idx}: window_start={window_start}, window_end={window_end}, target_time={target_time}")
+    
+    def _validate_window_configs(self, configs_dict):
+        window_pairs = (
+            ("tumbling", configs_dict["tumbling_window_len"], configs_dict["tumbling_lookback_len"], configs_dict["tumbling_horizon_len"]),
+            ("sliding" , configs_dict["sliding_window_len"] , configs_dict["sliding_lookback_len"] , configs_dict["sliding_horizon_len"] ),
+        )
+        
+        for technique, window_len, lookback_len, horizon_len in window_pairs:
+            if lookback_len + horizon_len != window_len:
+                raise ValueError(
+                    f"Invalid {technique} config: lookback ({lookback_len}) + horizon ({horizon_len}) "
+                    f"must equal window_len ({window_len})."
+                )
+    
+    def _assert_no_overlap_between_train_and_test(self, months_for_expected_outputs, months_for_provided_inputs, technique):
+        if len(months_for_expected_outputs["80%"]) == 0 or len(months_for_provided_inputs["20%"]) == 0:
+            return
+        
+        last_train_target_time = months_for_expected_outputs["80%"][-1][-1]
+        first_test_input_time = months_for_provided_inputs["20%"][0][0][0]
+        
+        if not (last_train_target_time < first_test_input_time):
+            raise ValueError(
+                f"Potential train/test temporal overlap in {technique}: "
+                f"last_train_target_time={last_train_target_time}, first_test_input_time={first_test_input_time}."
+            )
