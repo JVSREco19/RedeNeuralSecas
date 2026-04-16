@@ -206,6 +206,9 @@ class Dataset:
         
         for idx in range(limit):
             window = windows[idx]
+            if len(window) < horizon_len:
+                print(f"  #{idx}: skipped (window_len={len(window)} < horizon_len={horizon_len})")
+                continue
             window_start = window[0]
             window_end = window[-1]
             target_time = window[-horizon_len]
@@ -234,6 +237,10 @@ class Dataset:
         
         # provided inputs shape: (num_windows, lookback_len, 1)
         first_test_window_inputs = months_for_provided_inputs["20%"][0]
+        if first_test_window_inputs.ndim < 2 or first_test_window_inputs.shape[0] == 0 or first_test_window_inputs.shape[1] == 0:
+            raise ValueError(
+                f"Invalid input window shape in {technique}: expected at least (1, 1), got {first_test_window_inputs.shape}."
+            )
         first_test_input_time = first_test_window_inputs[0][0]
         
         if last_train_target_time >= first_test_input_time:
