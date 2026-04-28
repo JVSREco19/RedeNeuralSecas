@@ -302,17 +302,17 @@ class PerformanceEvaluator():
                 '20%' : self.getError(spei_expected_outputs['20%'], spei_predicted_values['20%'])
                           }
             print(f'\t\t--------------Result for model {city_for_training} applied to its own data ({technique})---------------')
-            print(f"\t\t\tTRAIN ( 80%) NumPy: {errors_dict['80%']['numpy']}")
-            print(f"\t\t\tTRAIN ( 80%) Keras: {errors_dict['80%']['keras']}")
-            print(f"\t\t\tTEST  ( 20%) NumPy: {errors_dict['20%']['numpy']}")
-            print(f"\t\t\tTEST  ( 20%) Keras: {errors_dict['20%']['keras']}")
+            # print(f"\t\t\tTRAIN ( 80%) NumPy: {errors_dict['80%']['numpy']}")
+            print(f"\t\t\tTRAIN R² ( 80%) Keras: {errors_dict['80%']['keras']['R^2']}")
+            # print(f"\t\t\tTEST  ( 20%) NumPy: {errors_dict['20%']['numpy']}")
+            print(f"\t\t\tTEST  R² ( 20%) Keras: {errors_dict['20%']['keras']['R^2']}")
         else:
             errors_dict = {
                 '20%' : self.getError(spei_expected_outputs['20%' ], spei_predicted_values['20%' ])
                           }
             print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data ({technique})---------------')
-            print(f"\t\t\tTEST ( 20%) NumPy: {errors_dict['20%']['numpy']}")
-            print(f"\t\t\tTEST ( 20%) Keras: {errors_dict['20%']['keras']}")
+            # print(f"\t\t\tTEST ( 20%) NumPy: {errors_dict['20%']['numpy']}")
+            print(f"\t\t\tTEST R² ( 20%) Keras: {errors_dict['20%']['keras']['R^2']}")
 
         return errors_dict
 

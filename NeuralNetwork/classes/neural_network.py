@@ -31,7 +31,7 @@ class NeuralNetwork:
         configs_dict.update(
             {'input_shape_sliding' : (configs_dict['sliding_lookback_len' ], 1),
              'input_shape_tumbling': (configs_dict['tumbling_lookback_len'], 1),
-             'activation'          : ['relu', 'sigmoid'],
+             'activation'          : ['relu', 'sigmoid', 'tanh'],
              'loss'                : 'mse',
              'metrics'             : ['mae',
                                      tf.keras.metrics.RootMeanSquaredError(name='rmse'),
@@ -62,11 +62,13 @@ class NeuralNetwork:
             recurrent_dropout = self.configs_dict[f'{technique}_dropout'     ]   )
                  )
 
+        model.add(tf.keras.layers.Dropout(self.configs_dict[f'{technique}_dropout']))
+
         # sliding_dense_layers failed with values: 5, 4, 3, 1.
         for _ in range(self.configs_dict[f'{technique}_dense_layers']):
             model.add(tf.keras.layers.Dense(
                 units         = self.configs_dict[f'{technique}_dense_units' ]   ,
-                activation    = self.configs_dict["activation"               ][1])
+                activation    = self.configs_dict["activation"               ][2])
                       )
             # relu activation on these 3 layers seems to improve overfitting!
             
@@ -157,36 +159,36 @@ class NeuralNetwork:
         print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
         if is_model:
-            print(f'Is model? {is_model}.')
+            # print(f'Is model? {is_model}.')
             
-            print('STARTED making predictions for Tumbling Windows')
+            # print('STARTED making predictions for Tumbling Windows')
             spei_predicted_values_tumbling = {
                 '80%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['80%'], verbose = 0),
                 '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
                                     }
-            print('ENDED making predictions for Tumbling Windows')
+            # print('ENDED making predictions for Tumbling Windows')
             
-            print('STARTED making predictions for Sliding Windows')
+            # print('STARTED making predictions for Sliding Windows')
             spei_predicted_values_sliding = {
                 '80%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['80%'], verbose = 0),
                 '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
                                     }
-            print('ENDED making predictions for Sliding Windows')
+            # print('ENDED making predictions for Sliding Windows')
             
         else:
-            print(f'Is model? {is_model}.')
+            # print(f'Is model? {is_model}.')
             
-            print('STARTED making predictions for Tumbling Windows')
+            # print('STARTED making predictions for Tumbling Windows')
             spei_predicted_values_tumbling = {
                 '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
                                     }
-            print('ENDED making predictions for Tumbling Windows')
+            # print('ENDED making predictions for Tumbling Windows')
 
-            print('STARTED making predictions for Sliding Windows')
+            # print('STARTED making predictions for Sliding Windows')
             spei_predicted_values_sliding = {
                 '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
                                     }
-            print('ENDED making predictions for Sliding Windows')
+            # print('ENDED making predictions for Sliding Windows')
                      
         metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate('tumbling',
             is_model                      , spei_dict                                            ,
@@ -197,6 +199,15 @@ class NeuralNetwork:
             is_model                      , spei_dict                                         ,
             spei_expected_outputs_sliding , spei_predicted_values_sliding                     ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name        )
+        
+        # Canaries:
+        tumbling_canary = metrics_central_tumbling['R^2 80% Keras'].iloc[-1]
+        sliding_canary  = metrics_central_sliding ['R^2 80% Keras'].iloc[-1]
+        
+        assert tumbling_canary > 0, f"model failed: model for {metrics_central_tumbling['Municipio Previsto']} got R² = {tumbling_canary} on training"
+        assert sliding_canary  > 0, f"model failed: model for {metrics_central_sliding['Municipio Previsto']} got R² = {sliding_canary} on training"
+        
+        ### INSERT HERE CODE TO EXIT THE PROGRAM IF ANY R² IS BELOW ZERO, BECAUSE THE MODEL WILL BE BROKEN THEN.
         
         # plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
         #     self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)

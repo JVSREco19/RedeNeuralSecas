@@ -26,7 +26,7 @@ def instantiate_ml_models_for_central_cities():
     for central_city in neural_network_models.keys():
         DATASET = clusters[central_city][central_city]
         neural_network_models[central_city] = NeuralNetwork(NEURAL_NET_CONFIG, DATASET, THE_PLOTTER)
-        print(f'\tCreated ML model {central_city}')
+        print(f'\tCreated ML model(s) for {central_city}')
         
         tf.keras.backend.clear_session()
         
@@ -34,30 +34,7 @@ def instantiate_ml_models_for_central_cities():
 
 def train_ml_models_for_central_cities():
     metrics_central_cities_tumbling = None
-    metrics_central_cities_sliding  = None
-    
-    # for neural_network_model_name, neural_network_model in neural_network_models.items():
-    #     metrics_current_central_city_tumbling, _ = neural_network_model.use_neural_network()
-
-    #     if metrics_central_cities_tumbling is None or metrics_central_cities_tumbling.empty:
-    #         metrics_central_cities_tumbling = metrics_current_central_city_tumbling
-    #     else:
-    #         metrics_df_central_cities = pd.concat(
-    #             [metrics_central_cities_tumbling       ,
-    #              metrics_current_central_city_tumbling],
-    #              ignore_index=True                     )
-    
-    # for neural_network_model_name, neural_network_model in neural_network_models.items():
-    #     metrics_current_central_city_sliding, _ = neural_network_model.use_neural_network()
-
-    #     if metrics_central_cities_sliding is None or metrics_central_cities_sliding.empty:
-    #         metrics_central_cities_sliding = metrics_current_central_city_sliding
-    #     else:
-    #         metrics_df_central_cities = pd.concat(
-    #             [metrics_central_cities_sliding        ,
-    #              metrics_current_central_city_sliding ],
-    #              ignore_index=True                     )
-          
+    metrics_central_cities_sliding  = None          
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
         (metrics_current_central_city_tumbling, metrics_bordering_tumbling,
@@ -159,10 +136,10 @@ print('PREPARATION: START')
 THE_PLOTTER = Plotter()
 
 clusters = InputDataLoader(INPUT_DIR_ADDR).get_cluster_memberships()
-print('\tLoaded all datasets')
+# print('\tLoaded all datasets')
 
 make_output_dirs(OUTPUT_DIR_ADDR, clusters)
-print('\tMade output directories for all cities')
+# print('\tMade output directories for all cities')
 print('PREPARATION: END')
 
 print('CREATION: START')
