@@ -152,10 +152,17 @@ print('TRAINING: START')
 print('TRAINING: END')
 
 print('APPLYING: START')
-metrics_df_all_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
+(metrics_df_bordering_cities_tumbling,
+ metrics_df_bordering_cities_sliding ) = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
 print('APPLYING: END')
 
 print('TERMINATION: START')
-save_results('tumbling', None, metrics_central_cities_only_tumbling, None)#, neural_network_models)
-save_results('sliding' , None, metrics_central_cities_only_sliding , None)#, neural_network_models)
+save_results('tumbling', metrics_df_bordering_cities_tumbling, 
+                         metrics_central_cities_only_tumbling, None)
+save_results('sliding' , metrics_df_bordering_cities_sliding , 
+                         metrics_central_cities_only_sliding , None)
+save_results(   None   ,                 None                ,
+                                         None                , neural_network_models)
+
+
 print('TERMINATION: END')
