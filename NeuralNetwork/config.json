@@ -1,6 +1,6 @@
 {
 	"parcelDataTrain"      :   0.8,
-	"tumbling_epochs"      : 800,
+	"tumbling_epochs"      : 150,
 	"tumbling_dense_layers":   3,
 	"tumbling_dense_units" :   6,
 	"tumbling_hidden_units":   9,

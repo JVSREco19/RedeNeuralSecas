@@ -154,7 +154,11 @@ class NeuralNetwork:
                                                                       spei_expected_outputs_sliding ,
                                                                       spei_provided_inputs_tumbling ,
                                                                       spei_expected_outputs_tumbling)
-            # plotter.drawModelLineGraph           (history, self.dataset.city_cluster_name, self.dataset.city_name)
+            # 2026-05-22, tested, are working fine:
+            plotter.drawModelLineGraph(history_tumbling, 'tumbling windows',
+                        self.dataset.city_cluster_name, self.dataset.city_name)
+            plotter.drawModelLineGraph(history_sliding , 'sliding windows' ,
+                        self.dataset.city_cluster_name, self.dataset.city_name)
             
         print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
@@ -207,6 +211,7 @@ class NeuralNetwork:
         assert tumbling_canary > 0, f"model failed: model for {metrics_central_tumbling['Municipio Previsto']} got R² = {tumbling_canary} on training"
         assert sliding_canary  > 0, f"model failed: model for {metrics_central_sliding['Municipio Previsto']} got R² = {sliding_canary} on training"
         
+        # 2026-05-22, tested, is working fine:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
         

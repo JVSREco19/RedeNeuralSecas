@@ -10,15 +10,15 @@ class Plotter:
     METRICS_PORTIONS_CENTRAL   = [ '80%', '20%']
     METRICS_PORTIONS_BORDERING = ['20%']
     
-    def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None):
+    def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None, technique=None):
         if city_for_predicting:
             FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
             os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting}.png')
+            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting} - {technique}.png')
         elif city_for_training:
             FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/'
             os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename + f' - Model {city_for_training}.png')
+            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} - {technique}.png')
         else:
             FILEPATH = './{Plotter.OUTPUT_DIR_ADDR}/'
             os.makedirs(FILEPATH, exist_ok=True)
@@ -205,7 +205,7 @@ class Plotter:
         plt.close()
         #######################################################################
 
-    def drawModelLineGraph(self, history, city_cluster_name, city_for_training):
+    def drawModelLineGraph(self, history, technique, city_cluster_name, city_for_training):
         
         fig, axs = plt.subplots(nrows=2, ncols=2, sharex=True)
         
@@ -228,9 +228,9 @@ class Plotter:
         for ax in axs[1]: # axs[1] = 2nd row
             ax.set(xlabel='Epochs (training)')
         
-        plt.suptitle(f'Model {city_for_training}')
+        plt.suptitle(f'Model {city_for_training} ({technique})')
     
-        self._saveFig(plt, 'Line Graph.', city_cluster_name, city_for_training)
+        self._saveFig(plt, 'Line Graph.', city_cluster_name=city_cluster_name, city_for_training=city_for_training, technique=technique)
         plt.close()
 
     def define_box_properties(self, plot_name, color_code, label):
