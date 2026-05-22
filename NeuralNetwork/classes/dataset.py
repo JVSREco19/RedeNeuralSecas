@@ -148,7 +148,7 @@ class Dataset:
     
     def _tumbling_window_maker(self, data_dict, configs_dict):
         tumbling_window_len   = configs_dict['tumbling_window_len'  ]
-        tumbling_window_step  = configs_dict['tumbling_window_step'  ]
+        tumbling_window_step  = configs_dict['tumbling_window_step' ]
         tumbling_lookback_len = configs_dict['tumbling_lookback_len']
         tumbling_horizon_len  = configs_dict['tumbling_horizon_len' ]
         

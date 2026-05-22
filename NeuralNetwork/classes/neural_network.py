@@ -8,7 +8,7 @@ class NeuralNetwork:
 
     def __init__(self, file_name, dataset, plotter):
         self.dataset        = dataset
-        # self.plotter        = plotter
+        self.plotter        = plotter
         self.evaluator      = PerformanceEvaluator()
         
         self.configs_dict   = self._set_configs(file_name)
@@ -124,7 +124,7 @@ class NeuralNetwork:
         return history_tumbling, history_sliding
     
     def use_neural_network(self, dataset=None, plotter=None):
-        # if plotter == None: plotter = self.plotter
+        if plotter == None: plotter = self.plotter
         if dataset == None:
               dataset  = self.dataset
               is_model = True
@@ -207,10 +207,8 @@ class NeuralNetwork:
         assert tumbling_canary > 0, f"model failed: model for {metrics_central_tumbling['Municipio Previsto']} got R² = {tumbling_canary} on training"
         assert sliding_canary  > 0, f"model failed: model for {metrics_central_sliding['Municipio Previsto']} got R² = {sliding_canary} on training"
         
-        ### INSERT HERE CODE TO EXIT THE PROGRAM IF ANY R² IS BELOW ZERO, BECAUSE THE MODEL WILL BE BROKEN THEN.
-        
-        # plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
-        #     self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
+        plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
+            self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
         
         # self.plotter.plotModelPlots(dataset, spei_dict, is_model             ,
         #     spei_expected_outputs_tumbling            , spei_predicted_values,

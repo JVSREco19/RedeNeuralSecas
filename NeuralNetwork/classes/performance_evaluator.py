@@ -3,7 +3,7 @@ import numpy      as np
 import pandas     as pd
 from decimal import Decimal, InvalidOperation, ROUND_DOWN
 
-class PerformanceEvaluator():
+class PerformanceEvaluator:
     
     # Constants for decimal comparison precision
     DECIMAL_PRECISION = 4  # Number of decimal digits to compare
