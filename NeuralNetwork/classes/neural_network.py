@@ -215,12 +215,19 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
         
-        # self.plotter.plotModelPlots(dataset, spei_dict, is_model             ,
-        #     spei_expected_outputs_tumbling            , spei_predicted_values,
-        #     months_for_expected_outputs_tumbling      , self.has_trained     ,
-        #     history if not self.has_trained else None               ,
-        #     metrics_central if is_model     else metrics_bordering  ,
-        #     self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name)
+        self.plotter.plotModelPlots(dataset, spei_dict, is_model                      ,
+            spei_expected_outputs_tumbling            , spei_predicted_values_tumbling,
+            months_for_expected_outputs_tumbling      , self.has_trained              ,
+            history_tumbling if not self.has_trained else None                        ,
+            metrics_central_tumbling if is_model     else metrics_bordering_tumbling  ,
+            self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'tumbling')
+        
+        self.plotter.plotModelPlots(dataset, spei_dict, is_model                     ,
+            spei_expected_outputs_tumbling            , spei_predicted_values_sliding,
+            months_for_expected_outputs_tumbling      , self.has_trained             ,
+            history_sliding if not self.has_trained else None                        ,
+            metrics_central_sliding if is_model     else metrics_bordering_sliding   ,
+            self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'sliding')
         
         print(f'Ended  : applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         

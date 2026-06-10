@@ -32,16 +32,18 @@ class Plotter:
                        spei_expected_outputs , spei_predicted_values,
                        monthForPredicted_dict, has_trained          ,
                        history               , metrics_df           ,
-                       city_cluster_name     , city_for_training    , city_for_predicting):
+                       city_cluster_name     , city_for_training    , city_for_predicting, technique):
         
-        self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
-                                          city_cluster_name, city_for_training    , city_for_predicting  )
-        self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
-                                          city_cluster_name, city_for_training    , city_for_predicting  )
-        self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
-                                          city_cluster_name, city_for_training    , city_for_predicting  )
-        self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
-                                          city_cluster_name, city_for_training   , city_for_predicting)
+        # self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
+                                          # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+        # self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
+                                          # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+        # self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
+                                          # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+        # self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
+                                          # city_cluster_name, city_for_training   , city_for_predicting   , technique)
+    
+        pass
     
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
         monthValues          = dataset.get_months         ()
@@ -134,7 +136,7 @@ class Plotter:
         return true_values_denormalized_dict, predictions_denormalized_dict
     
     def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
-                              months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting):
+                              months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting, technique):
         
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
@@ -144,15 +146,16 @@ class Plotter:
         
             plt.figure ()
             plt.plot   (reshapedMonth,  trueValues_denormalized['100%'])
+            # "ValueError: x and y must have same first dimension, but have shapes (342,) and (2010,)":
             plt.plot   (reshapedMonth, predictions_denormalized['100%'])
             plt.axvline(months_for_expected_outputs['80%'][-1][-1], color='r')
             plt.legend (['Real', 'Predicted'])
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
-            plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s)')
+            plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s {technique})')
             #plt.show()
             
-            self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
         ###20%#################################################################
         reshapedMonth = months_for_expected_outputs['20%'].flatten()
@@ -164,31 +167,32 @@ class Plotter:
         plt.legend (['Real', 'Predicted'])
         plt.xlabel ('Year')
         plt.ylabel ('SPEI')
-        plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (20%\'s)')
+        plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (20%\'s {technique})')
         #plt.show()
         
-        self._saveFig(plt, 'Previsao 20%', city_cluster_name, city_for_training, city_for_predicting)
+        self._saveFig(plt, 'Previsao 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
         #######################################################################
     
     def showPredictionsDistribution(self, dataset, is_model   , spei_expected_outputs, spei_predicted_values,
-                                    city_cluster_name, city_for_training   , city_for_predicting  ):
+                                    city_cluster_name, city_for_training   , city_for_predicting, technique  ):
         
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
         ###100%################################################################
         if is_model:
             plt.figure ()
+            # "ValueError: x and y must be the same size":
             plt.scatter(x =  trueValues_denormalized['100%'],
                         y = predictions_denormalized['100%'],
                         color=['white'],  marker='^', edgecolors='black')
             plt.xlabel ('Real SPEI')
             plt.ylabel ('Predicted SPEI'  )
             plt.axline ( (0, 0) , slope=1 )
-            plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (100%\'s distribution)')
+            plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (100%\'s distribution {technique})')
             #plt.show()
             
-            self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
         ###20%#################################################################
         plt.figure ()
@@ -198,10 +202,10 @@ class Plotter:
         plt.xlabel ('Real SPEI')
         plt.ylabel ('Predicted SPEI'  )
         plt.axline ( (0, 0) , slope=1 )
-        plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (20%\'s distribution)')
+        plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (20%\'s distribution {technique})')
         #plt.show()
         
-        self._saveFig(plt, 'distribuiçãoDoSPEI 20%', city_cluster_name, city_for_training, city_for_predicting)
+        self._saveFig(plt, 'distribuiçãoDoSPEI 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
         #######################################################################
 
@@ -242,9 +246,10 @@ class Plotter:
         	plt.legend()
     
     def showResidualPlots(self  ,  is_model, true_values_dict , predicted_values_dict,
-                          city_cluster_name, city_for_training, city_for_predicting  ):
+                          city_cluster_name, city_for_training, city_for_predicting, technique  ):
         
         if is_model:
+            # "ValueError: operands could not be broadcast together with shapes (46,6) (273,6)":
             residuals        = { '80%': true_values_dict[ '80%'] - predicted_values_dict[ '80%'],
                                  '20%': true_values_dict[ '20%'] - predicted_values_dict[ '20%']}
         else:
@@ -255,13 +260,14 @@ class Plotter:
             plt.axhline(y=0, color='r', linestyle='--')
             plt.xlabel('Predicted Values')
             plt.ylabel('Residuals')
-            plt.title (f'Residual Plot for {data_portion_type} data.\nModel {city_for_training} applied to {city_for_predicting}.')
+            plt.title (f'Residual Plot for {data_portion_type} data ({technique}).\nModel {city_for_training} applied to {city_for_predicting}.')
             
-            self._saveFig(plt, f'Residual Plots {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, f'Residual Plots {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
     
-    def showR2ScatterPlots(self, is_model, true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting):
+    def showR2ScatterPlots(self, is_model, true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting, technique):
         for data_portion_type in Plotter.METRICS_PORTIONS_CENTRAL if is_model else Plotter.METRICS_PORTIONS_BORDERING:
+            # "ValueError: x and y must be the same size":
             plt.scatter(true_values_dict[data_portion_type], predicted_values_dict[data_portion_type], label = 'R²')
             
             # Generates a single line by creating `x_vals`, a sequence of 100 evenly spaced values between the min and max values in true_values
@@ -269,10 +275,10 @@ class Plotter:
             x_vals = np.linspace(min(flattened_values), max(flattened_values), 100)
             plt.plot(x_vals, x_vals, color='red', label='x=y')  # Line will only appear once
             
-            plt.title (f'R² {data_portion_type} data. Model {city_for_training} applied to {city_for_predicting}.')
+            plt.title (f'Model {city_for_training} applied to {city_for_predicting}\nR² {data_portion_type} data ({technique})')
             plt.xlabel('True values')
             plt.ylabel('Predicted values')
             plt.legend()
                 
-            self._saveFig(plt, f'R² Scatter Plot {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting)
+            self._saveFig(plt, f'R² Scatter Plot {data_portion_type}', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
