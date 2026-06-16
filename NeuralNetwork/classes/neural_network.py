@@ -145,12 +145,28 @@ class NeuralNetwork:
              spei_provided_inputs_tumbling       , spei_expected_outputs_tumbling       ,
              months_for_provided_inputs_tumbling , months_for_expected_outputs_tumbling ) = dataset.format_data_for_model(
                  self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
-       
+                
+        # print()
+        
+        ####################################################################################
+        # 2026-06-16:                          #     20%     #      80%     #    100%      #
+        ####################################################################################
+        # spei_provided_inputs_tumbling        # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
+        # months_for_provided_inputs_tumbling  # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
+        # spei_expected_outputs_tumbling       # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) #
+        # months_for_expected_outputs_tumbling # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) #
+        ####################################################################################
+        # spei_provided_inputs_sliding         # (62, 12, 1) # (273, 12, 1) # (335, 12, 1) #
+        # months_for_provided_inputs_sliding   # (62, 12, 1) # (273, 12, 1) # (335, 12, 1) #
+        # spei_expected_outputs_sliding        # (62,  6   ) # (273,  6   ) # (335,  6   ) #
+        # months_for_expected_outputs_sliding  # (62,  6   ) # (273,  6   ) # (335,  6   ) #
+        ####################################################################################
+        
         split_position = len(spei_dict['80%'])
         
         if not self.has_trained:
             # flags has_trained as True:
-            history_tumbling, history_sliding  = self._train_ml_models(spei_provided_inputs_sliding  ,
+            history_tumbling, history_sliding  = self._train_ml_models(spei_provided_inputs_sliding ,
                                                                       spei_expected_outputs_sliding ,
                                                                       spei_provided_inputs_tumbling ,
                                                                       spei_expected_outputs_tumbling)
@@ -193,7 +209,25 @@ class NeuralNetwork:
                 '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Sliding Windows')
-                     
+        
+        # print()
+        
+        ####################################################################################
+        # 2026-06-16:                          #     20%     #      80%     #    100%      #
+        ####################################################################################
+        # spei_provided_inputs_tumbling        # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
+        # months_for_provided_inputs_tumbling  # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
+        # spei_expected_outputs_tumbling       # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) #
+        # months_for_expected_outputs_tumbling # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) #
+        ####################################################################################
+        # spei_provided_inputs_sliding         # (62, 12, 1) # (273, 12, 1) # (335, 12, 1) #
+        # months_for_provided_inputs_sliding   # (62, 12, 1) # (273, 12, 1) # (335, 12, 1) #
+        # spei_expected_outputs_sliding        # (62,  6   ) # (273,  6   ) # (335,  6   ) #
+        # months_for_expected_outputs_sliding  # (62,  6   ) # (273,  6   ) # (335,  6   ) #
+        ####################################################################################
+        # THESE VALUES ARE THE SAME! NOTHING CHANGED.                                      #
+        ####################################################################################
+        
         metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate('tumbling',
             is_model                      , spei_dict                                            ,
             spei_expected_outputs_tumbling, spei_predicted_values_tumbling                       ,
@@ -215,6 +249,8 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position    ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name )
         
+        # print()
+        
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
             spei_expected_outputs_tumbling            , spei_predicted_values_tumbling ,
             months_for_expected_outputs_tumbling      , self.has_trained               ,
@@ -223,8 +259,8 @@ class NeuralNetwork:
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'tumbling')
         
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
-            spei_expected_outputs_tumbling            , spei_predicted_values_sliding  ,
-            months_for_expected_outputs_tumbling      , self.has_trained               ,
+            spei_expected_outputs_sliding            , spei_predicted_values_sliding   ,
+            months_for_expected_outputs_sliding      , self.has_trained                ,
             history_sliding if not self.has_trained else None                          ,
             metrics_central_sliding if is_model     else metrics_bordering_sliding     ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'sliding' )

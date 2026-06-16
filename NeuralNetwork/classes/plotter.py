@@ -43,8 +43,6 @@ class Plotter:
         self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
                                           city_cluster_name, city_for_training   , city_for_predicting   , technique)
     
-        pass
-    
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
         monthValues          = dataset.get_months         ()
         speiValues           = dataset.get_spei           ()
@@ -127,11 +125,18 @@ class Plotter:
             predictions_denormalized_dict[ '20%'] = np.full_like(flattened_20, spei_min_value)
         else:
             if is_model:
-                true_values_denormalized_dict['100%'] = (spei_expected_outputs ['100%']           * spei_delta + spei_min_value)
+                true_values_denormalized_dict['100%'] = (spei_expected_outputs['100%']           * spei_delta + spei_min_value)
                 predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
             
-            true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
-            predictions_denormalized_dict[ '20%'] = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
+            true_values_denormalized_dict[ '20%']     = (spei_expected_outputs[ '20%']           * spei_delta + spei_min_value)
+            predictions_denormalized_dict[ '20%']     = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
+        
+        print()
+        assert  '20%' in true_values_denormalized_dict, 'There is no  20% portion for true_values_denormalized_dict'
+        assert '100%' in true_values_denormalized_dict, 'There is no 100% portion for true_values_denormalized_dict'
+        
+        assert  '20%' in predictions_denormalized_dict, 'There is no  20% portion for predictions_denormalized_dict'
+        assert '100%' in predictions_denormalized_dict, 'There is no 100% portion for predictions_denormalized_dict'
         
         assert true_values_denormalized_dict['20%'].shape == predictions_denormalized_dict['20%'].shape,\
         f"{true_values_denormalized_dict['20%'].shape} != {predictions_denormalized_dict['20%'].shape}"
@@ -143,6 +148,8 @@ class Plotter:
     
     def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
                               months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting, technique):
+        
+        # print()
         
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
