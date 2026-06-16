@@ -40,8 +40,8 @@ class Plotter:
                                           # city_cluster_name, city_for_training    , city_for_predicting  , technique)
         # self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
                                           # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-        # self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
-                                          # city_cluster_name, city_for_training   , city_for_predicting   , technique)
+        self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
+                                          city_cluster_name, city_for_training   , city_for_predicting   , technique)
     
         pass
     
@@ -92,18 +92,18 @@ class Plotter:
     
     def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values):
         ###ADJUSTMENTS OF INPUTS###############################################
-        spei_expected_outputs[ '20%']  = spei_expected_outputs[ '20%'].flatten()
+        spei_expected_outputs    [ '20%'] = spei_expected_outputs[ '20%'].flatten()
         
         if is_model:
-            spei_expected_outputs['100%']  = spei_expected_outputs['100%'].flatten()
+            spei_expected_outputs['100%'] = spei_expected_outputs['100%'].flatten()
             spei_predicted_values['100%'] = np.append(spei_predicted_values[ '80%'],
-                                                                   spei_predicted_values[ '20%'])
+                                                      spei_predicted_values[ '20%'])
         
         ###PREPARATIVES FOR OUTPUT#############################################
         if is_model:
             RELEVANT_PORTIONS = ['100%', '20%']
         else:
-            RELEVANT_PORTIONS = ['20%']
+            RELEVANT_PORTIONS = [        '20%']
         
         true_values_denormalized_dict = dict.fromkeys(RELEVANT_PORTIONS)
         predictions_denormalized_dict = dict.fromkeys(RELEVANT_PORTIONS)
@@ -133,6 +133,12 @@ class Plotter:
             true_values_denormalized_dict[ '20%'] = (spei_expected_outputs [ '20%']           * spei_delta + spei_min_value)
             predictions_denormalized_dict[ '20%'] = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
         
+        assert true_values_denormalized_dict['20%'].shape == predictions_denormalized_dict['20%'].shape,\
+        f"{true_values_denormalized_dict['20%'].shape} != {predictions_denormalized_dict['20%'].shape}"
+        
+        assert true_values_denormalized_dict['100%'].shape == predictions_denormalized_dict['100%'].shape,\
+        f"{true_values_denormalized_dict['100%'].shape} != {predictions_denormalized_dict['100%'].shape}"
+        
         return true_values_denormalized_dict, predictions_denormalized_dict
     
     def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
@@ -145,9 +151,13 @@ class Plotter:
             reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
         
             plt.figure ()
-            plt.plot   (reshapedMonth,  trueValues_denormalized['100%'])
-            # "ValueError: x and y must have same first dimension, but have shapes (342,) and (2010,)":
-            plt.plot   (reshapedMonth, predictions_denormalized['100%'])
+            
+            assert reshapedMonth.shape == trueValues_denormalized['100%'].shape == predictions_denormalized['100%'].shape,\
+            f"{reshapedMonth.shape} != {trueValues_denormalized['100%'].shape} != {predictions_denormalized['100%'].shape}"
+            
+            plt.plot   (reshapedMonth      ,  trueValues_denormalized['100%'])
+            plt.plot   (reshapedMonth      , predictions_denormalized['100%'])
+            
             plt.axvline(months_for_expected_outputs['80%'][-1][-1], color='r')
             plt.legend (['Real', 'Predicted'])
             plt.xlabel ('Year')
