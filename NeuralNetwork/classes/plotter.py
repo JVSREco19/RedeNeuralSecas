@@ -88,7 +88,7 @@ class Plotter:
         self._saveFig(plt, 'SPEI Data (test)', city_cluster_name, city_for_training, city_for_predicting)
         plt.close()
     
-    def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values):
+    def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values, technique):
         ###ADJUSTMENTS OF INPUTS###############################################
         spei_expected_outputs    [ '20%'] = spei_expected_outputs[ '20%'].flatten()
         
@@ -132,17 +132,18 @@ class Plotter:
             predictions_denormalized_dict[ '20%']     = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
         
         print()
-        assert  '20%' in true_values_denormalized_dict, 'There is no  20% portion for true_values_denormalized_dict'
-        assert '100%' in true_values_denormalized_dict, 'There is no 100% portion for true_values_denormalized_dict'
-        
-        assert  '20%' in predictions_denormalized_dict, 'There is no  20% portion for predictions_denormalized_dict'
-        assert '100%' in predictions_denormalized_dict, 'There is no 100% portion for predictions_denormalized_dict'
-        
+        if is_model:
+            assert '100%' in true_values_denormalized_dict, f'There is no 100% portion for true_values_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
+            assert '100%' in predictions_denormalized_dict, f'There is no 100% portion for predictions_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
+            assert true_values_denormalized_dict['100%'].shape == predictions_denormalized_dict['100%'].shape,\
+            f"{true_values_denormalized_dict['100%'].shape} != {predictions_denormalized_dict['100%'].shape}"
+            
+        assert  '20%' in true_values_denormalized_dict, f'There is no  20% portion for true_values_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
+        assert  '20%' in predictions_denormalized_dict, f'There is no  20% portion for predictions_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
         assert true_values_denormalized_dict['20%'].shape == predictions_denormalized_dict['20%'].shape,\
         f"{true_values_denormalized_dict['20%'].shape} != {predictions_denormalized_dict['20%'].shape}"
         
-        assert true_values_denormalized_dict['100%'].shape == predictions_denormalized_dict['100%'].shape,\
-        f"{true_values_denormalized_dict['100%'].shape} != {predictions_denormalized_dict['100%'].shape}"
+        print(f'OK: city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}!')
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
@@ -152,7 +153,7 @@ class Plotter:
         # print()
         
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
         ###100%################################################################
         if is_model:
             reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
