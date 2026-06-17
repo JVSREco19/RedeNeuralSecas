@@ -89,6 +89,7 @@ class Plotter:
         plt.close()
     
     def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values, technique):
+        # print()        
         ###ADJUSTMENTS OF INPUTS###############################################
         spei_expected_outputs    [ '20%'] = spei_expected_outputs[ '20%'].flatten()
         
@@ -143,17 +144,56 @@ class Plotter:
         assert true_values_denormalized_dict['20%'].shape == predictions_denormalized_dict['20%'].shape,\
         f"{true_values_denormalized_dict['20%'].shape} != {predictions_denormalized_dict['20%'].shape}"
         
-        print(f'OK: city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}!')
+        # print(f'OK: city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}!')
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
     def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
                               months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting, technique):
         
-        # print()
+        print()
+        #################################################################################### 
+        # 2026-06-17:                          #     20%     #      80%     #    100%      # 
+        #################################################################################### 
+        # spei_expected_outputs_tumbling       # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) # OK
+        # months_for_expected_outputs_tumbling # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) # OK
+        #################################################################################### 
+        # spei_expected_outputs_sliding        # (62,  6   ) # (273,  6   ) # (335,  6   ) # 
+        # months_for_expected_outputs_sliding  # (62,  6   ) # (273,  6   ) # (335,  6   ) # 
+        #################################################################################### 
+        # spei_predicted_values_tumbling       # (11, 6   )  # ( 46,  6   ) #     N/A      # OK
+        # spei_predicted_values_sliding        # (62, 6   )  # (273,  6   ) #     N/A      # 
+        #################################################################################### 
+        # THESE VALUES ABOVE ARE THE SAME! NOTHING CHANGED.                                # 
+        #################################################################################### 
         
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
+        
+        print()
+        #################################################################################### 
+        # 2026-06-17:                          #     20%     #      80%     #    100%      # 
+        #################################################################################### 
+        # spei_expected_outputs_tumbling       # ( 11,  6  ) # ( 46,  6   ) # (  57,  6  ) # OK
+        # months_for_expected_outputs_tumbling # ( 11,  6  ) # ( 46,  6   ) # (  57,  6  ) # OK
+        #################################################################################### 
+        # spei_expected_outputs_sliding        # ( 62,  6  ) # (273,  6   ) # ( 335,  6  ) # 
+        # months_for_expected_outputs_sliding  # ( 62,  6  ) # (273,  6   ) # ( 335,  6  ) # 
+        #################################################################################### 
+        # spei_predicted_values_tumbling       # ( 11, 6   ) # ( 46,  6   ) #     N/A      # OK
+        # spei_predicted_values_sliding        # ( 62, 6   ) # (273,  6   ) #     N/A      # 
+        #################################################################################### 
+        # THESE VALUES ABOVE ARE THE SAME! NOTHING CHANGED.                                # 
+        #################################################################################### 
+        # trueValues_denormalized  (tumbling)  # ( 66,     ) #     N/A      # ( 342,     ) # OK (11 x 6 =  66;  57 x 6 =  342)
+        # predictions_denormalized (tumbling)  # ( 66,     ) #     N/A      # ( 342,     ) # OK (11 x 6 =  66;  57 x 6 =  342)
+        #--------------------------------------#-------------#--------------#--------------#
+        # trueValues_denormalized  (sliding)   # (372,     ) #     N/A      # (2010,     ) # OK (62 x 6 = 372; 335 x 6 = 2010)
+        # predictions_denormalized (sliding)   # (372,     ) #     N/A      # (2010,     ) # OK (62 x 6 = 372; 335 x 6 = 2010)
+        ####################################################################################
+        
+        
+        
         ###100%################################################################
         if is_model:
             reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])

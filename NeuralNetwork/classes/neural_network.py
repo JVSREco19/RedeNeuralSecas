@@ -146,10 +146,10 @@ class NeuralNetwork:
              months_for_provided_inputs_tumbling , months_for_expected_outputs_tumbling ) = dataset.format_data_for_model(
                  self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
                 
-        # print()
+        print()
         
         ####################################################################################
-        # 2026-06-16:                          #     20%     #      80%     #    100%      #
+        # 2026-06-17:                          #     20%     #      80%     #    100%      #
         ####################################################################################
         # spei_provided_inputs_tumbling        # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
         # months_for_provided_inputs_tumbling  # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
@@ -210,10 +210,10 @@ class NeuralNetwork:
                                     }
             # print('ENDED making predictions for Sliding Windows')
         
-        # print()
+        print()
         
         ####################################################################################
-        # 2026-06-16:                          #     20%     #      80%     #    100%      #
+        # 2026-06-17:                          #     20%     #      80%     #    100%      #
         ####################################################################################
         # spei_provided_inputs_tumbling        # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
         # months_for_provided_inputs_tumbling  # (11,  6, 1) # ( 46,  6, 1) # ( 57,  6, 1) #
@@ -225,7 +225,10 @@ class NeuralNetwork:
         # spei_expected_outputs_sliding        # (62,  6   ) # (273,  6   ) # (335,  6   ) #
         # months_for_expected_outputs_sliding  # (62,  6   ) # (273,  6   ) # (335,  6   ) #
         ####################################################################################
-        # THESE VALUES ARE THE SAME! NOTHING CHANGED.                                      #
+        # THESE VALUES ABOVE ARE THE SAME! NOTHING CHANGED.                                #
+        ####################################################################################
+        # spei_predicted_values_tumbling       # (11, 6   )  # ( 46,  6   ) #     N/A      #
+        # spei_predicted_values_sliding        # (62, 6   )  # (273,  6   ) #     N/A      #
         ####################################################################################
         
         metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate('tumbling',
@@ -249,7 +252,7 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position    ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name )
         
-        # print()
+        print()
         
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
             spei_expected_outputs_tumbling            , spei_predicted_values_tumbling ,
