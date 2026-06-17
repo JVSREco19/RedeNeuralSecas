@@ -132,7 +132,7 @@ class Plotter:
             true_values_denormalized_dict[ '20%']     = (spei_expected_outputs[ '20%']           * spei_delta + spei_min_value)
             predictions_denormalized_dict[ '20%']     = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
         
-        print()
+        # print()
         if is_model:
             assert '100%' in true_values_denormalized_dict, f'There is no 100% portion for true_values_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
             assert '100%' in predictions_denormalized_dict, f'There is no 100% portion for predictions_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
@@ -151,7 +151,7 @@ class Plotter:
     def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
                               months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting, technique):
         
-        print()
+        # print()
         #################################################################################### 
         # 2026-06-17:                          #     20%     #      80%     #    100%      # 
         #################################################################################### 
@@ -170,7 +170,7 @@ class Plotter:
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
         
-        print()
+        # print()
         #################################################################################### 
         # 2026-06-17:                          #     20%     #      80%     #    100%      # 
         #################################################################################### 
@@ -191,9 +191,9 @@ class Plotter:
         # trueValues_denormalized  (sliding)   # (372,     ) #     N/A      # (2010,     ) # OK (62 x 6 = 372; 335 x 6 = 2010)
         # predictions_denormalized (sliding)   # (372,     ) #     N/A      # (2010,     ) # OK (62 x 6 = 372; 335 x 6 = 2010)
         ####################################################################################
-        
-        
-        
+
+
+
         ###100%################################################################
         if is_model:
             reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])

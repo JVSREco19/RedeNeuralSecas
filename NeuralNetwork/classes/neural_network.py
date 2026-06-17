@@ -7,12 +7,12 @@ class NeuralNetwork:
     DATA_TYPES_LIST = ['80%', '20%']
 
     def __init__(self, file_name, dataset, plotter):
+        self.configs_dict   = self._set_configs(file_name)
+        
         self.dataset        = dataset
         self.plotter        = plotter
         self.evaluator      = PerformanceEvaluator()
-        
-        self.configs_dict   = self._set_configs(file_name)
-        
+                
         self.model_tumbling = self._create_ml_model('tumbling')
         self.model_sliding  = self._create_ml_model('sliding' )
         
@@ -132,21 +132,15 @@ class NeuralNetwork:
         
         # For bordering cities, use the training dataset's normalization parameters
         if is_model:
-            (spei_dict                           ,                months_dict           ,
-             spei_provided_inputs_sliding        , spei_expected_outputs_sliding        ,
-             months_for_provided_inputs_sliding  , months_for_expected_outputs_sliding  ,
-             spei_provided_inputs_tumbling       , spei_expected_outputs_tumbling       ,
-             months_for_provided_inputs_tumbling , months_for_expected_outputs_tumbling ) = dataset.format_data_for_model(self.configs_dict)
+            (spei_dict, months_dict,
+             spei_data, months_data) = dataset.format_data_for_model(self.configs_dict)
             
         else:
-            (spei_dict                           ,                months_dict           ,
-             spei_provided_inputs_sliding        , spei_expected_outputs_sliding        ,
-             months_for_provided_inputs_sliding  , months_for_expected_outputs_sliding  ,
-             spei_provided_inputs_tumbling       , spei_expected_outputs_tumbling       ,
-             months_for_provided_inputs_tumbling , months_for_expected_outputs_tumbling ) = dataset.format_data_for_model(
+            (spei_dict, months_dict,
+             spei_data, months_data) = dataset.format_data_for_model(
                  self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
                 
-        print()
+        # print()
         
         ####################################################################################
         # 2026-06-17:                          #     20%     #      80%     #    100%      #
@@ -166,10 +160,11 @@ class NeuralNetwork:
         
         if not self.has_trained:
             # flags has_trained as True:
-            history_tumbling, history_sliding  = self._train_ml_models(spei_provided_inputs_sliding ,
-                                                                      spei_expected_outputs_sliding ,
-                                                                      spei_provided_inputs_tumbling ,
-                                                                      spei_expected_outputs_tumbling)
+            history_tumbling, history_sliding  = self._train_ml_models(spei_data['sliding' ]['input' ],
+                                                                       spei_data['sliding' ]['output'],
+                                                                       spei_data['tumbling']['input' ],
+                                                                       spei_data['tumbling']['output'])
+            
             # 2026-05-22, tested, are working fine:
             plotter.drawModelLineGraph(history_tumbling, 'tumbling windows',
                         self.dataset.city_cluster_name, self.dataset.city_name)
@@ -183,15 +178,15 @@ class NeuralNetwork:
             
             # print('STARTED making predictions for Tumbling Windows')
             spei_predicted_values_tumbling = {
-                '80%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['80%'], verbose = 0),
-                '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
+                '80%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['80%'], verbose = 0),
+                '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Tumbling Windows')
             
             # print('STARTED making predictions for Sliding Windows')
             spei_predicted_values_sliding = {
-                '80%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['80%'], verbose = 0),
-                '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
+                '80%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['80%'], verbose = 0),
+                '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Sliding Windows')
             
@@ -200,17 +195,17 @@ class NeuralNetwork:
             
             # print('STARTED making predictions for Tumbling Windows')
             spei_predicted_values_tumbling = {
-                '20%' : self.model_tumbling.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
+                '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Tumbling Windows')
 
             # print('STARTED making predictions for Sliding Windows')
             spei_predicted_values_sliding = {
-                '20%' : self.model_sliding.predict(spei_provided_inputs_sliding  ['20%'], verbose = 0)
+                '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Sliding Windows')
         
-        print()
+        # print()
         
         ####################################################################################
         # 2026-06-17:                          #     20%     #      80%     #    100%      #
@@ -233,12 +228,12 @@ class NeuralNetwork:
         
         metrics_central_tumbling, metrics_bordering_tumbling = self.evaluator.evaluate('tumbling',
             is_model                      , spei_dict                                            ,
-            spei_expected_outputs_tumbling, spei_predicted_values_tumbling                       ,
+            spei_data['tumbling']['output'], spei_predicted_values_tumbling                       ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name           )
         
         metrics_central_sliding, metrics_bordering_sliding = self.evaluator.evaluate('sliding',
             is_model                      , spei_dict                                         ,
-            spei_expected_outputs_sliding , spei_predicted_values_sliding                     ,
+            spei_data['sliding']['output'] , spei_predicted_values_sliding                     ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name        )
         
         # Canaries:
@@ -252,18 +247,18 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position    ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name )
         
-        print()
+        # print()
         
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
-            spei_expected_outputs_tumbling            , spei_predicted_values_tumbling ,
-            months_for_expected_outputs_tumbling      , self.has_trained               ,
+            spei_data  ['tumbling']['output']      , spei_predicted_values_tumbling    ,
+            months_data['tumbling']['output']      , self.has_trained                  ,
             history_tumbling if not self.has_trained else None                         ,
             metrics_central_tumbling if is_model     else metrics_bordering_tumbling   ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'tumbling')
         
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
-            spei_expected_outputs_sliding            , spei_predicted_values_sliding   ,
-            months_for_expected_outputs_sliding      , self.has_trained                ,
+            spei_data  ['sliding']['output']      , spei_predicted_values_sliding      ,
+            months_data['sliding']['output']      , self.has_trained                   ,
             history_sliding if not self.has_trained else None                          ,
             metrics_central_sliding if is_model     else metrics_bordering_sliding     ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name, 'sliding' )

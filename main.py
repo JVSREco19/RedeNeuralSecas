@@ -20,7 +20,7 @@ def make_output_dirs(rootdir, clusters):
         for city in cities_dict.keys():
             os.makedirs(f'{rootdir}/cluster {cluster_name}/model {cluster_name}/city {city}')
 
-def instantiate_ml_models_for_central_cities():
+def instantiate_ml_models_for_central_cities(clusters):
     neural_network_models = dict.fromkeys(clusters)
     
     for central_city in neural_network_models.keys():
@@ -143,7 +143,7 @@ make_output_dirs(OUTPUT_DIR_ADDR, clusters)
 print('PREPARATION: END')
 
 print('CREATION: START')
-neural_network_models = instantiate_ml_models_for_central_cities()
+neural_network_models = instantiate_ml_models_for_central_cities(clusters)
 print('CREATION: END')
 
 print('TRAINING: START')
