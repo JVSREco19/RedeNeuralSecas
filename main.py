@@ -33,36 +33,33 @@ def instantiate_ml_models_for_central_cities(clusters):
     return neural_network_models
 
 def train_ml_models_for_central_cities():
-    metrics_central_cities_tumbling = None
-    metrics_central_cities_sliding  = None          
+    
+    metrics_central_cities = {'tumbling': None, 'sliding': None}
+    
+    techniques = ['tumbling', 'sliding']
+
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
-        (metrics_current_central_city_tumbling, metrics_bordering_tumbling,
-         metrics_current_central_city_sliding , metrics_bordering_sliding ) = neural_network_model.use_neural_network()
+        # (metrics_current_central_city_tumbling, metrics_bordering_tumbling,
+        #  metrics_current_central_city_sliding , metrics_bordering_sliding )
+        metrics_central, metrics_bordering = neural_network_model.use_neural_network()
 
-        # Tumbling:
-        if metrics_central_cities_tumbling is None or metrics_central_cities_tumbling.empty:
-            metrics_central_cities_tumbling = metrics_current_central_city_tumbling
-        else:
-            metrics_central_cities_tumbling = pd.concat (
-                [metrics_central_cities_tumbling        ,
-                 metrics_current_central_city_tumbling ],
-                 ignore_index=True                      )
+        for technique in techniques:
 
-        # Sliding:
-        if metrics_central_cities_sliding is None or metrics_central_cities_sliding.empty:
-            metrics_central_cities_sliding = metrics_current_central_city_sliding
-        else:
-            metrics_central_cities_sliding = pd.concat (
-                [metrics_central_cities_sliding        ,
-                 metrics_current_central_city_sliding ],
-                 ignore_index=True                     )
+            if metrics_central_cities[technique] is None or metrics_central_cities[technique].empty:
+                metrics_central_cities[technique] = metrics_central[technique]
+            else:
+                metrics_central_cities[technique] = pd.concat (
+                    [metrics_central_cities[technique]        ,
+                     metrics_central[technique]] ,
+                     ignore_index=True                        )
     
-    return metrics_central_cities_tumbling, metrics_central_cities_sliding
+    return metrics_central_cities
 
 def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
-    metrics_df_bordering_cities_tumbling = None
-    metrics_df_bordering_cities_sliding  = None
+    metrics_df_bordering_cities = {'tumbling': None, 'sliding': None}
+    
+    techniques = ['tumbling', 'sliding']
     
     for cluster_name, cities_dict in clusters.items():
         print(f'Model {cluster_name}:')
@@ -75,24 +72,16 @@ def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
             print(f'\tCity {city}')
             DATASET = clusters[cluster_name][city]
             
-            (_ , metrics_df_bordering_cities_current_model_tumbling,
-             _ , metrics_df_bordering_cities_current_model_sliding ) = MODEL.use_neural_network(dataset=DATASET)
+            (metrics_central, metrics_bordering) = MODEL.use_neural_network(dataset=DATASET)
     
-        # Tumbling:
-        # Run once for every central city, not for every bordering city:
-        if metrics_df_bordering_cities_tumbling is None:
-            metrics_df_bordering_cities_tumbling = metrics_df_bordering_cities_current_model_tumbling
-        else:
-            metrics_df_bordering_cities_tumbling = pd.concat([metrics_df_bordering_cities_tumbling, metrics_df_bordering_cities_current_model_tumbling], ignore_index=True)
-        
-        # Sliding:
-        # Run once for every central city, not for every bordering city:
-        if metrics_df_bordering_cities_sliding is None:
-            metrics_df_bordering_cities_sliding = metrics_df_bordering_cities_current_model_sliding
-        else:
-            metrics_df_bordering_cities_sliding = pd.concat([metrics_df_bordering_cities_sliding, metrics_df_bordering_cities_current_model_sliding], ignore_index=True)
+        for technique in techniques:
+            # Run once for every central city, not for every bordering city:
+            if metrics_df_bordering_cities [technique] is None:
+                metrics_df_bordering_cities[technique] = metrics_bordering[technique]
+            else:
+                metrics_df_bordering_cities_tumbling = pd.concat([metrics_df_bordering_cities[technique], metrics_bordering[technique]], ignore_index=True)
     
-    return metrics_df_bordering_cities_tumbling, metrics_df_bordering_cities_sliding
+    return metrics_df_bordering_cities
 
 def save_ml_models_for_later_reuse(neural_network_models):
     if os.path.isdir(f'{OUTPUT_DIR_ADDR}/Models'):
@@ -147,20 +136,18 @@ neural_network_models = instantiate_ml_models_for_central_cities(clusters)
 print('CREATION: END')
 
 print('TRAINING: START')
-(metrics_central_cities_only_tumbling,
- metrics_central_cities_only_sliding ) = train_ml_models_for_central_cities()
+metrics_central_cities_only = train_ml_models_for_central_cities()
 print('TRAINING: END')
 
 print('APPLYING: START')
-(metrics_df_bordering_cities_tumbling,
- metrics_df_bordering_cities_sliding ) = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
+metrics_df_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neural_network_models)
 print('APPLYING: END')
 
 print('TERMINATION: START')
-save_results('tumbling', metrics_df_bordering_cities_tumbling, 
-                         metrics_central_cities_only_tumbling, None)
-save_results('sliding' , metrics_df_bordering_cities_sliding , 
-                         metrics_central_cities_only_sliding , None)
+save_results('tumbling', metrics_df_bordering_cities['tumbling'], 
+                         metrics_central_cities_only['tumbling'], None)
+save_results('sliding' , metrics_df_bordering_cities['sliding' ], 
+                         metrics_central_cities_only['sliding' ], None)
 save_results(   None   ,                 None                ,
                                          None                , neural_network_models)
 

@@ -7,8 +7,9 @@ class Plotter:
     
     OUTPUT_DIR_ADDR   = './Output/'
     
-    METRICS_PORTIONS_CENTRAL   = [ '80%', '20%']
-    METRICS_PORTIONS_BORDERING = ['20%']
+    METRICS_PORTIONS_CENTRAL   = [   '80%'  ,   '20%'  ]
+    METRICS_PORTIONS_BORDERING = [              '20%'  ]
+    METRICS_TECHNIQUES         = ['tumbling', 'sliding']
     
     def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None, technique=None):
         if city_for_predicting:
@@ -28,20 +29,25 @@ class Plotter:
         self.showSpeiData(dataset     , spei_test, split, city_cluster_name, city_for_training, city_for_predicting)
         self.showSpeiTest(dataset     , spei_test, split, city_cluster_name, city_for_training, city_for_predicting)
 
-    def plotModelPlots(self                  , dataset, spei_dict            , is_model           ,
-                       spei_expected_outputs , spei_predicted_values,
-                       monthForPredicted_dict, has_trained          ,
-                       history               , metrics_df           ,
-                       city_cluster_name     , city_for_training    , city_for_predicting, technique):
+    def plotModelPlots(self,     dataset,       spei_dict,        is_model,
+        spei_data     ,   months_data  , has_trained                      ,
+        spei_predicted_values_tumbling, spei_predicted_values_sliding     ,
+        history                                                           ,
+        city_cluster_name,     city_for_training,      city_for_predicting):
         
-        # self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
-                                          # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-        # self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
-                                          # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-        # self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
-                                          # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-        self.showPredictionResults       (dataset, is_model         , spei_expected_outputs, spei_predicted_values , monthForPredicted_dict,
-                                          city_cluster_name, city_for_training   , city_for_predicting   , technique)
+        spei_predicted_values = {'tumbling': spei_predicted_values_tumbling,
+                                 'sliding': spei_predicted_values_sliding  }
+
+        for technique in Plotter.METRICS_TECHNIQUES:
+            # self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
+                                              # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+            # self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
+                                              # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+            # self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
+                                              # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+                                              
+            self.showPredictionResults       (dataset, is_model         , spei_data, spei_predicted_values, months_data,
+                                              city_cluster_name, city_for_training   , city_for_predicting   , technique)
     
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
         monthValues          = dataset.get_months         ()
@@ -95,8 +101,10 @@ class Plotter:
         
         if is_model:
             spei_expected_outputs['100%'] = spei_expected_outputs['100%'].flatten()
-            spei_predicted_values['100%'] = np.append(spei_predicted_values[ '80%'],
-                                                      spei_predicted_values[ '20%'])
+            
+            spei_predicted_values[technique]['100%'] = np.append(
+                spei_predicted_values[technique]['80%'],
+                spei_predicted_values[technique]['20%'])
         
         ###PREPARATIVES FOR OUTPUT#############################################
         if is_model:
@@ -126,11 +134,11 @@ class Plotter:
             predictions_denormalized_dict[ '20%'] = np.full_like(flattened_20, spei_min_value)
         else:
             if is_model:
-                true_values_denormalized_dict['100%'] = (spei_expected_outputs['100%']           * spei_delta + spei_min_value)
-                predictions_denormalized_dict['100%'] = (spei_predicted_values['100%']           * spei_delta + spei_min_value)
+                true_values_denormalized_dict['100%'] = (spei_expected_outputs           ['100%']           * spei_delta + spei_min_value)
+                predictions_denormalized_dict['100%'] = (spei_predicted_values[technique]['100%']           * spei_delta + spei_min_value)
             
-            true_values_denormalized_dict[ '20%']     = (spei_expected_outputs[ '20%']           * spei_delta + spei_min_value)
-            predictions_denormalized_dict[ '20%']     = (spei_predicted_values[ '20%'].flatten() * spei_delta + spei_min_value)
+            true_values_denormalized_dict[ '20%']     = (spei_expected_outputs           [ '20%']           * spei_delta + spei_min_value)
+            predictions_denormalized_dict[ '20%']     = (spei_predicted_values[technique][ '20%'].flatten() * spei_delta + spei_min_value)
         
         # print()
         if is_model:
@@ -148,55 +156,16 @@ class Plotter:
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
-    def showPredictionResults(self      ,    dataset, is_model   , spei_expected_outputs, spei_predicted_values,
-                              months_for_expected_outputs, city_cluster_name   , city_for_training    , city_for_predicting, technique):
-        
-        # print()
-        #################################################################################### 
-        # 2026-06-17:                          #     20%     #      80%     #    100%      # 
-        #################################################################################### 
-        # spei_expected_outputs_tumbling       # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) # OK
-        # months_for_expected_outputs_tumbling # (11,  6   ) # ( 46,  6   ) # ( 57,  6   ) # OK
-        #################################################################################### 
-        # spei_expected_outputs_sliding        # (62,  6   ) # (273,  6   ) # (335,  6   ) # 
-        # months_for_expected_outputs_sliding  # (62,  6   ) # (273,  6   ) # (335,  6   ) # 
-        #################################################################################### 
-        # spei_predicted_values_tumbling       # (11, 6   )  # ( 46,  6   ) #     N/A      # OK
-        # spei_predicted_values_sliding        # (62, 6   )  # (273,  6   ) #     N/A      # 
-        #################################################################################### 
-        # THESE VALUES ABOVE ARE THE SAME! NOTHING CHANGED.                                # 
-        #################################################################################### 
+    def showPredictionResults(self, dataset, is_model, spei_data, spei_predicted_values, months_data,
+                              city_cluster_name, city_for_training, city_for_predicting, technique):
         
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
-        
-        # print()
-        #################################################################################### 
-        # 2026-06-17:                          #     20%     #      80%     #    100%      # 
-        #################################################################################### 
-        # spei_expected_outputs_tumbling       # ( 11,  6  ) # ( 46,  6   ) # (  57,  6  ) # OK
-        # months_for_expected_outputs_tumbling # ( 11,  6  ) # ( 46,  6   ) # (  57,  6  ) # OK
-        #################################################################################### 
-        # spei_expected_outputs_sliding        # ( 62,  6  ) # (273,  6   ) # ( 335,  6  ) # 
-        # months_for_expected_outputs_sliding  # ( 62,  6  ) # (273,  6   ) # ( 335,  6  ) # 
-        #################################################################################### 
-        # spei_predicted_values_tumbling       # ( 11, 6   ) # ( 46,  6   ) #     N/A      # OK
-        # spei_predicted_values_sliding        # ( 62, 6   ) # (273,  6   ) #     N/A      # 
-        #################################################################################### 
-        # THESE VALUES ABOVE ARE THE SAME! NOTHING CHANGED.                                # 
-        #################################################################################### 
-        # trueValues_denormalized  (tumbling)  # ( 66,     ) #     N/A      # ( 342,     ) # OK (11 x 6 =  66;  57 x 6 =  342)
-        # predictions_denormalized (tumbling)  # ( 66,     ) #     N/A      # ( 342,     ) # OK (11 x 6 =  66;  57 x 6 =  342)
-        #--------------------------------------#-------------#--------------#--------------#
-        # trueValues_denormalized  (sliding)   # (372,     ) #     N/A      # (2010,     ) # OK (62 x 6 = 372; 335 x 6 = 2010)
-        # predictions_denormalized (sliding)   # (372,     ) #     N/A      # (2010,     ) # OK (62 x 6 = 372; 335 x 6 = 2010)
-        ####################################################################################
-
-
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model,
+                                          spei_data[technique]['output'], spei_predicted_values, technique)
 
         ###100%################################################################
         if is_model:
-            reshapedMonth = np.append(months_for_expected_outputs['80%'], months_for_expected_outputs['20%'])
+            reshapedMonth = np.append(months_data[technique]['output']['80%'], months_data[technique]['output']['20%'])
         
             plt.figure ()
             
@@ -206,7 +175,7 @@ class Plotter:
             plt.plot   (reshapedMonth      ,  trueValues_denormalized['100%'])
             plt.plot   (reshapedMonth      , predictions_denormalized['100%'])
             
-            plt.axvline(months_for_expected_outputs['80%'][-1][-1], color='r')
+            plt.axvline(months_data[technique]['output']['80%'][-1][-1], color='r')
             plt.legend (['Real', 'Predicted'])
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
@@ -216,7 +185,7 @@ class Plotter:
             self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
         ###20%#################################################################
-        reshapedMonth = months_for_expected_outputs['20%'].flatten()
+        reshapedMonth = months_data[technique]['output']['20%'].flatten()
     
         plt.figure ()
         # ValueError: x and y can be no greater than 2D, but have shapes (11, 6, 1) and (11, 6):
