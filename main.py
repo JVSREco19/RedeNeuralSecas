@@ -42,7 +42,7 @@ def train_ml_models_for_central_cities():
     for neural_network_model_name, neural_network_model in neural_network_models.items():
         # (metrics_current_central_city_tumbling, metrics_bordering_tumbling,
         #  metrics_current_central_city_sliding , metrics_bordering_sliding )
-        metrics_central, metrics_bordering = neural_network_model.use_neural_network()
+        (metrics_central, _ ) = neural_network_model.use_neural_network()
 
         for technique in techniques:
 
@@ -51,13 +51,13 @@ def train_ml_models_for_central_cities():
             else:
                 metrics_central_cities[technique] = pd.concat (
                     [metrics_central_cities[technique]        ,
-                     metrics_central[technique]] ,
+                     metrics_central       [technique]]       ,
                      ignore_index=True                        )
     
     return metrics_central_cities
 
 def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
-    metrics_df_bordering_cities = {'tumbling': None, 'sliding': None}
+    metrics_bordering_cities = {'tumbling': None, 'sliding': None}
     
     techniques = ['tumbling', 'sliding']
     
@@ -72,16 +72,19 @@ def apply_ml_models_for_bordering_cities(clusters, neural_network_models):
             print(f'\tCity {city}')
             DATASET = clusters[cluster_name][city]
             
-            (metrics_central, metrics_bordering) = MODEL.use_neural_network(dataset=DATASET)
+            ( _ , metrics_bordering) = MODEL.use_neural_network(dataset=DATASET)
     
         for technique in techniques:
             # Run once for every central city, not for every bordering city:
-            if metrics_df_bordering_cities [technique] is None:
-                metrics_df_bordering_cities[technique] = metrics_bordering[technique]
+            if metrics_bordering_cities [technique] is None:
+                metrics_bordering_cities[technique] = metrics_bordering[technique]
             else:
-                metrics_df_bordering_cities_tumbling = pd.concat([metrics_df_bordering_cities[technique], metrics_bordering[technique]], ignore_index=True)
+                metrics_bordering_cities[technique] = pd.concat(
+                    [metrics_bordering_cities[technique] ,
+                     metrics_bordering       [technique]],
+                     ignore_index=True                   )
     
-    return metrics_df_bordering_cities
+    return metrics_bordering_cities
 
 def save_ml_models_for_later_reuse(neural_network_models):
     if os.path.isdir(f'{OUTPUT_DIR_ADDR}/Models'):
@@ -144,6 +147,7 @@ metrics_df_bordering_cities = apply_ml_models_for_bordering_cities(clusters, neu
 print('APPLYING: END')
 
 print('TERMINATION: START')
+    
 save_results('tumbling', metrics_df_bordering_cities['tumbling'], 
                          metrics_central_cities_only['tumbling'], None)
 save_results('sliding' , metrics_df_bordering_cities['sliding' ], 

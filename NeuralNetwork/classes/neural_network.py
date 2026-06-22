@@ -138,7 +138,7 @@ class NeuralNetwork:
             # 2026-05-22, tested, are working fine:
             plotter.drawModelLineGraph(history['tumbling'], 'tumbling windows',
                         self.dataset.city_cluster_name, self.dataset.city_name)
-            plotter.drawModelLineGraph(history['sliding' ] , 'sliding windows' ,
+            plotter.drawModelLineGraph(history['sliding' ] , 'sliding windows',
                         self.dataset.city_cluster_name, self.dataset.city_name)
             
         print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
