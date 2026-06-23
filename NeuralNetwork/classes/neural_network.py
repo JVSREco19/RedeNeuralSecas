@@ -176,9 +176,9 @@ class NeuralNetwork:
             # print('ENDED making predictions for Sliding Windows')
         
         metrics_central, metrics_bordering= self.evaluator.evaluate(
-            is_model                      , spei_dict                                         ,
-            spei_data['sliding']['output'] , spei_predicted_values_sliding                     ,
-            self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name        )
+            is_model                      , spei_dict                                 ,
+            spei_data['sliding']['output'] , spei_predicted_values_sliding            ,
+            self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name)
         
         # Canaries:
         tumbling_canary = metrics_central['tumbling']['R^2 80% Keras'].iloc[-1]

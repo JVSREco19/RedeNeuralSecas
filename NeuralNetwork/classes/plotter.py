@@ -237,40 +237,48 @@ class Plotter:
         #######################################################################
 
     def drawModelLineGraph(self, history, technique, city_cluster_name, city_for_training):
-        
-        fig, axs = plt.subplots(nrows=2, ncols=2, sharex=True)
-        
-        axs[0, 0].plot(history.history['mae'] , 'tab:blue')
-        axs[0, 0].set_title('MAE')
-        axs[0, 0].legend(['loss'])
-        
-        axs[0, 1].plot(history.history['rmse'], 'tab:orange')
-        axs[0, 1].set_title('RMSE')
-        axs[0, 1].legend(['loss'])
-        
-        axs[1, 0].plot(history.history['mse'] , 'tab:green')
-        axs[1, 0].set_title('MSE')
-        axs[1, 0].legend(['loss'])
-        
-        axs[1, 1].plot(history.history['r2']  , 'tab:red')
-        axs[1, 1].set_title('R²')
-        axs[1, 1].legend(['explanation power'])
-        
-        for ax in axs[1]: # axs[1] = 2nd row
-            ax.set(xlabel='Epochs (training)')
-        
-        plt.suptitle(f'Model {city_for_training} ({technique})')
+        y_mae = history.history['mae'][19:]
+        y_rmse = history.history['rmse'][19:]
+        y_mse = history.history['mse'][19:]
+        y_r2 = history.history['r2'][19:]
     
+        x = range(20, 20 + len(y_mae))
+    
+        fig, axs = plt.subplots(nrows=2, ncols=2, sharex=True)
+    
+        axs[0, 0].plot(x, y_mae, 'tab:blue')
+        axs[0, 0].set_title('MAE')
+    
+        axs[0, 1].plot(x, y_rmse, 'tab:orange')
+        axs[0, 1].set_title('RMSE')
+    
+        axs[1, 0].plot(x, y_mse, 'tab:green')
+        axs[1, 0].set_title('MSE')
+    
+        axs[1, 1].plot(x, y_r2, 'tab:red')
+        axs[1, 1].set_title('R²')
+    
+        ticks = [20, 50, 100, 150]
+        ticks = [t for t in ticks if t <= x[-1]]
+    
+        for ax in axs.flat:
+            ax.set_xticks(ticks)
+            ax.set_xlim(20, x[-1])
+    
+        for ax in axs[1]:
+            ax.set(xlabel='Epochs (training)')
+    
+        plt.suptitle(f'Model {city_for_training} ({technique})')
         self._saveFig(plt, 'Line Graph.', city_cluster_name=city_cluster_name, city_for_training=city_for_training, technique=technique)
         plt.close()
-
-    def define_box_properties(self, plot_name, color_code, label):
-        	for k, v in plot_name.items():
-        		plt.setp(plot_name.get(k), color=color_code)
-        		
-        	# use plot function to draw a small line to name the legend.
-        	plt.plot([], c=color_code, label=label)
-        	plt.legend()
+    
+        def define_box_properties(self, plot_name, color_code, label):
+            	for k, v in plot_name.items():
+            		plt.setp(plot_name.get(k), color=color_code)
+            		
+            	# use plot function to draw a small line to name the legend.
+            	plt.plot([], c=color_code, label=label)
+            	plt.legend()
     
     def showResidualPlots(self  ,  is_model, true_values_dict , predicted_values_dict,
                           city_cluster_name, city_for_training, city_for_predicting, technique  ):
