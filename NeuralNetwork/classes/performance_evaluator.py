@@ -272,18 +272,22 @@ class PerformanceEvaluator:
         
         return {'sign_equal': sign_equal, 'integer_equal': integer_equal, 'first4_equal': first4_equal}
         
-    def evaluate          (self      ,     is_model, spei_dict                                 ,
-                           spei_expected_outputs  , spei_predicted_values                      ,
-                           city_cluster_name      , city_for_training    , city_for_predicting):
+    def evaluate          (self             , is_model, spei_dict                       ,
+                           spei_data        , spei_predicted_values                     ,
+                           city_cluster_name, city_for_training    , city_for_predicting):
 
         TECHNIQUE_TYPES = ['tumbling', 'sliding']
         
         for technique in TECHNIQUE_TYPES:
-            errors_dict = self._print_errors(technique, spei_expected_outputs, spei_predicted_values,
-                                    city_for_training , city_for_predicting  , is_model             )
-            self.writeErrors(technique, errors_dict   , spei_dict            , is_model             ,
-                             spei_expected_outputs    , spei_predicted_values                       ,
-                             city_cluster_name        , city_for_training    , city_for_predicting  )
+            
+            errors_dict = self._print_errors(technique                      ,
+                            spei_data            [technique]['output']      ,
+                            spei_predicted_values[technique]                ,
+                            city_for_training, city_for_predicting, is_model)
+            
+            self.writeErrors(technique        , errors_dict          , spei_dict, is_model  ,
+                spei_data[technique]['output'], spei_predicted_values                       ,
+                city_cluster_name             , city_for_training    , city_for_predicting  )
         
         return self.metrics_central, self.metrics_bordering
     
