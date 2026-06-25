@@ -143,18 +143,20 @@ class NeuralNetwork:
             
         print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
+        spei_predicted_values = {'tumbling': None, 'sliding': None}
+        
         if is_model:
             # print(f'Is model? {is_model}.')
             
             # print('STARTED making predictions for Tumbling Windows')
-            spei_predicted_values_tumbling = {
+            spei_predicted_values['tumbling'] = {
                 '80%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['80%'], verbose = 0),
                 '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Tumbling Windows')
             
             # print('STARTED making predictions for Sliding Windows')
-            spei_predicted_values_sliding = {
+            spei_predicted_values['sliding'] = {
                 '80%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['80%'], verbose = 0),
                 '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
@@ -164,28 +166,32 @@ class NeuralNetwork:
             # print(f'Is model? {is_model}.')
             
             # print('STARTED making predictions for Tumbling Windows')
-            spei_predicted_values_tumbling = {
+            spei_predicted_values['tumbling'] = {
                 '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Tumbling Windows')
 
             # print('STARTED making predictions for Sliding Windows')
-            spei_predicted_values_sliding = {
+            spei_predicted_values['sliding'] = {
                 '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Sliding Windows')
         
+        print()
+        
         metrics_central, metrics_bordering= self.evaluator.evaluate(
             is_model                      , spei_dict                                 ,
-            spei_data['sliding']['output'] , spei_predicted_values_sliding            ,
+            spei_data['sliding']['output'] , spei_predicted_values['sliding']         ,
             self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name)
+        
+        print()
         
         # Canaries:
         tumbling_canary = metrics_central['tumbling']['R^2 80% Keras'].iloc[-1]
-        sliding_canary  = metrics_central['sliding']['R^2 80% Keras'].iloc[-1]
+        sliding_canary  = metrics_central['sliding' ]['R^2 80% Keras'].iloc[-1]
         
         assert tumbling_canary > 0, f"model failed: model for {metrics_central['tumbling']['Municipio Previsto']} got R² = {tumbling_canary} on training"
-        assert sliding_canary  > 0, f"model failed: model for {metrics_central['sliding']['Municipio Previsto']} got R² = {sliding_canary}  on training"
+        assert sliding_canary  > 0, f"model failed: model for {metrics_central['sliding' ]['Municipio Previsto']} got R² = {sliding_canary}  on training"
         
         # 2026-05-22, tested, is working fine:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position    ,
@@ -195,7 +201,7 @@ class NeuralNetwork:
    
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
             spei_data     ,   months_data  , self.has_trained                          ,
-            spei_predicted_values_tumbling, spei_predicted_values_sliding              ,
+            spei_predicted_values['tumbling'], spei_predicted_values['sliding']        ,
             history          if not self.has_trained else None                         ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name)
         
