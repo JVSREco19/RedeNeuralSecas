@@ -11,19 +11,31 @@ class Plotter:
     METRICS_PORTIONS_BORDERING = [              '20%'  ]
     METRICS_TECHNIQUES         = ['tumbling', 'sliding']
     
-    def _saveFig(self, plot, filename, city_cluster_name=None, city_for_training=None, city_for_predicting=None, technique=None):
+    def _saveFig(self, plot, file_title, city_cluster_name=None, city_for_training=None, city_for_predicting=None, technique=None):
+        
         if city_for_predicting:
             FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/city {city_for_predicting}/'
-            os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} applied to {city_for_predicting} - {technique}.png')
+            
+            if technique != None:
+                FILENAME = file_title + f' - Model {city_for_training} applied to {city_for_predicting} - {technique}.png'
+            else:
+                FILENAME = file_title + f' - Model {city_for_training} applied to {city_for_predicting}.png'
+                
         elif city_for_training:
-            FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/'
-            os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename + f' - Model {city_for_training} - {technique}.png')
+            FILEPATH = f'./{Plotter.OUTPUT_DIR_ADDR}/cluster {city_cluster_name}/model {city_for_training}/'    
+
+            if technique != None:
+                FILENAME = file_title + f' - Model {city_for_training} - {technique}.png'
+            else:
+                FILENAME = file_title + f' - Model {city_for_training}.png'
+           
         else:
             FILEPATH = './{Plotter.OUTPUT_DIR_ADDR}/'
-            os.makedirs(FILEPATH, exist_ok=True)
-            plt.savefig(FILEPATH + filename, bbox_inches="tight")
+            FILENAME = file_title
+            # plt.savefig(FILEPATH + file_title, bbox_inches="tight")
+        
+        os.makedirs(FILEPATH, exist_ok=True)
+        plt.savefig(FILEPATH + FILENAME)
 
     def plotDatasetPlots(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
         self.showSpeiData(dataset     , spei_test, split, city_cluster_name, city_for_training, city_for_predicting)
