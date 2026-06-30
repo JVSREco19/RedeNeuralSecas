@@ -111,38 +111,8 @@ class NeuralNetwork:
         print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
         return history
-    
-    def use_neural_network(self, dataset=None, plotter=None):
-        if plotter == None: plotter = self.plotter
-        if dataset == None:
-              dataset  = self.dataset
-              is_model = True
-        else: is_model = False
-        
-        # For bordering cities, use the training dataset's normalization parameters
-        if is_model:
-            (spei_dict, months_dict,
-             spei_data, months_data) = dataset.format_data_for_model(self.configs_dict)
-            
-        else:
-            (spei_dict, months_dict,
-             spei_data, months_data) = dataset.format_data_for_model(
-                 self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
-        
-        split_position = len(spei_dict['80%'])
-        
-        if not self.has_trained:
-            # flags has_trained as True:
-            history  = self._train_ml_models(spei_data)
-            
-            # 2026-05-22, tested, are working fine:
-            plotter.drawModelLineGraph(history['tumbling'], 'tumbling windows',
-                        self.dataset.city_cluster_name, self.dataset.city_name)
-            plotter.drawModelLineGraph(history['sliding' ] , 'sliding windows',
-                        self.dataset.city_cluster_name, self.dataset.city_name)
-            
-        print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
-        
+
+    def _make_predictions(self, spei_data, is_model):
         spei_predicted_values = {'tumbling': None, 'sliding': None}
         
         if is_model:
@@ -176,6 +146,43 @@ class NeuralNetwork:
                 '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
             # print('ENDED making predictions for Sliding Windows')
+            
+        return spei_predicted_values
+    
+    def use_neural_network(self, dataset=None, plotter=None):
+        if plotter == None: plotter = self.plotter
+        if dataset == None:
+              dataset  = self.dataset
+              is_model = True
+        else: is_model = False
+        
+        # For bordering cities, use the training dataset's normalization parameters
+        if is_model:
+            (spei_dict, months_dict,
+             spei_data, months_data) = dataset.format_data_for_model(self.configs_dict)
+            
+        else:
+            (spei_dict, months_dict,
+             spei_data, months_data) = dataset.format_data_for_model(
+                 self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
+        
+        split_position = len(spei_dict['80%'])
+        
+        if not self.has_trained:
+            # flags has_trained as True:
+            history  = self._train_ml_models(spei_data)
+            
+            # 2026-05-22, tested, are working fine:
+            plotter.drawModelLineGraph(history['tumbling'], 'tumbling windows',
+                        self.dataset.city_cluster_name, self.dataset.city_name)
+            plotter.drawModelLineGraph(history['sliding' ] , 'sliding windows',
+                        self.dataset.city_cluster_name, self.dataset.city_name)
+            
+        print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
+        
+        spei_predicted_values = self._make_predictions(spei_data, is_model)
+        
+        print()
         
         metrics_central, metrics_bordering= self.evaluator.evaluate(
             is_model                      , spei_dict                                 ,
