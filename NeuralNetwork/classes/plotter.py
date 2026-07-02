@@ -224,14 +224,22 @@ class Plotter:
         ###100%################################################################
         if is_model:
             if technique == 'sliding':
-                # Overlapping windows: aggregate by month so each unique month
-                # is plotted exactly once, with its predictions averaged across
-                # the windows that covered it.
+                # Real line uses the FULL un-windowed series so every real
+                # month is plotted, including the lookback months that have
+                # no predicted counterpart. The predicted line is the
+                # per-month average of the overlapping window outputs,
+                # placed at the corresponding real months; lookback months
+                # stay NaN on the predicted axis and matplotlib leaves a gap.
+                plot_months_100         = months_axis_100
+                trueValues_to_plot_100  = full_real_100
+                predictions_to_plot_100 = np.full(months_axis_100.shape[0], np.nan)
                 months_100 = months_data[technique]['output']['100%']
-                plot_months_100       , trueValues_to_plot_100   = self._aggregate_predictions_by_month(
-                    trueValues_denormalized ['100%'], months_100)
-                _ignored             , predictions_to_plot_100  = self._aggregate_predictions_by_month(
+                _avg_months_100, avg_pred_100 = self._aggregate_predictions_by_month(
                     predictions_denormalized['100%'], months_100)
+                for m, p in zip(_avg_months_100, avg_pred_100):
+                    idx = np.searchsorted(plot_months_100, m)
+                    if idx < plot_months_100.shape[0] and plot_months_100[idx] == m:
+                        predictions_to_plot_100[idx] = p
             else:
                 # Tumbling: real line uses the full un-windowed series, so
                 # every real month is plotted. The predicted line is aligned
@@ -266,11 +274,20 @@ class Plotter:
             plt.close()
         ###20%#################################################################
         if technique == 'sliding':
+            # Real line uses the FULL un-windowed 20% series, so every real
+            # month is plotted. The predicted line is the per-month average
+            # of the overlapping window outputs, placed at the corresponding
+            # real months; lookback months stay NaN on the predicted axis.
+            plot_months_20         = months_axis_20
+            trueValues_to_plot_20  = full_real_20
+            predictions_to_plot_20 = np.full(months_axis_20.shape[0], np.nan)
             months_20 = months_data[technique]['output']['20%']
-            plot_months_20       , trueValues_to_plot_20  = self._aggregate_predictions_by_month(
-                trueValues_denormalized ['20%'], months_20)
-            _ignored             , predictions_to_plot_20 = self._aggregate_predictions_by_month(
+            _avg_months_20, avg_pred_20 = self._aggregate_predictions_by_month(
                 predictions_denormalized['20%'], months_20)
+            for m, p in zip(_avg_months_20, avg_pred_20):
+                idx = np.searchsorted(plot_months_20, m)
+                if idx < plot_months_20.shape[0] and plot_months_20[idx] == m:
+                    predictions_to_plot_20[idx] = p
         else:
             # Tumbling: real line uses the full un-windowed 20% series, so
             # every real month is plotted. The predicted line is aligned to
