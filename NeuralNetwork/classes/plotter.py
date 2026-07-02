@@ -46,9 +46,21 @@ class Plotter:
         spei_predicted_values_tumbling, spei_predicted_values_sliding     ,
         history                                                           ,
         city_cluster_name,     city_for_training,      city_for_predicting):
-        
+
         spei_predicted_values = {'tumbling': spei_predicted_values_tumbling,
                                  'sliding': spei_predicted_values_sliding  }
+
+        # Un-windowed months, one entry per month, mirroring the
+        # train_test_split that produced spei_dict. `spei_dict['100%']` is
+        # the full un-windowed series, so its length matches the full
+        # month axis available via dataset.get_months().
+        split_position = len(spei_dict['80%'])
+        full_months = dataset.get_months()
+        months_dict = {
+            '80%' : full_months[:split_position],
+            '20%' : full_months[ split_position:],
+            '100%': full_months
+        }
 
         for technique in Plotter.METRICS_TECHNIQUES:
             # self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
@@ -57,8 +69,8 @@ class Plotter:
                                               # city_cluster_name, city_for_training    , city_for_predicting  , technique)
             # self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
                                               # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-                                              
-            self.showPredictionResults       (dataset, is_model         , spei_data, spei_predicted_values, months_data,
+
+            self.showPredictionResults       (dataset, spei_dict, months_dict, is_model, spei_data, spei_predicted_values, months_data,
                                               city_cluster_name, city_for_training   , city_for_predicting   , technique)
     
     def showSpeiData(self, dataset, spei_test, split, city_cluster_name, city_for_training, city_for_predicting):
@@ -183,12 +195,31 @@ class Plotter:
 
         return unique_months, averaged_values
 
-    def showPredictionResults(self, dataset, is_model, spei_data, spei_predicted_values, months_data,
+    def showPredictionResults(self, dataset, spei_dict, months_dict, is_model, spei_data, spei_predicted_values, months_data,
                               city_cluster_name, city_for_training, city_for_predicting, technique):
 
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model,
                                           spei_data[technique]['output'], spei_predicted_values, technique)
+
+        # The un-windowed real series (denormalized), one entry per month.
+        # For tumbling, this is the real line we want to plot so every real
+        # month appears, including the lookback months that have no predicted
+        # counterpart. The predicted line stays aligned to its windowed months;
+        # lookback months stay NaN on the predicted axis and matplotlib will
+        # leave a gap there instead of drawing a diagonal "bridge".
+        spei_delta = dataset.spei_max - dataset.spei_min
+        if np.isclose(spei_delta, 0):
+            full_real_20  = np.full_like(spei_dict[ '20%'], dataset.spei_min)
+            full_real_100 = np.full_like(spei_dict['100%'], dataset.spei_min)
+        else:
+            full_real_20  = spei_dict[ '20%'] * spei_delta + dataset.spei_min
+            full_real_100 = spei_dict['100%'] * spei_delta + dataset.spei_min
+        # The un-windowed months: one entry per month, in chronological order,
+        # matching the real series above. months_dict is built in plotModelPlots
+        # from dataset.get_months() and the train_test_split boundary.
+        months_axis_20  = months_dict[ '20%']
+        months_axis_100 = months_dict['100%']
 
         ###100%################################################################
         if is_model:
@@ -197,26 +228,34 @@ class Plotter:
                 # is plotted exactly once, with its predictions averaged across
                 # the windows that covered it.
                 months_100 = months_data[technique]['output']['100%']
-                reshapedMonth         , trueValues_to_plot_100 = self._aggregate_predictions_by_month(
+                plot_months_100       , trueValues_to_plot_100   = self._aggregate_predictions_by_month(
                     trueValues_denormalized ['100%'], months_100)
-                _ignored,                predictions_to_plot_100 = self._aggregate_predictions_by_month(
+                _ignored             , predictions_to_plot_100  = self._aggregate_predictions_by_month(
                     predictions_denormalized['100%'], months_100)
             else:
-                # Tumbling: no overlap, each (month, value) pair is unique.
-                reshapedMonth         = np.append(months_data[technique]['output']['80%'],
-                                                   months_data[technique]['output']['20%'])
-                trueValues_to_plot_100 = trueValues_denormalized['100%']
-                predictions_to_plot_100 = predictions_denormalized['100%']
+                # Tumbling: real line uses the full un-windowed series, so
+                # every real month is plotted. The predicted line is aligned
+                # to the months its windows actually cover; lookback months
+                # stay NaN on the predicted axis.
+                plot_months_100       = months_axis_100
+                trueValues_to_plot_100 = full_real_100
+                predictions_to_plot_100 = np.full(months_axis_100.shape[0], np.nan)
+                pred_months_100 = months_data[technique]['output']['100%'].flatten()
+                pred_values_100 = predictions_denormalized['100%']
+                for m, p in zip(pred_months_100, pred_values_100):
+                    idx = np.searchsorted(plot_months_100, m)
+                    if idx < plot_months_100.shape[0] and plot_months_100[idx] == m:
+                        predictions_to_plot_100[idx] = p
 
             plt.figure ()
 
-            assert reshapedMonth.shape[0] == trueValues_to_plot_100.shape[0] == predictions_to_plot_100.shape[0],\
-            f"{reshapedMonth.shape} != {trueValues_to_plot_100.shape} != {predictions_to_plot_100.shape}"
+            assert plot_months_100.shape[0] == trueValues_to_plot_100.shape[0] == predictions_to_plot_100.shape[0],\
+            f"{plot_months_100.shape} != {trueValues_to_plot_100.shape} != {predictions_to_plot_100.shape}"
 
-            plt.plot   (reshapedMonth      ,  trueValues_to_plot_100     )
-            plt.plot   (reshapedMonth      ,  predictions_to_plot_100    )
+            plt.plot   (plot_months_100      ,  trueValues_to_plot_100     )
+            plt.plot   (plot_months_100      ,  predictions_to_plot_100    )
 
-            plt.axvline(months_data[technique]['output']['80%'][-1][-1], color='r')
+            plt.axvline(months_dict['80%'][-1], color='r')
             plt.legend (['Real', 'Predicted'])
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
@@ -228,23 +267,31 @@ class Plotter:
         ###20%#################################################################
         if technique == 'sliding':
             months_20 = months_data[technique]['output']['20%']
-            reshapedMonth         , trueValues_to_plot_20 = self._aggregate_predictions_by_month(
+            plot_months_20       , trueValues_to_plot_20  = self._aggregate_predictions_by_month(
                 trueValues_denormalized ['20%'], months_20)
-            _ignored,                predictions_to_plot_20 = self._aggregate_predictions_by_month(
+            _ignored             , predictions_to_plot_20 = self._aggregate_predictions_by_month(
                 predictions_denormalized['20%'], months_20)
         else:
-            # Tumbling: no overlap, each (month, value) pair is unique.
-            reshapedMonth         = months_data[technique]['output']['20%'].flatten()
-            trueValues_to_plot_20 = trueValues_denormalized['20%']
-            predictions_to_plot_20 = predictions_denormalized['20%']
+            # Tumbling: real line uses the full un-windowed 20% series, so
+            # every real month is plotted. The predicted line is aligned to
+            # the months its windows actually cover; lookback months stay
+            # NaN on the predicted axis and matplotlib leaves a gap.
+            plot_months_20       = months_axis_20
+            trueValues_to_plot_20 = full_real_20
+            predictions_to_plot_20 = np.full(months_axis_20.shape[0], np.nan)
+            pred_months_20 = months_data[technique]['output']['20%'].flatten()
+            for m, p in zip(pred_months_20, predictions_denormalized['20%']):
+                idx = np.searchsorted(plot_months_20, m)
+                if idx < plot_months_20.shape[0] and plot_months_20[idx] == m:
+                    predictions_to_plot_20[idx] = p
 
         plt.figure ()
 
-        assert reshapedMonth.shape[0] == trueValues_to_plot_20.shape[0] == predictions_to_plot_20.shape[0],\
-        f"{reshapedMonth.shape} != {trueValues_to_plot_20.shape} != {predictions_to_plot_20.shape}"
+        assert plot_months_20.shape[0] == trueValues_to_plot_20.shape[0] == predictions_to_plot_20.shape[0],\
+        f"{plot_months_20.shape} != {trueValues_to_plot_20.shape} != {predictions_to_plot_20.shape}"
 
-        plt.plot   (reshapedMonth,  trueValues_to_plot_20    )
-        plt.plot   (reshapedMonth,  predictions_to_plot_20   )
+        plt.plot   (plot_months_20,  trueValues_to_plot_20    )
+        plt.plot   (plot_months_20,  predictions_to_plot_20   )
         plt.legend (['Real', 'Predicted'])
         plt.xlabel ('Year')
         plt.ylabel ('SPEI')
