@@ -195,6 +195,121 @@ class Plotter:
 
         return unique_months, averaged_values
 
+    def _lookback_spans(self, plot_months, predicted_values):
+        """
+        Find the contiguous ranges of `plot_months` over which the predicted
+        series is NaN — i.e., the lookback regions where the model has no
+        prediction. Returns a list of (x_left, x_right) tuples, where each
+        span is positioned at the midpoint between the last predicted month
+        before the lookback and the first predicted month after it. This
+        makes the dark band end exactly at the visual boundary between the
+        last NaN month and the next predicted month, regardless of whether
+        the x-axis is numerical or datetime.
+
+        Datetime axes are handled by converting to integer representation
+        (months-since-epoch for `datetime64[M]`, day count for finer
+        resolutions) for the midpoint arithmetic, then converting back.
+        """
+        plot_months      = np.asarray(plot_months)
+        predicted_values = np.asarray(predicted_values)
+
+        is_datetime = np.issubdtype(plot_months.dtype, np.datetime64)
+        if is_datetime:
+            # numpy.datetime64 arithmetic on the raw array works in the
+            # array's own resolution. We promote to nanosecond resolution
+            # so that a half-step on any axis (15 days for monthly, 12
+            # hours for daily, etc.) is representable exactly instead of
+            # being rounded to the nearest unit. matplotlib renders
+            # nanosecond-precision x-values at the correct sub-tick
+            # position on coarser axes.
+            as_int = plot_months.astype('datetime64[ns]').view(np.int64)
+            back   = lambda v: np.datetime64(int(round(v)), 'ns')
+        else:
+            # Numerical axes (int, float, etc.): keep the values as float64
+            # so that the band boundary falls on the visual half-step
+            # between two ticks (e.g. 5.5 between ticks 5 and 6), instead
+            # of snapping to an integer tick and overlapping the predicted
+            # point. Using `astype(np.int64)` here would lose sub-integer
+            # information on a half-step axis.
+            as_int = plot_months.astype(np.float64)
+            back   = lambda v: float(v)
+
+        isnan = np.isnan(predicted_values)
+        spans = []
+        n = plot_months.shape[0]
+        i = 0
+        while i < n:
+            if not isnan[i]:
+                i += 1
+                continue
+            start = i
+            while i < n and isnan[i]:
+                i += 1
+            # i is now the index of the FIRST non-NaN month after the run
+            # (or n, if the run extends to the end of the series).
+            last_nan_idx = i - 1   # index of the last NaN month in the run
+
+            # x_left: midpoint between the month just before the lookback
+            # and the first NaN month. If the lookback starts at index 0,
+            # there is no month before it; extrapolate half a step backwards.
+            if start == 0:
+                if n >= 2:
+                    step = as_int[1] - as_int[0]
+                else:
+                    step = np.float64(1)   # degenerate single-element case
+                x_left_int = as_int[0] - step / 2
+            else:
+                x_left_int = (as_int[start - 1] + as_int[start]) / 2
+
+            # x_right: midpoint between the last NaN month and the first
+            # predicted month after the run. If the run reaches the end of
+            # the series, extrapolate half a step forwards.
+            if i >= n:
+                if n >= 2:
+                    step = as_int[-1] - as_int[-2]
+                else:
+                    step = np.float64(1)
+                x_right_int = as_int[-1] + step / 2
+            else:
+                x_right_int = (as_int[last_nan_idx] + as_int[i]) / 2
+
+            spans.append((back(x_left_int), back(x_right_int)))
+        return spans
+
+    def _draw_lookback_bands(self, plot_months, predicted_values):
+        """
+        Draw a dark translucent vertical band over each lookback (no-prediction)
+        region of the current axes. Returns a list of patch handles (one per
+        band); all patches share the same legend label 'lookback', so the
+        caller should de-duplicate the legend entries by label.
+        """
+        handles = []
+        for x_left, x_right in self._lookback_spans(plot_months, predicted_values):
+            patch = plt.axvspan(x_left, x_right, color='black', alpha=0.20,
+                                label='lookback')
+            handles.append(patch)
+        return handles
+
+    @staticmethod
+    def _dedupe_legend_handles(handles):
+        """
+        Drop duplicate legend entries that share the same label. Keeps the
+        first handle seen per label; entries with no label (or the
+        '_nolegend_' sentinel) are kept as-is.
+        """
+        seen = set()
+        deduped = []
+        for h in handles:
+            label = getattr(h, '_label', None)
+            if label is None or label == '_nolegend_':
+                deduped.append(h)
+                continue
+            if label in seen:
+                continue
+            seen.add(label)
+            deduped.append(h)
+        return deduped
+
     def showPredictionResults(self, dataset, spei_dict, months_dict, is_model, spei_data, spei_predicted_values, months_data,
                               city_cluster_name, city_for_training, city_for_predicting, technique):
 
@@ -260,11 +375,18 @@ class Plotter:
             assert plot_months_100.shape[0] == trueValues_to_plot_100.shape[0] == predictions_to_plot_100.shape[0],\
             f"{plot_months_100.shape} != {trueValues_to_plot_100.shape} != {predictions_to_plot_100.shape}"
 
-            plt.plot   (plot_months_100      ,  trueValues_to_plot_100     )
-            plt.plot   (plot_months_100      ,  predictions_to_plot_100    )
+            real_line_100     , = plt.plot(plot_months_100, trueValues_to_plot_100 , label='Real'      )
+            predicted_line_100, = plt.plot(plot_months_100, predictions_to_plot_100, label='Predicted' )
 
-            plt.axvline(months_dict['80%'][-1], color='r')
-            plt.legend (['Real', 'Predicted'])
+            # Dark translucent band over each lookback (no-prediction) region.
+            lookback_handles_100 = self._draw_lookback_bands(plot_months_100, predictions_to_plot_100)
+
+            split_handle_100 = plt.axvline(months_dict['80%'][-1], color='r',
+                                            label='Início da porção de teste (20%)')
+
+            plt.legend(handles=Plotter._dedupe_legend_handles(
+                          [real_line_100, predicted_line_100, *lookback_handles_100, split_handle_100]),
+                       loc='best')
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
             plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s {technique})')
@@ -307,9 +429,15 @@ class Plotter:
         assert plot_months_20.shape[0] == trueValues_to_plot_20.shape[0] == predictions_to_plot_20.shape[0],\
         f"{plot_months_20.shape} != {trueValues_to_plot_20.shape} != {predictions_to_plot_20.shape}"
 
-        plt.plot   (plot_months_20,  trueValues_to_plot_20    )
-        plt.plot   (plot_months_20,  predictions_to_plot_20   )
-        plt.legend (['Real', 'Predicted'])
+        real_line_20     , = plt.plot(plot_months_20, trueValues_to_plot_20 , label='Real'      )
+        predicted_line_20, = plt.plot(plot_months_20, predictions_to_plot_20, label='Predicted' )
+
+        # Dark translucent band over each lookback (no-prediction) region.
+        lookback_handles_20 = self._draw_lookback_bands(plot_months_20, predictions_to_plot_20)
+
+        plt.legend(handles=Plotter._dedupe_legend_handles(
+                      [real_line_20, predicted_line_20, *lookback_handles_20]),
+                   loc='best')
         plt.xlabel ('Year')
         plt.ylabel ('SPEI')
         plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (20%\'s {technique})')
