@@ -195,20 +195,32 @@ class Plotter:
 
         return unique_months, averaged_values
 
-    def _lookback_spans(self, plot_months, predicted_values):
+    def _spans_by_kind(self, plot_months, predicted_values):
         """
         Find the contiguous ranges of `plot_months` over which the predicted
-        series is NaN — i.e., the lookback regions where the model has no
-        prediction. Returns a list of (x_left, x_right) tuples, where each
-        span is positioned at the midpoint between the last predicted month
-        before the lookback and the first predicted month after it. This
-        makes the dark band end exactly at the visual boundary between the
-        last NaN month and the next predicted month, regardless of whether
-        the x-axis is numerical or datetime.
+        series is NaN, and classify each run by kind:
+
+          - 'lookback': a NaN run that the model genuinely has no prediction
+            for, because the first window(s) of some slice consume those
+            months as their lookback portion. These appear at the start of a
+            slice (`start == 0`) and in the middle of a concatenated series
+            where one slice's lookback sits between two predicted regions.
+          - 'unused': a NaN run at the END of the series that no window
+            covers, because the data length isn't a multiple of the window
+            step. These are an arithmetic leftover, not a real lookback.
+
+        Each span is positioned at the midpoint between the last predicted
+        month before the run and the first predicted month after it (or
+        extrapolated half a step past the series if the run touches an edge),
+        so the band ends exactly at the visual boundary between the last
+        NaN month and the next predicted month, regardless of whether the
+        x-axis is numerical or datetime.
 
         Datetime axes are handled by converting to integer representation
         (months-since-epoch for `datetime64[M]`, day count for finer
         resolutions) for the midpoint arithmetic, then converting back.
+
+        Returns a list of (kind, x_left, x_right) tuples.
         """
         plot_months      = np.asarray(plot_months)
         predicted_values = np.asarray(predicted_values)
@@ -249,8 +261,18 @@ class Plotter:
             # (or n, if the run extends to the end of the series).
             last_nan_idx = i - 1   # index of the last NaN month in the run
 
-            # x_left: midpoint between the month just before the lookback
-            # and the first NaN month. If the lookback starts at index 0,
+            # A NaN run that reaches the end of the series with no predicted
+            # month after it is an arithmetic leftover from the sliding
+            # window step, not a real lookback. Any run that has a predicted
+            # month on both sides (or at least on the right side, i.e. a
+            # leading run that starts at index 0) is a genuine lookback.
+            if i >= n and start > 0:
+                kind = 'unused'
+            else:
+                kind = 'lookback'
+
+            # x_left: midpoint between the month just before the run
+            # and the first NaN month. If the run starts at index 0,
             # there is no month before it; extrapolate half a step backwards.
             if start == 0:
                 if n >= 2:
@@ -273,20 +295,33 @@ class Plotter:
             else:
                 x_right_int = (as_int[last_nan_idx] + as_int[i]) / 2
 
-            spans.append((back(x_left_int), back(x_right_int)))
+            spans.append((kind, back(x_left_int), back(x_right_int)))
         return spans
 
-    def _draw_lookback_bands(self, plot_months, predicted_values):
+    def _draw_no_prediction_bands(self, plot_months, predicted_values):
         """
-        Draw a dark translucent vertical band over each lookback (no-prediction)
-        region of the current axes. Returns a list of patch handles (one per
-        band); all patches share the same legend label 'lookback', so the
-        caller should de-duplicate the legend entries by label.
+        Draw a translucent vertical band over each region of the current
+        axes where the predicted series is NaN. Two kinds of regions are
+        distinguished:
+
+          - 'Lookback' (dark, alpha 0.20): the model genuinely has no
+            prediction for those months because they're consumed as the
+            lookback portion of the first window(s) of some slice.
+          - 'Unused'  (green, alpha 0.20): months at the end of the series
+            that no window covers because the data length isn't a multiple
+            of the window step. These are an arithmetic leftover.
+
+        Returns a list of patch handles (one per band); each kind shares
+        a single legend label, so the caller should de-duplicate the
+        legend entries by label.
         """
+        style = {
+            'lookback': dict(color='black', alpha=0.20, label='Lookback'),
+            'unused'  : dict(color='green', alpha=0.20, label='Unused'  ),
+        }
         handles = []
-        for x_left, x_right in self._lookback_spans(plot_months, predicted_values):
-            patch = plt.axvspan(x_left, x_right, color='black', alpha=0.20,
-                                label='lookback')
+        for kind, x_left, x_right in self._spans_by_kind(plot_months, predicted_values):
+            patch = plt.axvspan(x_left, x_right, **style[kind])
             handles.append(patch)
         return handles
 
@@ -378,14 +413,15 @@ class Plotter:
             real_line_100     , = plt.plot(plot_months_100, trueValues_to_plot_100 , label='Real'      )
             predicted_line_100, = plt.plot(plot_months_100, predictions_to_plot_100, label='Predicted' )
 
-            # Dark translucent band over each lookback (no-prediction) region.
-            lookback_handles_100 = self._draw_lookback_bands(plot_months_100, predictions_to_plot_100)
+            # Translucent bands over each no-prediction region: dark for
+            # genuine lookbacks, green for unused trailing leftovers.
+            no_pred_handles_100 = self._draw_no_prediction_bands(plot_months_100, predictions_to_plot_100)
 
             split_handle_100 = plt.axvline(months_dict['80%'][-1], color='r',
-                                            label='Início da porção de teste (20%)')
+                                            label='Test portion start')
 
             plt.legend(handles=Plotter._dedupe_legend_handles(
-                          [real_line_100, predicted_line_100, *lookback_handles_100, split_handle_100]),
+                          [real_line_100, predicted_line_100, *no_pred_handles_100, split_handle_100]),
                        loc='best')
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
@@ -432,11 +468,12 @@ class Plotter:
         real_line_20     , = plt.plot(plot_months_20, trueValues_to_plot_20 , label='Real'      )
         predicted_line_20, = plt.plot(plot_months_20, predictions_to_plot_20, label='Predicted' )
 
-        # Dark translucent band over each lookback (no-prediction) region.
-        lookback_handles_20 = self._draw_lookback_bands(plot_months_20, predictions_to_plot_20)
+        # Translucent bands over each no-prediction region: dark for
+        # genuine lookbacks, green for unused trailing leftovers.
+        no_pred_handles_20 = self._draw_no_prediction_bands(plot_months_20, predictions_to_plot_20)
 
         plt.legend(handles=Plotter._dedupe_legend_handles(
-                      [real_line_20, predicted_line_20, *lookback_handles_20]),
+                      [real_line_20, predicted_line_20, *no_pred_handles_20]),
                    loc='best')
         plt.xlabel ('Year')
         plt.ylabel ('SPEI')
