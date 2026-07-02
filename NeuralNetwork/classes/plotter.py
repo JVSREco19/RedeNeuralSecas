@@ -107,7 +107,7 @@ class Plotter:
         plt.close()
     
     def _calculateDenormalizedValues(self, dataset, is_model, spei_expected_outputs, spei_predicted_values, technique):
-        # print()        
+   
         ###ADJUSTMENTS OF INPUTS###############################################
         spei_expected_outputs    [ '20%'] = spei_expected_outputs[ '20%'].flatten()
         
@@ -152,7 +152,6 @@ class Plotter:
             true_values_denormalized_dict[ '20%']     = (spei_expected_outputs           [ '20%']           * spei_delta + spei_min_value)
             predictions_denormalized_dict[ '20%']     = (spei_predicted_values[technique][ '20%'].flatten() * spei_delta + spei_min_value)
         
-        # print()
         if is_model:
             assert '100%' in true_values_denormalized_dict, f'There is no 100% portion for true_values_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
             assert '100%' in predictions_denormalized_dict, f'There is no 100% portion for predictions_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
@@ -168,47 +167,90 @@ class Plotter:
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
+    def _aggregate_predictions_by_month(self, values_2d, months_2d):
+        """
+        Group overlapping sliding-window values by the month they predict, then
+        average per month. Returns (unique_months_1d, averaged_values_1d) with
+        identical length, sorted chronologically.
+        """
+        flat_months = np.asarray(months_2d).flatten()
+        flat_values = np.asarray(values_2d).flatten()
+
+        unique_months   = np.unique(flat_months)            # sorted, dtype preserved
+        averaged_values = np.array([
+            flat_values[flat_months == m].mean() for m in unique_months
+        ])
+
+        return unique_months, averaged_values
+
     def showPredictionResults(self, dataset, is_model, spei_data, spei_predicted_values, months_data,
                               city_cluster_name, city_for_training, city_for_predicting, technique):
-        
+
         (trueValues_denormalized ,
          predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model,
                                           spei_data[technique]['output'], spei_predicted_values, technique)
 
         ###100%################################################################
         if is_model:
-            reshapedMonth = np.append(months_data[technique]['output']['80%'], months_data[technique]['output']['20%'])
-        
+            if technique == 'sliding':
+                # Overlapping windows: aggregate by month so each unique month
+                # is plotted exactly once, with its predictions averaged across
+                # the windows that covered it.
+                months_100 = months_data[technique]['output']['100%']
+                reshapedMonth         , trueValues_to_plot_100 = self._aggregate_predictions_by_month(
+                    trueValues_denormalized ['100%'], months_100)
+                _ignored,                predictions_to_plot_100 = self._aggregate_predictions_by_month(
+                    predictions_denormalized['100%'], months_100)
+            else:
+                # Tumbling: no overlap, each (month, value) pair is unique.
+                reshapedMonth         = np.append(months_data[technique]['output']['80%'],
+                                                   months_data[technique]['output']['20%'])
+                trueValues_to_plot_100 = trueValues_denormalized['100%']
+                predictions_to_plot_100 = predictions_denormalized['100%']
+
             plt.figure ()
-            
-            assert reshapedMonth.shape == trueValues_denormalized['100%'].shape == predictions_denormalized['100%'].shape,\
-            f"{reshapedMonth.shape} != {trueValues_denormalized['100%'].shape} != {predictions_denormalized['100%'].shape}"
-            
-            plt.plot   (reshapedMonth      ,  trueValues_denormalized['100%'])
-            plt.plot   (reshapedMonth      , predictions_denormalized['100%'])
-            
+
+            assert reshapedMonth.shape[0] == trueValues_to_plot_100.shape[0] == predictions_to_plot_100.shape[0],\
+            f"{reshapedMonth.shape} != {trueValues_to_plot_100.shape} != {predictions_to_plot_100.shape}"
+
+            plt.plot   (reshapedMonth      ,  trueValues_to_plot_100     )
+            plt.plot   (reshapedMonth      ,  predictions_to_plot_100    )
+
             plt.axvline(months_data[technique]['output']['80%'][-1][-1], color='r')
             plt.legend (['Real', 'Predicted'])
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
             plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s {technique})')
-            #plt.show()
-            
+            # plt.show()
+
             self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
         ###20%#################################################################
-        reshapedMonth = months_data[technique]['output']['20%'].flatten()
-    
+        if technique == 'sliding':
+            months_20 = months_data[technique]['output']['20%']
+            reshapedMonth         , trueValues_to_plot_20 = self._aggregate_predictions_by_month(
+                trueValues_denormalized ['20%'], months_20)
+            _ignored,                predictions_to_plot_20 = self._aggregate_predictions_by_month(
+                predictions_denormalized['20%'], months_20)
+        else:
+            # Tumbling: no overlap, each (month, value) pair is unique.
+            reshapedMonth         = months_data[technique]['output']['20%'].flatten()
+            trueValues_to_plot_20 = trueValues_denormalized['20%']
+            predictions_to_plot_20 = predictions_denormalized['20%']
+
         plt.figure ()
-        # ValueError: x and y can be no greater than 2D, but have shapes (11, 6, 1) and (11, 6):
-        plt.plot   (reshapedMonth,  trueValues_denormalized[ '20%'])
-        plt.plot   (reshapedMonth, predictions_denormalized[ '20%'])
+
+        assert reshapedMonth.shape[0] == trueValues_to_plot_20.shape[0] == predictions_to_plot_20.shape[0],\
+        f"{reshapedMonth.shape} != {trueValues_to_plot_20.shape} != {predictions_to_plot_20.shape}"
+
+        plt.plot   (reshapedMonth,  trueValues_to_plot_20    )
+        plt.plot   (reshapedMonth,  predictions_to_plot_20   )
         plt.legend (['Real', 'Predicted'])
         plt.xlabel ('Year')
         plt.ylabel ('SPEI')
         plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (20%\'s {technique})')
-        #plt.show()
-        
+        # plt.show()
+
         self._saveFig(plt, 'Previsao 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
         #######################################################################
@@ -221,7 +263,6 @@ class Plotter:
         ###100%################################################################
         if is_model:
             plt.figure ()
-            # "ValueError: x and y must be the same size":
             plt.scatter(x =  trueValues_denormalized['100%'],
                         y = predictions_denormalized['100%'],
                         color=['white'],  marker='^', edgecolors='black')
@@ -296,7 +337,6 @@ class Plotter:
                           city_cluster_name, city_for_training, city_for_predicting, technique  ):
         
         if is_model:
-            # "ValueError: operands could not be broadcast together with shapes (46,6) (273,6)":
             residuals        = { '80%': true_values_dict[ '80%'] - predicted_values_dict[ '80%'],
                                  '20%': true_values_dict[ '20%'] - predicted_values_dict[ '20%']}
         else:
@@ -314,7 +354,6 @@ class Plotter:
     
     def showR2ScatterPlots(self, is_model, true_values_dict, predicted_values_dict, city_cluster_name, city_for_training, city_for_predicting, technique):
         for data_portion_type in Plotter.METRICS_PORTIONS_CENTRAL if is_model else Plotter.METRICS_PORTIONS_BORDERING:
-            # "ValueError: x and y must be the same size":
             plt.scatter(true_values_dict[data_portion_type], predicted_values_dict[data_portion_type], label = 'R²')
             
             # Generates a single line by creating `x_vals`, a sequence of 100 evenly spaced values between the min and max values in true_values
