@@ -40,8 +40,6 @@ def train_ml_models_for_central_cities():
 
     
     for neural_network_model_name, neural_network_model in neural_network_models.items():
-        # (metrics_current_central_city_tumbling, metrics_bordering_tumbling,
-        #  metrics_current_central_city_sliding , metrics_bordering_sliding )
         (metrics_central, _ ) = neural_network_model.use_neural_network()
 
         for technique in techniques:
@@ -126,12 +124,8 @@ def save_results(technique, metrics_df_all_bordering_cities, metrics_df_central_
 
 print('PREPARATION: START')
 THE_PLOTTER = Plotter()
-
 clusters = InputDataLoader(INPUT_DIR_ADDR).get_cluster_memberships()
-# print('\tLoaded all datasets')
-
 make_output_dirs(OUTPUT_DIR_ADDR, clusters)
-# print('\tMade output directories for all cities')
 print('PREPARATION: END')
 
 print('CREATION: START')

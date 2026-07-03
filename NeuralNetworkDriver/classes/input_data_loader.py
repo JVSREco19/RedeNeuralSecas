@@ -30,17 +30,6 @@ class InputDataLoader:
                     cluster_spei_min = city_data.spei.min()
                 if cluster_spei_max is None or city_data.spei.max() > cluster_spei_max:
                     cluster_spei_max = city_data.spei.max()
-            
-            # print()
-            # print(f'Cluster {cluster_name}:')
-            # print(f'\tMin. SPEI: {cluster_spei_min:.4f}')
-            # print(f'\tMax. SPEI: {cluster_spei_max:.4f}')
-            
-            # for city_name, city_data in cluster_members.items():
-                # print()
-                # print(f'\tCity {city_name:}')
-                # print(f'\tMin. SPEI: {min(city_data.spei):.4f}')
-                # print(f'\tMax. SPEI: {max(city_data.spei):.4f}')
     
     def get_cluster_memberships(self):
         return self._clusters

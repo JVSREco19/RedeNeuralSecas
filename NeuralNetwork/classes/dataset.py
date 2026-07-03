@@ -35,8 +35,6 @@ class Dataset:
         spei_data   =  self._window_maker(  spei_dict, configs_dict)
         months_data =  self._window_maker(months_dict, configs_dict)
         
-        # print()
-        
         ###100% DATA PORTIONS TUMBLING#########################################
         spei_data  ['tumbling']['input' ]['100%'] = np.concatenate( (spei_data  ['tumbling']['input' ]['80%'] ,
                                                                      spei_data  ['tumbling']['input' ]['20%']), axis=0)

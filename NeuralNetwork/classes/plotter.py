@@ -32,7 +32,6 @@ class Plotter:
         else:
             FILEPATH = './{Plotter.OUTPUT_DIR_ADDR}/'
             FILENAME = file_title
-            # plt.savefig(FILEPATH + file_title, bbox_inches="tight")
         
         os.makedirs(FILEPATH, exist_ok=True)
         plt.savefig(FILEPATH + FILENAME)
@@ -63,12 +62,12 @@ class Plotter:
         }
 
         for technique in Plotter.METRICS_TECHNIQUES:
-            # self.showResidualPlots           (is_model         , spei_expected_outputs, spei_predicted_values,
-                                              # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-            # self.showR2ScatterPlots          (is_model         , spei_expected_outputs, spei_predicted_values,
-                                              # city_cluster_name, city_for_training    , city_for_predicting  , technique)
-            # self.showPredictionsDistribution (dataset, is_model         , spei_expected_outputs, spei_predicted_values,
-                                              # city_cluster_name, city_for_training    , city_for_predicting  , technique)
+            self.showResidualPlots           (is_model,         spei_data[technique]['output'], spei_predicted_values[technique],
+                                              city_cluster_name, city_for_training    , city_for_predicting  , technique)
+            self.showR2ScatterPlots          (is_model,         spei_data[technique]['output'], spei_predicted_values[technique],
+                                              city_cluster_name, city_for_training    , city_for_predicting  , technique)
+            self.showPredictionsDistribution (dataset, is_model, spei_data[technique]['output'], spei_predicted_values,
+                                              city_cluster_name, city_for_training    , city_for_predicting  , technique)
 
             self.showPredictionResults       (dataset, spei_dict, months_dict, is_model, spei_data, spei_predicted_values, months_data,
                                               city_cluster_name, city_for_training   , city_for_predicting   , technique)
@@ -92,7 +91,6 @@ class Plotter:
         plt.ylabel ('SPEI (Normalizado)')
         plt.plot   (monthValues[split:],spei_test,'k',label='20%')
         plt.legend ()
-        #plt.show()
         
         self._saveFig(plt, 'SPEI Data', city_cluster_name, city_for_training, city_for_predicting)
         plt.close()
@@ -113,7 +111,6 @@ class Plotter:
         plt.ylabel      ('SPEI')        
         plt.title       (f'{city_for_predicting}: SPEI Data')
         plt.legend      ()
-        #plt.show()
         
         self._saveFig(plt, 'SPEI Data (test)', city_cluster_name, city_for_training, city_for_predicting)
         plt.close()
@@ -174,8 +171,6 @@ class Plotter:
         assert  '20%' in predictions_denormalized_dict, f'There is no  20% portion for predictions_denormalized_dict of city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}'
         assert true_values_denormalized_dict['20%'].shape == predictions_denormalized_dict['20%'].shape,\
         f"{true_values_denormalized_dict['20%'].shape} != {predictions_denormalized_dict['20%'].shape}"
-        
-        # print(f'OK: city {dataset.city_name} from cluster {dataset.city_cluster_name} using technique {technique}!')
         
         return true_values_denormalized_dict, predictions_denormalized_dict
     
@@ -426,7 +421,6 @@ class Plotter:
             plt.xlabel ('Year')
             plt.ylabel ('SPEI')
             plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (100%\'s {technique})')
-            # plt.show()
 
             self._saveFig(plt, 'Previsao 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
@@ -478,7 +472,6 @@ class Plotter:
         plt.xlabel ('Year')
         plt.ylabel ('SPEI')
         plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nreal and predicted SPEI values (20%\'s {technique})')
-        # plt.show()
 
         self._saveFig(plt, 'Previsao 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
@@ -486,9 +479,9 @@ class Plotter:
     
     def showPredictionsDistribution(self, dataset, is_model   , spei_expected_outputs, spei_predicted_values,
                                     city_cluster_name, city_for_training   , city_for_predicting, technique  ):
-        
+
         (trueValues_denormalized ,
-         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values)
+         predictions_denormalized) = self._calculateDenormalizedValues(dataset, is_model, spei_expected_outputs, spei_predicted_values, technique)
         ###100%################################################################
         if is_model:
             plt.figure ()
@@ -499,7 +492,6 @@ class Plotter:
             plt.ylabel ('Predicted SPEI'  )
             plt.axline ( (0, 0) , slope=1 )
             plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (100%\'s distribution {technique})')
-            #plt.show()
             
             self._saveFig(plt, 'distribuiçãoDoSPEI 100%', city_cluster_name, city_for_training, city_for_predicting, technique)
             plt.close()
@@ -512,7 +504,6 @@ class Plotter:
         plt.ylabel ('Predicted SPEI'  )
         plt.axline ( (0, 0) , slope=1 )
         plt.title  (f'Model {city_for_training} applied to {city_for_predicting}:\nSPEI (20%\'s distribution {technique})')
-        #plt.show()
         
         self._saveFig(plt, 'distribuiçãoDoSPEI 20%', city_cluster_name, city_for_training, city_for_predicting, technique)
         plt.close()
@@ -554,13 +545,13 @@ class Plotter:
         self._saveFig(plt, 'Line Graph.', city_cluster_name=city_cluster_name, city_for_training=city_for_training, technique=technique)
         plt.close()
     
-        def define_box_properties(self, plot_name, color_code, label):
-            	for k, v in plot_name.items():
-            		plt.setp(plot_name.get(k), color=color_code)
+        # def define_box_properties(self, plot_name, color_code, label):
+        #     	for k, v in plot_name.items():
+        #     		plt.setp(plot_name.get(k), color=color_code)
             		
-            	# use plot function to draw a small line to name the legend.
-            	plt.plot([], c=color_code, label=label)
-            	plt.legend()
+        #     	# use plot function to draw a small line to name the legend.
+        #     	plt.plot([], c=color_code, label=label)
+        #     	plt.legend()
     
     def showResidualPlots(self  ,  is_model, true_values_dict , predicted_values_dict,
                           city_cluster_name, city_for_training, city_for_predicting, technique  ):

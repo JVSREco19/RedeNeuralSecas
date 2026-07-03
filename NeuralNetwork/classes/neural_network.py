@@ -43,7 +43,6 @@ class NeuralNetwork:
         return configs_dict        
 
     def _create_ml_model(self, technique):
-        # print(f'Started: creation of ML model {self.dataset.city_name}')
         model = tf.keras.Sequential()
         
         model.add(tf.keras.Input           (
@@ -76,7 +75,6 @@ class NeuralNetwork:
         model.compile(loss      = self.configs_dict[ 'loss'     ],
                       metrics   = self.configs_dict[ 'metrics'  ],
                       optimizer = self.configs_dict[f'optimizer_{technique}'])
-        # print(f'Ended: creation of ML model {self.dataset.city_name}')
         
         return model
     
@@ -116,36 +114,21 @@ class NeuralNetwork:
         spei_predicted_values = {'tumbling': None, 'sliding': None}
         
         if is_model:
-            # print(f'Is model? {is_model}.')
-            
-            # print('STARTED making predictions for Tumbling Windows')
             spei_predicted_values['tumbling'] = {
                 '80%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['80%'], verbose = 0),
                 '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
-                                    }
-            # print('ENDED making predictions for Tumbling Windows')
-            
-            # print('STARTED making predictions for Sliding Windows')
+                                    }           
             spei_predicted_values['sliding'] = {
                 '80%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['80%'], verbose = 0),
                 '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
-            # print('ENDED making predictions for Sliding Windows')
-            
         else:
-            # print(f'Is model? {is_model}.')
-            
-            # print('STARTED making predictions for Tumbling Windows')
             spei_predicted_values['tumbling'] = {
                 '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
                                     }
-            # print('ENDED making predictions for Tumbling Windows')
-
-            # print('STARTED making predictions for Sliding Windows')
             spei_predicted_values['sliding'] = {
                 '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
                                     }
-            # print('ENDED making predictions for Sliding Windows')
             
         return spei_predicted_values
     
@@ -160,11 +143,13 @@ class NeuralNetwork:
         if is_model:
             (spei_dict, months_dict,
              spei_data, months_data) = dataset.format_data_for_model(self.configs_dict)
+            print()
             
         else:
             (spei_dict, months_dict,
              spei_data, months_data) = dataset.format_data_for_model(
                  self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
+            print()
         
         split_position = len(spei_dict['80%'])
         
@@ -200,8 +185,6 @@ class NeuralNetwork:
         plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position    ,
             self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name )
         
-        # print()
-   
         self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
             spei_data     ,   months_data  , self.has_trained                          ,
             spei_predicted_values['tumbling'], spei_predicted_values['sliding']        ,
