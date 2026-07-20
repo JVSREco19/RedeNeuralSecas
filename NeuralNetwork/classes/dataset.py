@@ -5,7 +5,8 @@ from sklearn.model_selection import train_test_split
 
 class Dataset:
     
-    DATA_PORTION_TYPES = ['80%', '20%'] # '100%' is made out of 80% + 20% through 'concatenate'
+    DATA_PORTION_TYPES   = ['80%', '20%'] # '100%' is made out of 80% + 20% through 'concatenate'
+    DATA_TECHNIQUE_TYPES = ['tumbling', 'sliding']
     
     def __init__(self, city_name, city_cluster_name):
         self.city_name         = str(city_name        ).upper()
@@ -31,24 +32,32 @@ class Dataset:
         #(SPEI/months)_dict.keys() = ['80%', '20%']
         spei_dict                  , months_dict                = self._train_test_split(configs_dict['parcelDataTrain'], norm_min, norm_max)
         
-        #         IN               ,           OUT               :
-        spei_provided_inputs_tumbling       , spei_expected_outputs_tumbling       =  self._create_input_output_pairs(  spei_dict, configs_dict)
-        months_for_provided_inputs_tumbling , months_for_expected_outputs_tumbling =  self._create_input_output_pairs(months_dict, configs_dict)
+        spei_data   =  self._window_maker(  spei_dict, configs_dict)
+        months_data =  self._window_maker(months_dict, configs_dict)
         
-        ###100% DATA PORTIONS##################################################
-        spei_provided_inputs_tumbling        ['100%'] = np.concatenate( (spei_provided_inputs_tumbling        ['80%'] ,
-                                                                spei_provided_inputs_tumbling        ['20%']), axis=0)
-        spei_expected_outputs_tumbling       ['100%'] = np.concatenate( (spei_expected_outputs_tumbling       ['80%'] ,
-                                                                spei_expected_outputs_tumbling       ['20%']), axis=0)
+        ###100% DATA PORTIONS TUMBLING#########################################
+        spei_data  ['tumbling']['input' ]['100%'] = np.concatenate( (spei_data  ['tumbling']['input' ]['80%'] ,
+                                                                     spei_data  ['tumbling']['input' ]['20%']), axis=0)
+        spei_data  ['tumbling']['output']['100%'] = np.concatenate( (spei_data  ['tumbling']['output']['80%'] ,
+                                                                     spei_data  ['tumbling']['output']['20%']), axis=0)
         
-        months_for_provided_inputs_tumbling  ['100%'] = np.concatenate( (months_for_provided_inputs_tumbling  ['80%'] ,
-                                                                months_for_provided_inputs_tumbling  ['20%']), axis=0)
-        months_for_expected_outputs_tumbling ['100%'] = np.concatenate( (months_for_expected_outputs_tumbling ['80%'] ,
-                                                                months_for_expected_outputs_tumbling ['20%']), axis=0)
+        months_data['tumbling']['input' ]['100%'] = np.concatenate( (months_data['tumbling']['input' ]['80%'] ,
+                                                                     months_data['tumbling']['input' ]['20%']), axis=0)
+        months_data['tumbling']['output']['100%'] = np.concatenate( (months_data['tumbling']['output']['80%'],
+                                                                     months_data['tumbling']['output']['20%']), axis=0)
+        ###100% DATA PORTIONS SLIDING##########################################
+        spei_data  ['sliding' ]['input' ]['100%'] = np.concatenate( (spei_data  ['sliding' ]['input' ]['80%'] ,
+                                                                     spei_data  ['sliding' ]['input' ]['20%']), axis=0)
+        spei_data  ['sliding' ]['output']['100%'] = np.concatenate( (spei_data  ['sliding' ]['output']['80%'] ,
+                                                                     spei_data  ['sliding' ]['output']['20%']), axis=0)
+        
+        months_data['sliding' ]['input' ]['100%'] = np.concatenate( (months_data['sliding' ]['input' ]['80%'] ,
+                                                                     months_data['sliding' ]['input' ]['20%']), axis=0)
+        months_data['sliding' ]['output']['100%'] = np.concatenate( (months_data['sliding' ]['output']['80%'],
+                                                                     months_data['sliding' ]['output']['20%']), axis=0)      
         #######################################################################
-        return (                  spei_dict,                months_dict  ,
-                      spei_provided_inputs_tumbling , spei_expected_outputs_tumbling       ,
-                months_for_provided_inputs_tumbling , months_for_expected_outputs_tumbling )
+        return (spei_dict, months_dict,
+                spei_data, months_data)
     
     def _train_test_split(self, train_size, norm_min=None, norm_max=None):
         
@@ -93,53 +102,35 @@ class Dataset:
                                                                     
         return spei_dict, months_dict
     
-    def _create_input_output_pairs(self, data_dict, configs_dict):
-        input_sliding , output_sliding  = self._sliding_window_maker (data_dict, configs_dict)
-        input_tumbling, output_tumbling = self._tumbling_window_maker(data_dict, configs_dict)
+    def _window_maker(self, data_dict, configs_dict):
         
-        return input_tumbling, output_tumbling
-    
-    def _sliding_window_maker(self, data_dict, configs_dict):
-        sliding_window_len   = configs_dict['sliding_window_len'  ]
-        sliding_lookback_len = configs_dict['sliding_lookback_len']
-        sliding_horizon_len  = configs_dict['sliding_horizon_len' ]
+        data = {key: {} for key in Dataset.DATA_TECHNIQUE_TYPES}
         
-        input_sliding  = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
-        output_sliding = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
-        
-        for data_portion_type in Dataset.DATA_PORTION_TYPES:
-            # Data → sliding windows (with overlaps):
-            windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
-                                       window_shape = sliding_window_len          )
+        for technique in Dataset.DATA_TECHNIQUE_TYPES:
             
-            input_sliding [data_portion_type] = windows_sliding[ : ,                       : sliding_lookback_len]
-            output_sliding[data_portion_type] = windows_sliding[ : , -sliding_horizon_len :                      ]
+            window_len   = configs_dict[f'{technique}_window_len'  ]
+            window_step  = configs_dict[f'{technique}_window_step' ]
+            lookback_len = configs_dict[f'{technique}_lookback_len']
+            horizon_len  = configs_dict[f'{technique}_horizon_len' ]
             
-            # +new dimension at the end of the array:
-            input_sliding[data_portion_type] = input_sliding[data_portion_type][..., np.newaxis]
-        
-        return input_sliding, output_sliding
-    
-    def _tumbling_window_maker(self, data_dict, configs_dict):
-        tumbling_window_len   = configs_dict['tumbling_window_len'  ]
-        tumbling_lookback_len = configs_dict['tumbling_lookback_len']
-        tumbling_horizon_len  = configs_dict['tumbling_horizon_len' ]
-        
-        input_tumbling  = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
-        output_tumbling = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
-        
-        for data_portion_type in Dataset.DATA_PORTION_TYPES:
-            # Data → sliding windows (with overlaps):
-            windows_sliding = sliding_windower(x    = data_dict[data_portion_type],
-                                       window_shape = tumbling_window_len         )
+            input_data  = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
+            output_data = dict.fromkeys(Dataset.DATA_PORTION_TYPES)
             
-            # -overlaps by selecting only every 'tumbling_window_len'-th window:
-            windows_tumbling = windows_sliding[::tumbling_window_len]
+            for data_portion_type in Dataset.DATA_PORTION_TYPES:
+                # Data → sliding windows (with overlaps):
+                windows = sliding_windower(x    = data_dict[data_portion_type],
+                                           window_shape = window_len          )
+                
+                # reduces overlaps
+                windows = windows[::window_step]
+                
+                input_data [data_portion_type] = windows[ : ,              : lookback_len]
+                output_data[data_portion_type] = windows[ : , -horizon_len :             ]
+                
+                # +new dimension at the end of the array:
+                input_data[data_portion_type] = input_data[data_portion_type][..., np.newaxis]
             
-            input_tumbling [data_portion_type] = windows_tumbling[ : ,                       : tumbling_lookback_len]
-            output_tumbling[data_portion_type] = windows_tumbling[ : , -tumbling_horizon_len :                      ]
+            data[technique].update({'input' :  input_data})
+            data[technique].update({'output': output_data})
             
-            # +new dimension at the end of the array:
-            input_tumbling[data_portion_type] = input_tumbling[data_portion_type][..., np.newaxis]
-            
-        return input_tumbling, output_tumbling
+        return data

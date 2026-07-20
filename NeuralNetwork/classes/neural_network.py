@@ -7,57 +7,130 @@ class NeuralNetwork:
     DATA_TYPES_LIST = ['80%', '20%']
 
     def __init__(self, file_name, dataset, plotter):
+        self.configs_dict   = self._set_configs(file_name)
+        
         self.dataset        = dataset
         self.plotter        = plotter
         self.evaluator      = PerformanceEvaluator()
+                
+        self.model_tumbling = self._create_ml_model('tumbling')
+        self.model_sliding  = self._create_ml_model('sliding' )
         
-        self.configs_dict   = self._set_configs(file_name)
-        self.model          = self._create_ml_model()
         self.has_trained    = False
-        
-        # print('Input shape:', self.model.input_shape)
-        # print(self.model.summary())
     
     def _set_configs(self, file_name):
         with open(file_name) as file:
             configs_dict = json.load(file)
         
         configs_dict.update(
-            {'input_shape' : (configs_dict['total_points'] - configs_dict['dense_units'], 1),
-             'activation'  : ['relu', 'sigmoid'],
-             'loss'        : 'mse',
-             'metrics'     : ['mae',
-                             tf.keras.metrics.RootMeanSquaredError(name='rmse'),
-                             'mse',
-                             tf.keras.metrics.R2Score(name="r2")],
-             'optimizer'   : 'adam'
+            {'input_shape_sliding' : (configs_dict['sliding_lookback_len' ], 1),
+             'input_shape_tumbling': (configs_dict['tumbling_lookback_len'], 1),
+             'activation'          : ['relu', 'sigmoid', 'tanh'],
+             'loss'                : 'mse',
+             'metrics'             : ['mae',
+                                     tf.keras.metrics.RootMeanSquaredError(name='rmse'),
+                                     'mse',
+                                     tf.keras.metrics.R2Score(name="r2")],
+             'optimizer_tumbling'  : tf.keras.optimizers.Adam(learning_rate=0.001 ), # default value
+             'optimizer_sliding'   : tf.keras.optimizers.Adam(learning_rate=0.0015),
+             # Sliding, Adam, did not work well:
+             #    0.0001, 0.0002, 0.0003, 0.0005, 0.0010, 0.0020.
+             'tumbling_dropout': 0.0,
+             'sliding_dropout' : 0.2
             }
        )
         
         return configs_dict        
 
-    def _create_ml_model(self):
-        # print(f'Started: creation of ML model {self.dataset.city_name}')
+    def _create_ml_model(self, technique):
         model = tf.keras.Sequential()
-        model.add(tf.keras.Input       (    shape=self.configs_dict['input_shape' ]))
-        model.add(tf.keras.layers.LSTM (          self.configs_dict['hidden_units'], activation=self.configs_dict['activation'][0]))
-        for _ in range(3):
-            model.add(tf.keras.layers.Dense(units=self.configs_dict['dense_units' ], activation=self.configs_dict['activation'][1]))
-        model.compile(loss=self.configs_dict['loss'], metrics=self.configs_dict['metrics'], optimizer=self.configs_dict['optimizer'])
-        # print(f'Ended: creation of ML model {self.dataset.city_name}')
+        
+        model.add(tf.keras.Input           (
+            shape             = self.configs_dict[f'input_shape_{technique}' ]   )
+                  )
+        
+        model.add(tf.keras.layers.LSTM     (
+                                self.configs_dict[f'{technique}_hidden_units']   ,
+            activation        = self.configs_dict[ 'activation'              ][0],
+            recurrent_dropout = self.configs_dict[f'{technique}_dropout'     ]   )
+                 )
+
+        model.add(tf.keras.layers.Dropout(self.configs_dict[f'{technique}_dropout']))
+
+        # sliding_dense_layers failed with values: 5, 4, 3, 1.
+        for _ in range(self.configs_dict[f'{technique}_dense_layers']):
+            model.add(tf.keras.layers.Dense(
+                units         = self.configs_dict[f'{technique}_dense_units' ]   ,
+                activation    = self.configs_dict["activation"               ][2])
+                      )
+            # relu activation on these 3 layers seems to improve overfitting!
+            
+        model.add(tf.keras.layers.Dropout(self.configs_dict[f'{technique}_dropout']))
+        
+        model.add    (tf.keras.layers.Dense(
+            units             = self.configs_dict[f"{technique}_horizon_len" ],
+            activation        = "linear"                                      )
+                     )
+            
+        model.compile(loss      = self.configs_dict[ 'loss'     ],
+                      metrics   = self.configs_dict[ 'metrics'  ],
+                      optimizer = self.configs_dict[f'optimizer_{technique}'])
         
         return model
     
-    def _train_ml_model(self, spei_provided_inputs_tumbling, spei_expected_outputs_tumbling):
-        print(f'\nStarted: training of ML model {self.dataset.city_name} (may take a while)')
-        history = self.model.fit(
-            spei_provided_inputs_tumbling  ['80%'],
-            spei_expected_outputs_tumbling ['80%'],
-            epochs=self.configs_dict['numberOfEpochs'], batch_size=1, verbose=0)
+    def _train_ml_models(self, spei_data):     
+        
+        history = {'tumbling': None, 'sliding': None}
+        
+        print(f'\nStarted: training of ML model {self.dataset.city_name}, tumbling windows (may take a while)')
+        
+        history['tumbling'] = self.model_tumbling.fit(
+            spei_data['tumbling']['input' ]['80%']     ,
+            spei_data['tumbling']['output']['80%']     ,
+            epochs=self.configs_dict['tumbling_epochs'], 
+            batch_size= 1, verbose=0, shuffle=True) # shuffle=False leads to poorer R²
+        
+        
         self.has_trained = True
-        print(f'Ended  : training of ML model {self.dataset.city_name}')
+        print(f'Ended  : training of ML model {self.dataset.city_name}, tumbling windows')
+        
+        print(f'\nStarted: training of ML model {self.dataset.city_name}, sliding windows (may take a BIG while)')
+               
+        # Attempted, failed, batch sizes: 64, 16, 6, 4, 2.
+        history['sliding'] = self.model_sliding.fit(
+            spei_data['sliding' ]['input' ]['80%']    ,
+            spei_data['sliding' ]['output']['80%']    ,
+            epochs=self.configs_dict['sliding_epochs'],
+            batch_size= 8, verbose=0, shuffle=False) # shuffle=True leads to poorer R² results
+        # Epochs. Overfitted : 800, 400, 200.
+        # Epochs. Underfitted: 100.
+        
+        self.has_trained = True
+        print(f'Ended  : training of ML model {self.dataset.city_name}, sliding windows' )
         
         return history
+
+    def _make_predictions(self, spei_data, is_model):
+        spei_predicted_values = {'tumbling': None, 'sliding': None}
+        
+        if is_model:
+            spei_predicted_values['tumbling'] = {
+                '80%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['80%'], verbose = 0),
+                '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
+                                    }           
+            spei_predicted_values['sliding'] = {
+                '80%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['80%'], verbose = 0),
+                '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
+                                    }
+        else:
+            spei_predicted_values['tumbling'] = {
+                '20%' : self.model_tumbling.predict(spei_data['tumbling']['input' ]['20%'], verbose = 0)
+                                    }
+            spei_predicted_values['sliding'] = {
+                '20%' : self.model_sliding.predict(spei_data['sliding' ]['input' ]['20%'], verbose = 0)
+                                    }
+            
+        return spei_predicted_values
     
     def use_neural_network(self, dataset=None, plotter=None):
         if plotter == None: plotter = self.plotter
@@ -69,44 +142,53 @@ class NeuralNetwork:
         # For bordering cities, use the training dataset's normalization parameters
         if is_model:
             (spei_dict, months_dict,
-             spei_provided_inputs_tumbling, spei_expected_outputs_tumbling,
-             months_for_provided_inputs_tumbling, months_for_expected_outputs_tumbling) = dataset.format_data_for_model(self.configs_dict)
+             spei_data, months_data) = dataset.format_data_for_model(self.configs_dict)
+            print()
+            
         else:
             (spei_dict, months_dict,
-             spei_provided_inputs_tumbling, spei_expected_outputs_tumbling,
-             months_for_provided_inputs_tumbling, months_for_expected_outputs_tumbling) = dataset.format_data_for_model(
+             spei_data, months_data) = dataset.format_data_for_model(
                  self.configs_dict, self.dataset.spei_min, self.dataset.spei_max)
-       
+            print()
+        
         split_position = len(spei_dict['80%'])
+        
         if not self.has_trained:
             # flags has_trained as True:
-            history        = self._train_ml_model(spei_provided_inputs_tumbling, spei_expected_outputs_tumbling)
-            plotter.drawModelLineGraph           (history, self.dataset.city_cluster_name, self.dataset.city_name)
+            history  = self._train_ml_models(spei_data)
+            
+            # 2026-05-22, tested, are working fine:
+            plotter.drawModelLineGraph(history['tumbling'], 'tumbling windows',
+                        self.dataset.city_cluster_name, self.dataset.city_name)
+            plotter.drawModelLineGraph(history['sliding' ] , 'sliding windows',
+                        self.dataset.city_cluster_name, self.dataset.city_name)
             
         print(f'Started: applying ML model {self.dataset.city_name} to city {dataset.city_name}')
         
-        if is_model:
-            spei_predicted_values = {
-                '80%' : self.model.predict(spei_provided_inputs_tumbling['80%'], verbose = 0),
-                '20%' : self.model.predict(spei_provided_inputs_tumbling['20%'], verbose = 0)
-                                    }
-        else:
-            spei_predicted_values = {
-                '20%' : self.model.predict(spei_provided_inputs_tumbling[ '20%'], verbose = 0)
-                                    }
+        spei_predicted_values = self._make_predictions(spei_data, is_model)
         
-        metrics_central, metrics_bordering = self.evaluator.evaluate(is_model, spei_dict,
-            spei_expected_outputs_tumbling         , spei_predicted_values  ,
-            self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name  )
+        print()
         
-        plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position   ,
-            self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name)
+        metrics_central, metrics_bordering= self.evaluator.evaluate(
+            is_model                      , spei_dict                                 ,
+            spei_data                     , spei_predicted_values                     ,
+            self.dataset.city_cluster_name, self.dataset.city_name , dataset.city_name)
         
-        self.plotter.plotModelPlots(dataset, spei_dict, is_model             ,
-            spei_expected_outputs_tumbling            , spei_predicted_values,
-            months_for_expected_outputs_tumbling      , self.has_trained     ,
-            history if not self.has_trained else None               ,
-            metrics_central if is_model     else metrics_bordering  ,
+        # Canaries:
+        tumbling_canary = metrics_central['tumbling']['R^2 80% Keras'].iloc[-1]
+        sliding_canary  = metrics_central['sliding' ]['R^2 80% Keras'].iloc[-1]
+        
+        assert tumbling_canary > 0, f"model failed: model for {metrics_central['tumbling']['Municipio Previsto']} got R² = {tumbling_canary} on training"
+        assert sliding_canary  > 0, f"model failed: model for {metrics_central['sliding' ]['Municipio Previsto']} got R² = {sliding_canary}  on training"
+        
+        # 2026-05-22, tested, is working fine:
+        plotter.plotDatasetPlots   (dataset, spei_dict['20%']      , split_position    ,
+            self.dataset.city_cluster_name , self.dataset.city_name, dataset.city_name )
+        
+        self.plotter.plotModelPlots(dataset, spei_dict, is_model                       ,
+            spei_data     ,   months_data  , self.has_trained                          ,
+            spei_predicted_values['tumbling'], spei_predicted_values['sliding']        ,
+            history          if not self.has_trained else None                         ,
             self.dataset.city_cluster_name, self.dataset.city_name  , dataset.city_name)
         
         print(f'Ended  : applying ML model {self.dataset.city_name} to city {dataset.city_name}')

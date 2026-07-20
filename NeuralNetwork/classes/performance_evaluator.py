@@ -3,7 +3,7 @@ import numpy      as np
 import pandas     as pd
 from decimal import Decimal, InvalidOperation, ROUND_DOWN
 
-class PerformanceEvaluator():
+class PerformanceEvaluator:
     
     # Constants for decimal comparison precision
     DECIMAL_PRECISION = 4  # Number of decimal digits to compare
@@ -11,6 +11,8 @@ class PerformanceEvaluator():
     DECIMAL_PADDING = '0000'  # Padding string for decimal digits
     
     def __init__(self):
+        TECHNIQUES = 'tumbling', 'sliding'
+        
         COLS_CENTRAL = {
             'Agrupamento'               : str  ,
             'Municipio Treinado'        : str  ,
@@ -92,8 +94,14 @@ class PerformanceEvaluator():
             'R^2 20% first4_equal'      : bool
         }
         
-        self.metrics_central   = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
-        self.metrics_bordering = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
+        self.metrics_central   = dict.fromkeys(TECHNIQUES)
+        self.metrics_bordering = dict.fromkeys(TECHNIQUES)
+        
+        self.metrics_central  ['tumbling'] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
+        self.metrics_central  ['sliding' ] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_CENTRAL  .items()})
+        
+        self.metrics_bordering['tumbling'] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
+        self.metrics_bordering['sliding' ] = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in COLS_BORDERING.items()})
     
     def _get_error_numpy(self, actual, prediction):
         """
@@ -264,14 +272,22 @@ class PerformanceEvaluator():
         
         return {'sign_equal': sign_equal, 'integer_equal': integer_equal, 'first4_equal': first4_equal}
         
-    def evaluate          (self       , is_model, spei_dict            ,
-                           spei_expected_outputs, spei_predicted_values,
-                           city_cluster_name    , city_for_training    , city_for_predicting):
+    def evaluate          (self             , is_model, spei_dict                       ,
+                           spei_data        , spei_predicted_values                     ,
+                           city_cluster_name, city_for_training    , city_for_predicting):
+
+        TECHNIQUE_TYPES = ['tumbling', 'sliding']
         
-        errors_dict = self._print_errors(spei_expected_outputs, spei_predicted_values         ,
-                                         city_for_training   , city_for_predicting           , is_model)
-        self.writeErrors(errors_dict      , spei_dict        , is_model, spei_expected_outputs, spei_predicted_values,
-                         city_cluster_name, city_for_training, city_for_predicting)
+        for technique in TECHNIQUE_TYPES:
+            
+            errors_dict = self._print_errors(technique                      ,
+                            spei_data            [technique]['output']      ,
+                            spei_predicted_values[technique]                ,
+                            city_for_training, city_for_predicting, is_model)
+            
+            self.writeErrors(technique        , errors_dict          , spei_dict, is_model  ,
+                spei_data[technique]['output'], spei_predicted_values                       ,
+                city_cluster_name             , city_for_training    , city_for_predicting  )
         
         return self.metrics_central, self.metrics_bordering
     
@@ -285,7 +301,7 @@ class PerformanceEvaluator():
         
         return {'numpy': numpy_metrics, 'keras': keras_metrics}
 
-    def _print_errors(self, spei_expected_outputs, spei_predicted_values, city_for_training, city_for_predicting, is_model):
+    def _print_errors(self, technique, spei_expected_outputs, spei_predicted_values, city_for_training, city_for_predicting, is_model):
     
         # RMSE, MSE, MAE, R²:
         if is_model:
@@ -293,22 +309,22 @@ class PerformanceEvaluator():
                 '80%' : self.getError(spei_expected_outputs['80%'], spei_predicted_values['80%']),
                 '20%' : self.getError(spei_expected_outputs['20%'], spei_predicted_values['20%'])
                           }
-            print(f'\t\t--------------Result for model {city_for_training} applied to its own data---------------')
-            print(f"\t\t\tTRAIN ( 80%) NumPy: {errors_dict['80%']['numpy']}")
-            print(f"\t\t\tTRAIN ( 80%) Keras: {errors_dict['80%']['keras']}")
-            print(f"\t\t\tTEST  ( 20%) NumPy: {errors_dict['20%']['numpy']}")
-            print(f"\t\t\tTEST  ( 20%) Keras: {errors_dict['20%']['keras']}")
+            print(f'\t\t--------------Result for model {city_for_training} applied to its own data ({technique})---------------')
+            # print(f"\t\t\tTRAIN ( 80%) NumPy: {errors_dict['80%']['numpy']}")
+            print(f"\t\t\tTRAIN R² ( 80%) Keras: {errors_dict['80%']['keras']['R^2']}")
+            # print(f"\t\t\tTEST  ( 20%) NumPy: {errors_dict['20%']['numpy']}")
+            print(f"\t\t\tTEST  R² ( 20%) Keras: {errors_dict['20%']['keras']['R^2']}")
         else:
             errors_dict = {
                 '20%' : self.getError(spei_expected_outputs['20%' ], spei_predicted_values['20%' ])
                           }
-            print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data---------------')
-            print(f"\t\t\tTEST ( 20%) NumPy: {errors_dict['20%']['numpy']}")
-            print(f"\t\t\tTEST ( 20%) Keras: {errors_dict['20%']['keras']}")
+            print(f'\t\t--------------Result for model {city_for_training} applied to {city_for_predicting} data ({technique})---------------')
+            # print(f"\t\t\tTEST ( 20%) NumPy: {errors_dict['20%']['numpy']}")
+            print(f"\t\t\tTEST R² ( 20%) Keras: {errors_dict['20%']['keras']['R^2']}")
 
         return errors_dict
 
-    def writeErrors(self, errors_dict   , spei_dict            , is_model,
+    def writeErrors(self, technique, errors_dict   , spei_dict            , is_model,
                     spei_expected_outputs, spei_predicted_values,
                     city_cluster_name   , city_for_training    , city_for_predicting):
         
@@ -349,7 +365,7 @@ class PerformanceEvaluator():
             
             row = {
                 'Agrupamento'             : city_cluster_name,
-                'Municipio Treinado'      : city_for_training,
+                'Municipio Treinado'      : f'{city_for_training} ({technique})',
                 'Municipio Previsto'      : city_for_predicting,
                 # 80% portion - Numpy
                 'MAE 80% Numpy'           : mae_80_numpy,
@@ -417,7 +433,7 @@ class PerformanceEvaluator():
             
             row = {
                 'Agrupamento'             : city_cluster_name,
-                'Municipio Treinado'      : city_for_training,
+                'Municipio Treinado'      : f'{city_for_training} ({technique})',
                 'Municipio Previsto'      : city_for_predicting,
                 # 20% portion - Numpy
                 'MAE 20% Numpy'           : mae_20_numpy,
@@ -445,9 +461,9 @@ class PerformanceEvaluator():
             }
         
         if is_model:
-            self.metrics_central.loc[len(self.metrics_central)] = row
+            self.metrics_central  [technique].loc[len(self.metrics_central  [technique])] = row
         else:
-            self.metrics_bordering.loc[len(self.metrics_bordering)] = row
+            self.metrics_bordering[technique].loc[len(self.metrics_bordering[technique])] = row
 
     # def getTaylorMetrics(self, spei_dict, spei_expected_outputs, spei_predicted_values, is_model):    
     #  # Standard Deviation:
